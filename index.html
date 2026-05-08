@@ -797,10 +797,10 @@
       ondrop="handleCSVDrop(event)"
       onclick="document.getElementById('csvFileInput').click()">
       <div class="drop-zone-icon">📂</div>
-      <div class="drop-zone-ttl">Drop a rankings CSV here (or click to browse)</div>
-      <div class="drop-zone-sub">Works with exports from: KTC · FantasyPros · DLF · DraftShark · Dynasty Nerds · ESPN · Fantrax · CBS · Any site with a CSV export</div>
+      <div class="drop-zone-ttl">Drop one or more ranking CSVs here (or click to browse)</div>
+      <div class="drop-zone-sub">Multiple files for the same site are merged & averaged automatically · Works with: KTC · FantasyPros · DLF · DraftShark · Dynasty Nerds · ESPN · Fantrax · CBS · Any site with CSV export</div>
     </div>
-    <input type="file" id="csvFileInput" accept=".csv,.txt,.xls,.xlsx" style="display:none" onchange="handleCSVFile(this)">
+    <input type="file" id="csvFileInput" accept=".csv,.txt,.xls,.xlsx" multiple style="display:none" onchange="handleCSVFile(this)">
 
     <!-- How to export from each site -->
     <div style="margin-bottom:12px">
@@ -2185,21 +2185,60 @@ function promptSourceName(text, parsed) {
   return key;
 }
 
-// Load values from a parsed CSV into S.sourceValues and rebuild consensus
+// Load values from a parsed CSV into S.sourceValues and rebuild consensus.
+// If the source already has data (e.g. multiple DLF position files), values are merged by averaging.
 function loadSourceValues(key, parsed, fileName) {
-  S.sourceValues[key] = parsed;
-  S.sourceStatus[key] = 'ok';
   S.sourceMeta = S.sourceMeta || {};
-  S.sourceMeta[key] = { file: fileName, loaded: Date.now(), count: Object.keys(parsed).length };
-  // Persist CSV sources in localStorage
+  const existing = S.sourceValues[key];
+  const meta = S.sourceMeta[key] || {};
+  const prevCount = meta.fileCount || 0;
+
+  if (existing && prevCount > 0) {
+    // Merge: average with existing values
+    const merged = { ...existing };
+    Object.entries(parsed).forEach(([name, entry]) => {
+      if (merged[name]) {
+        // Running average: blend new values in
+        if (entry.dv > 0) merged[name].dv = Math.round((merged[name].dv * prevCount + entry.dv) / (prevCount + 1));
+        if (entry.rv > 0) merged[name].rv = Math.round((merged[name].rv * prevCount + entry.rv) / (prevCount + 1));
+        if (entry.trend && entry.trend !== 'flat') merged[name].trend = entry.trend;
+      } else {
+        merged[name] = { ...entry };
+      }
+    });
+    S.sourceValues[key] = merged;
+    const files = meta.files ? meta.files + ', ' + fileName : fileName;
+    S.sourceMeta[key] = {
+      files, file: files,
+      fileCount: prevCount + 1,
+      loaded: Date.now(),
+      count: Object.keys(merged).length,
+    };
+  } else {
+    // First file for this source
+    S.sourceValues[key] = parsed;
+    S.sourceMeta[key] = { file: fileName, files: fileName, fileCount: 1, loaded: Date.now(), count: Object.keys(parsed).length };
+  }
+
+  S.sourceStatus[key] = 'ok';
+
+  // Persist all files for this source in localStorage
   try {
     const stored = JSON.parse(localStorage.getItem('tradeiq_csv_sources')||'{}');
-    stored[key] = { parsed, fileName, loaded: Date.now() };
+    stored[key] = {
+      parsed: S.sourceValues[key],
+      fileName: S.sourceMeta[key].file,
+      fileCount: S.sourceMeta[key].fileCount,
+      loaded: Date.now(),
+    };
     localStorage.setItem('tradeiq_csv_sources', JSON.stringify(stored));
   } catch(e) {}
+
   rebuildPlayerValues();
   renderSourcesUI();
-  showToast(`Loaded ${Object.keys(parsed).length} players from ${fileName}`, 'ok');
+  const fc = S.sourceMeta[key].fileCount;
+  const label = fc > 1 ? ` (file ${fc} merged)` : '';
+  showToast(`Loaded ${Object.keys(parsed).length} players from ${fileName}${label}`, 'ok');
 }
 
 // Rebuild all player dynasty_val / redraft_val from consensus of loaded sources
@@ -2257,7 +2296,8 @@ function renderSourcesUI() {
     const status = S.sourceStatus?.[src.key] || 'none';
     const meta   = S.sourceMeta?.[src.key];
     const count  = meta?.count ? `${meta.count} players` : '';
-    const file   = meta?.file ? ` · ${meta.file}` : '';
+    const fc     = meta?.fileCount > 1 ? ` · ${meta.fileCount} files merged` : (meta?.file ? ` · ${meta.file}` : '');
+    const file   = fc;
     const typeLabel = src.type === 'auto' ? '⚡ Auto' : src.type === 'builtin' ? '✓ Built-in' : src.type === 'bookmarklet' ? '🔖 Bookmarklet' : '📂 CSV';
     let metaText = '';
     if (status === 'ok') metaText = count + file;
@@ -2354,29 +2394,63 @@ function updateSourceCount() {
 function handleCSVDrop(e) {
   e.preventDefault();
   document.getElementById('csvDropZone').classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file) processCSVFile(file);
+  const files = Array.from(e.dataTransfer.files).filter(f => f.name.match(/\.(csv|txt|tsv)$/i));
+  if (!files.length) { showToast('Drop a CSV file', 'err'); return; }
+  processCSVFiles(files);
 }
 function handleCSVFile(input) {
-  const file = input.files[0];
-  if (file) processCSVFile(file);
+  const files = Array.from(input.files);
+  if (files.length) processCSVFiles(files);
   input.value = '';
 }
-function processCSVFile(file) {
-  const reader = new FileReader();
-  reader.onload = e => {
-    const text   = e.target.result;
-    const parsed = parseRankingsCSV(text);
-    if (!parsed || Object.keys(parsed).length < 10) {
-      showToast('Could not parse rankings — check file format', 'err');
-      return;
+
+// Process one or many CSV files sequentially
+async function processCSVFiles(files) {
+  // If multiple files, group them by detected source key so we can ask once
+  // then load them all for that source
+  const pendingByKey = {};
+  const unknowns = [];
+
+  for (const file of files) {
+    await new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const text = e.target.result;
+        const parsed = parseRankingsCSV(text);
+        if (!parsed || Object.keys(parsed).length < 10) {
+          showToast(`Could not parse ${file.name} — skipping`, 'err');
+          resolve(); return;
+        }
+        let key = detectSourceFromCSV(text);
+        if (key) {
+          if (!pendingByKey[key]) pendingByKey[key] = [];
+          pendingByKey[key].push({ parsed, name: file.name });
+        } else {
+          unknowns.push({ text, parsed, name: file.name });
+        }
+        resolve();
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  // Load all auto-detected files grouped by source
+  for (const [key, items] of Object.entries(pendingByKey)) {
+    for (const item of items) {
+      loadSourceValues(key, item.parsed, item.name);
     }
-    let key = detectSourceFromCSV(text);
-    if (!key) key = promptSourceName(text, parsed);
-    if (!key) return;
-    loadSourceValues(key, parsed, file.name);
-  };
-  reader.readAsText(file);
+  }
+
+  // Handle unknowns — ask user once per group
+  for (const item of unknowns) {
+    let key = promptSourceName(item.text, item.parsed);
+    if (key) loadSourceValues(key, item.parsed, item.name);
+  }
+}
+
+// Legacy single-file wrapper (still used internally)
+function processCSVFile(file) {
+  processCSVFiles([file]);
 }
 
 // Save FantasyPros API key
