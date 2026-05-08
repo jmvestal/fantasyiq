@@ -2056,11 +2056,17 @@ function normName(name) {
 }
 
 // Convert a rank (1-N) to a 0–9500 value on a decay curve
-function rankToValue(rank, total) {
+// posMax: optional position-aware ceiling (prevents QB rank-1 = 9500 when only 30 QBs in file)
+function rankToValue(rank, total, posMax) {
   total = Math.max(total, 150);
   const pct = 1 - Math.min((rank - 1) / total, 1);
-  return Math.round(Math.pow(pct, 1.4) * 9400 + 100);
+  const raw = Math.round(Math.pow(pct, 1.4) * 9400 + 100);
+  return posMax ? Math.round(raw * posMax / 9500) : raw;
 }
+
+// Position-aware value ceiling — rank 1 of a position-only file should NOT equal 9500
+// These match realistic KTC dynasty highs for each position
+const POS_RANK_MAX = { QB: 7800, RB: 9800, WR: 9800, TE: 8200 };
 
 // Intelligently parse a CSV/TSV from any known ranking site
 function parseRankingsCSV(text) {
@@ -2111,6 +2117,20 @@ function parseRankingsCSV(text) {
   }).filter(v => !isNaN(v));
   const hasDirectValues = sampleVals.length >= 2 && sampleVals.some(v => v > 500);
 
+  // Detect if file is position-specific (e.g. a QB-only or RB-only export)
+  // This prevents rank-1 QB in a 30-QB file from scoring like rank-1 overall (9500)
+  const posCounts = {};
+  if (posIdx >= 0) {
+    for (let i = 1; i < lines.length; i++) {
+      const cols = splitRow(lines[i]);
+      const pos = (cols[posIdx] || '').replace(/"/g,'').trim().toUpperCase();
+      if (['QB','RB','WR','TE'].includes(pos)) posCounts[pos] = (posCounts[pos]||0) + 1;
+    }
+  }
+  const posEntries = Object.entries(posCounts).sort((a,b)=>b[1]-a[1]);
+  const dominantPos = posEntries.length > 0 && posEntries[0][1] > total * 0.65 ? posEntries[0][0] : null;
+  const rankPosMax  = dominantPos ? POS_RANK_MAX[dominantPos] : null;
+
   for (let i = 1; i < lines.length; i++) {
     const cols = splitRow(lines[i]);
     const raw  = cols[nameIdx];
@@ -2127,16 +2147,19 @@ function parseRankingsCSV(text) {
       const dynV = dynIdx >= 0 ? parseFloat(cols[dynIdx]) : 0;
       const rdfV = rdfIdx >= 0 ? parseFloat(cols[rdfIdx]) : 0;
       const genV = valueIdx >= 0 ? parseFloat(cols[valueIdx]) : 0;
-      // If values are on 0-10000 scale, use directly
-      // If they look like fractional scores (< 100), scale up
+      // If values are on 0-10000 scale, use directly; fractional scores → scale up
       const scale = v => isNaN(v) ? 0 : v > 500 ? Math.min(9999,Math.round(v)) : v > 0 ? Math.round(v*95) : 0;
       dv = scale(dynV || genV);
       rv = scale(rdfV || genV);
     }
 
     // Fall back to rank-based if no direct values
+    // Pass posMax so QB-only files don't rank-1 to 9500
     if (!dv && !rv) {
-      const val = rankToValue(rank, total);
+      // For mixed files, detect this row's position to apply per-row cap
+      const rowPos = posIdx >= 0 ? (cols[posIdx]||'').replace(/"/g,'').trim().toUpperCase() : null;
+      const rowMax = rowPos && POS_RANK_MAX[rowPos] ? POS_RANK_MAX[rowPos] : rankPosMax;
+      const val = rankToValue(rank, total, rowMax);
       dv = val; rv = val;
     }
 
@@ -2224,14 +2247,14 @@ function loadSourceValues(key, parsed, fileName) {
 
   // Persist all files for this source in localStorage
   try {
-    const stored = JSON.parse(localStorage.getItem('tradeiq_csv_sources')||'{}');
+    const stored = JSON.parse(localStorage.getItem('tradeiq_csv_sources_v2')||'{}');
     stored[key] = {
       parsed: S.sourceValues[key],
       fileName: S.sourceMeta[key].file,
       fileCount: S.sourceMeta[key].fileCount,
       loaded: Date.now(),
     };
-    localStorage.setItem('tradeiq_csv_sources', JSON.stringify(stored));
+    localStorage.setItem('tradeiq_csv_sources_v2', JSON.stringify(stored));
   } catch(e) {}
 
   rebuildPlayerValues();
@@ -2257,11 +2280,15 @@ function rebuildPlayerValues() {
   updateSourceCount();
 }
 
-// Build consensus value for one player across all loaded sources
+// Build consensus value for one player across all loaded sources.
+// Uses MEDIAN to prevent one outlier CSV from inflating/deflating a player.
+// VALUE_DB is always included as one anchor source so rank-inflated CSVs
+// get grounded (e.g. Goff QB12 in a position file can't average to elite).
 function buildConsensus(p) {
-  const pid     = normName(p.full_name || '');
-  const dvArr   = [], rvArr = [], trends = [];
+  const pid  = normName(p.full_name || '');
+  const dvArr = [], rvArr = [], trends = [];
 
+  // Collect all source values
   for (const [key, vals] of Object.entries(S.sourceValues || {})) {
     if (!vals) continue;
     const entry = vals[pid];
@@ -2271,18 +2298,47 @@ function buildConsensus(p) {
     if (entry.trend) trends.push(entry.trend);
   }
 
-  // VALUE_DB as additional source if no others cover this player
+  // Always include VALUE_DB as one anchor source.
+  // This grounds the consensus — a rank-inflated CSV can't dominate the average.
+  // API sources (fc, ktc) are more reliable so if they're present, VALUE_DB has less impact.
   const vdb = VALUE_DB[p.full_name];
-  if (dvArr.length === 0 && vdb) { dvArr.push(vdb.dv); rvArr.push(vdb.rv || vdb.dv); }
+  const hasApiSource = (S.sourceValues?.fc?.[pid]?.dv > 0) || (S.sourceValues?.ktc?.[pid]?.dv > 0);
+  if (vdb) {
+    if (!hasApiSource) {
+      // No live API coverage → give VALUE_DB 2 votes to anchor strongly
+      dvArr.push(vdb.dv); dvArr.push(vdb.dv);
+      rvArr.push(vdb.rv || vdb.dv); rvArr.push(vdb.rv || vdb.dv);
+    } else {
+      // API present → VALUE_DB gets 1 vote (light anchor)
+      dvArr.push(vdb.dv);
+      rvArr.push(vdb.rv || vdb.dv);
+    }
+    if (vdb.trend) trends.push(vdb.trend);
+  } else if (dvArr.length === 0) {
+    // Nothing at all — use player's existing estimate
+    return {
+      dv: p.dynasty_val || 500,
+      rv: p.redraft_val || 500,
+      trend: 'flat',
+      sources: 0,
+    };
+  }
 
-  const avg = arr => arr.length ? Math.round(arr.reduce((s,v)=>s+v,0)/arr.length) : 0;
+  // Median is more robust than mean — one bad outlier CSV can't swing the result
+  const median = arr => {
+    if (!arr.length) return 0;
+    const s = [...arr].sort((a,b)=>a-b);
+    const m = Math.floor(s.length / 2);
+    return s.length % 2 ? s[m] : Math.round((s[m-1] + s[m]) / 2);
+  };
+
   const upCt = trends.filter(t=>t==='up').length;
   const dnCt = trends.filter(t=>t==='down').length;
   const trend = upCt > dnCt ? 'up' : dnCt > upCt ? 'down' : 'flat';
 
   return {
-    dv: avg(dvArr) || p.dynasty_val || 500,
-    rv: avg(rvArr) || p.redraft_val || 500,
+    dv: median(dvArr) || p.dynasty_val || 500,
+    rv: median(rvArr) || p.redraft_val || 500,
     trend,
     sources: dvArr.length,
   };
@@ -2373,9 +2429,9 @@ function removeSource(key) {
   delete S.sourceStatus[key];
   delete S.sourceMeta?.[key];
   try {
-    const stored = JSON.parse(localStorage.getItem('tradeiq_csv_sources')||'{}');
+    const stored = JSON.parse(localStorage.getItem('tradeiq_csv_sources_v2')||'{}');
     delete stored[key];
-    localStorage.setItem('tradeiq_csv_sources', JSON.stringify(stored));
+    localStorage.setItem('tradeiq_csv_sources_v2', JSON.stringify(stored));
   } catch(e) {}
   rebuildPlayerValues();
   renderSourcesUI();
@@ -2582,7 +2638,7 @@ function handleBookmarkletImport() {
 // Restore CSV sources from localStorage on startup
 function restoreCSVSources() {
   try {
-    const stored = JSON.parse(localStorage.getItem('tradeiq_csv_sources')||'{}');
+    const stored = JSON.parse(localStorage.getItem('tradeiq_csv_sources_v2')||'{}');
     Object.entries(stored).forEach(([key, data]) => {
       if (data?.parsed) {
         S.sourceValues[key] = data.parsed;
