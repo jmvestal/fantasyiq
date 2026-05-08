@@ -355,6 +355,8 @@
     .src-btn{padding:5px 11px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:all .15s}
     .src-btn:hover{border-color:var(--primary);color:var(--primary-l)}
     .src-count{background:var(--primary);color:#fff;border-radius:10px;padding:0 6px;font-size:10px;font-weight:800;min-width:16px;text-align:center}
+    .bm-link{font-size:11px;font-weight:600;color:#14b8a6;border:1px solid #14b8a6;border-radius:5px;padding:3px 8px;text-decoration:none;white-space:nowrap;cursor:grab;flex-shrink:0;transition:all .15s}
+    .bm-link:hover{background:rgba(20,184,166,.15)}
     .src-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
     .src-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px}
     .src-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -2022,18 +2024,19 @@ function showToast(msg, type='ok') {
 
 // Source registry — each entry describes one ranking provider
 const RANKING_SOURCES = [
-  { key:'fc',  name:'FantasyCalc',         type:'auto',  dynasty:true,  redraft:true,  color:'#22c55e' },
-  { key:'ktc', name:'KeepTradeCut',        type:'auto',  dynasty:true,  redraft:true,  color:'#3b82f6' },
-  { key:'ffc', name:'FF Calculator',       type:'auto',  dynasty:true,  redraft:true,  color:'#10b981' },
-  { key:'dp',  name:'FantasyPros ECR',     type:'auto',  dynasty:true,  redraft:false, color:'#f59e0b' },
-  { key:'fp',  name:'FantasyPros (CSV)',   type:'csv',   dynasty:false, redraft:true,  color:'#d97706' },
-  { key:'dlf', name:'Dynasty LF',          type:'csv',   dynasty:true,  redraft:false, color:'#8b5cf6' },
-  { key:'ds',  name:'DraftShark',          type:'csv',   dynasty:true,  redraft:true,  color:'#ec4899' },
-  { key:'dn',  name:'Dynasty Nerds',       type:'csv',   dynasty:true,  redraft:false, color:'#06b6d4' },
-  { key:'espn',name:'ESPN',                type:'csv',   dynasty:false, redraft:true,  color:'#ef4444' },
-  { key:'fan', name:'Fantrax',             type:'csv',   dynasty:true,  redraft:true,  color:'#f97316' },
-  { key:'cbs', name:'CBS Sports',          type:'csv',   dynasty:false, redraft:true,  color:'#6366f1' },
-  { key:'tiq', name:'TradeIQ Baseline',    type:'builtin',dynasty:true, redraft:true,  color:'#7c3aed' },
+  { key:'fc',  name:'FantasyCalc',         type:'auto',       dynasty:true,  redraft:true,  color:'#22c55e' },
+  { key:'ktc', name:'KeepTradeCut',        type:'auto',       dynasty:true,  redraft:true,  color:'#3b82f6' },
+  { key:'ffc', name:'FF Calculator',       type:'auto',       dynasty:true,  redraft:true,  color:'#10b981' },
+  { key:'dp',  name:'FantasyPros ECR',     type:'auto',       dynasty:true,  redraft:false, color:'#f59e0b' },
+  { key:'dyz', name:'Dynatyze',            type:'bookmarklet',dynasty:true,  redraft:false, color:'#14b8a6', bmUrl:'https://dynatyze.com/football' },
+  { key:'fp',  name:'FantasyPros (CSV)',   type:'csv',        dynasty:false, redraft:true,  color:'#d97706' },
+  { key:'dlf', name:'Dynasty LF',          type:'csv',        dynasty:true,  redraft:false, color:'#8b5cf6' },
+  { key:'ds',  name:'DraftShark',          type:'csv',        dynasty:true,  redraft:true,  color:'#ec4899' },
+  { key:'dn',  name:'Dynasty Nerds',       type:'csv',        dynasty:true,  redraft:false, color:'#06b6d4' },
+  { key:'espn',name:'ESPN',                type:'csv',        dynasty:false, redraft:true,  color:'#ef4444' },
+  { key:'fan', name:'Fantrax',             type:'csv',        dynasty:true,  redraft:true,  color:'#f97316' },
+  { key:'cbs', name:'CBS Sports',          type:'csv',        dynasty:false, redraft:true,  color:'#6366f1' },
+  { key:'tiq', name:'TradeIQ Baseline',    type:'builtin',    dynasty:true,  redraft:true,  color:'#7c3aed' },
 ];
 
 // S.sourceValues = { [key]: { [normalizedName]: { dv, rv, trend } } }
@@ -2255,7 +2258,25 @@ function renderSourcesUI() {
     const meta   = S.sourceMeta?.[src.key];
     const count  = meta?.count ? `${meta.count} players` : '';
     const file   = meta?.file ? ` · ${meta.file}` : '';
-    const typeLabel = src.type === 'auto' ? '⚡ Auto' : src.type === 'builtin' ? '✓ Built-in' : '📂 CSV';
+    const typeLabel = src.type === 'auto' ? '⚡ Auto' : src.type === 'builtin' ? '✓ Built-in' : src.type === 'bookmarklet' ? '🔖 Bookmarklet' : '📂 CSV';
+    let metaText = '';
+    if (status === 'ok') metaText = count + file;
+    else if (status === 'loading') metaText = 'Loading…';
+    else if (status === 'err') metaText = 'Failed to load';
+    else if (src.type === 'csv') metaText = 'Not loaded — import a CSV below';
+    else if (src.type === 'builtin') metaText = 'Always active';
+    else if (src.type === 'bookmarklet') metaText = status === 'none' ? 'Not loaded — drag the bookmarklet to Chrome, then click it on their site' : '';
+    let action = '';
+    if (status === 'ok' && (src.type === 'csv' || src.type === 'bookmarklet')) {
+      action = `<span class="src-action" onclick="removeSource('${src.key}')">Remove</span>`;
+    }
+    if (src.type === 'bookmarklet') {
+      const bm = getBookmarkletHref(src.key);
+      action = `<div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+        ${status==='ok' ? `<span class="src-action" onclick="removeSource('${src.key}')">Remove</span>` : ''}
+        <a href="${bm}" class="bm-link" title="Drag this to your Chrome bookmarks bar, then click it while on ${src.bmUrl||src.name}" onclick="event.preventDefault();showBookmarkletHelp('${src.key}')">🔖 Get Bookmarklet</a>
+      </div>`;
+    }
     return `<div class="src-row">
       <div class="src-dot ${status}"></div>
       <div style="flex:1;min-width:0">
@@ -2265,12 +2286,46 @@ function renderSourcesUI() {
           ${src.dynasty ? '<span style="font-size:10px;background:#1e3a5f;color:#93c5fd;padding:1px 5px;border-radius:3px">Dynasty</span>' : ''}
           ${src.redraft ? '<span style="font-size:10px;background:#14532d;color:#86efac;padding:1px 5px;border-radius:3px">Redraft</span>' : ''}
         </div>
-        <div class="src-meta">${status==='ok' ? count+file : status==='loading' ? 'Loading…' : status==='err' ? 'Failed to load' : src.type==='csv'?'Not loaded — import a CSV below':src.type==='builtin'?'Always active':''}</div>
+        <div class="src-meta">${metaText}</div>
       </div>
-      ${status === 'ok' && src.type === 'csv' ? `<span class="src-action" onclick="removeSource('${src.key}')">Remove</span>` : ''}
+      ${action}
     </div>`;
   }).join('');
   updateSourceCount();
+}
+
+function showBookmarkletHelp(key) {
+  const src = RANKING_SOURCES.find(s => s.key === key);
+  if (!src) return;
+  const bm = getBookmarkletHref(key);
+  const existing = document.getElementById('bmHelpModal');
+  if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'bmHelpModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:28px;max-width:520px;width:100%">
+    <div style="font-size:18px;font-weight:800;margin-bottom:8px">🔖 ${src.name} Bookmarklet</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6">
+      This bookmarklet scrapes ${src.name} rankings and imports them directly into TradeIQ — no CSV needed.
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:14px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Step 1 — Add the bookmarklet</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:10px">Drag the button below to your Chrome bookmarks bar:</div>
+      <a href="${bm}" class="btn btn-p" style="display:inline-block;text-decoration:none;cursor:grab" ondragstart="void(0)">🔖 Import ${src.name} → TradeIQ</a>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px">Or right-click → Bookmark this link → choose Bookmarks Bar</div>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:14px;margin-bottom:20px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Step 2 — Use it</div>
+      <ol style="font-size:13px;color:var(--text2);line-height:1.8;padding-left:18px">
+        <li>Go to <a href="${src.bmUrl||'https://dynatyze.com/football'}" target="_blank" style="color:var(--primary-l)">${src.bmUrl||src.name}</a> (logged in)</li>
+        <li>Click the <strong>🔖 Import ${src.name} → TradeIQ</strong> bookmark</li>
+        <li>TradeIQ opens with the rankings auto-loaded ✅</li>
+      </ol>
+    </div>
+    <button class="btn btn-ghost" onclick="document.getElementById('bmHelpModal').remove()">Close</button>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 }
 
 function removeSource(key) {
@@ -2330,6 +2385,124 @@ function saveFPApiKey() {
   if (!key) return;
   localStorage.setItem('tradeiq_fp_key', key);
   showToast('FantasyPros key saved — will use on next load');
+}
+
+// ═══════════════════════════════════════════════════════════
+// BOOKMARKLET SYSTEM — scrape partner sites, import to TradeIQ
+// ═══════════════════════════════════════════════════════════
+
+// Returns the javascript: href for a given source key
+function getBookmarkletHref(key) {
+  const TARGET = 'https://jmvestal.github.io/tradeiq/';
+  // The full bookmarklet code — runs on the partner site
+  const code = `(function(){
+var SRC='${key}';
+var TARGET='${TARGET}';
+var players=[];
+function walk(obj,depth,found){
+  if(depth>8||!obj||typeof obj!=='object')return;
+  if(Array.isArray(obj)){
+    if(obj.length>15){var f=obj[0];if(f&&typeof f==='object'){var ks=Object.keys(f);if(ks.some(function(k){return/name|player/i.test(k)})&&ks.some(function(k){return/rank|value|ecr|adp/i.test(k)})){if(!found[0]||obj.length>found[0].length)found[0]=obj;}}}
+    obj.forEach(function(v){walk(v,depth+1,found);});
+  }else{Object.values(obj).forEach(function(v){walk(v,depth+1,found);});}
+}
+var found=[null];
+try{if(window.__NEXT_DATA__)walk(window.__NEXT_DATA__,0,found);}catch(e){}
+if(found[0]){
+  found[0].forEach(function(p,i){
+    var name=p.name||p.playerName||p.player_name||p.fullName||p.full_name||(p.player&&(p.player.name||p.player.playerName))||'';
+    var pos=((p.position||p.pos||(p.player&&p.player.position)||'')+'').replace(/[^A-Za-z]/g,'').toUpperCase().slice(0,3);
+    var rank=+(p.rank||p.ecr||p.adp||p.dynastyRank||p.overallRank||i+1);
+    if(name&&name.length>2)players.push({name:name,pos:pos,rank:rank});
+  });
+}
+if(players.length<5){
+  var POSITIONS=['QB','RB','WR','TE','K','DEF','DST'];
+  var rows=Array.from(document.querySelectorAll('tr,[class*="playerRow"],[class*="player-row"],[class*="rankRow"],[class*="PlayerCard"],[class*="tableRow"],[class*="list-item"]'));
+  rows.forEach(function(row){
+    var cells=Array.from(row.querySelectorAll('td,th,[class*="cell"],[class*="col"],[class*="name"],[class*="rank"]'));
+    if(cells.length<2)return;
+    var name='',pos='',rank=0;
+    cells.forEach(function(c){
+      var txt=c.textContent.trim().replace(/\\s+/g,' ');
+      if(POSITIONS.indexOf(txt.toUpperCase())>-1){pos=txt.toUpperCase();return;}
+      if(/^\\d+$/.test(txt)&&+txt<2000&&!rank){rank=+txt;return;}
+      if(!name&&txt.length>2&&txt.length<50&&/[A-Z]/.test(txt)&&!/^(rank|name|player|pos|team|age|pts|value|dynasty|redraft|pick)$/i.test(txt)&&!/^\\d/.test(txt))name=txt;
+    });
+    if(name&&!/^(rank|name|player|position|team|overall)$/i.test(name)){
+      var seen=players.find(function(p){return p.name.toLowerCase()===name.toLowerCase();});
+      if(!seen)players.push({name:name,pos:pos,rank:rank||players.length+1});
+    }
+  });
+}
+if(players.length<5){alert('TradeIQ: Only found '+players.length+' players.\\nNavigate to '+SRC+' rankings page first, then click the bookmarklet.');return;}
+players.sort(function(a,b){return a.rank-b.rank;});
+var csv='Rank,Name,Position\\n'+players.map(function(p,i){return (p.rank||i+1)+',"'+p.name.replace(/"/g,'')+'",'+p.pos;}).join('\\n');
+var b64;try{b64=btoa(unescape(encodeURIComponent(csv)));}catch(e){b64=btoa(csv);}
+window.open(TARGET+'#bm='+SRC+':'+b64,'_blank');
+})();`;
+  return 'javascript:' + encodeURIComponent(code);
+}
+
+// Restore bookmarklet sources from localStorage on startup
+function restoreBookmarkletSources() {
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (!k || !k.startsWith('tradeiq_bm_') || k.includes('_ts_')) continue;
+    const srcKey = k.replace('tradeiq_bm_', '');
+    try {
+      const parsed = JSON.parse(localStorage.getItem(k));
+      const ts = parseInt(localStorage.getItem('tradeiq_bm_ts_' + srcKey) || '0');
+      if (parsed && Object.keys(parsed).length > 0) {
+        S.sourceValues[srcKey] = parsed;
+        S.sourceStatus[srcKey] = 'ok';
+        S.sourceMeta[srcKey] = { count: Object.keys(parsed).length, loaded: ts, file: `${srcKey} (bookmarklet)` };
+        if (!RANKING_SOURCES.find(s => s.key === srcKey)) {
+          const names = { dyz:'Dynatyze', ds2:'DraftSharks', dlf2:'DynastyLF' };
+          RANKING_SOURCES.push({ key: srcKey, name: names[srcKey] || srcKey, type:'bookmarklet', dynasty:true, redraft:false, color:'#14b8a6' });
+        }
+      }
+    } catch(e) {}
+  }
+}
+
+// Handle bookmarklet import from URL hash: #bm=KEY:BASE64CSV
+function handleBookmarkletImport() {
+  const hash = window.location.hash;
+  if (!hash.startsWith('#bm=')) return;
+  const rest = hash.slice(4);
+  const colon = rest.indexOf(':');
+  if (colon < 1) return;
+  const srcKey = rest.slice(0, colon);
+  const b64    = rest.slice(colon + 1);
+  // Clear hash immediately so refresh doesn't re-import
+  history.replaceState(null, '', location.pathname + location.search);
+  try {
+    const csv    = decodeURIComponent(escape(atob(b64)));
+    const parsed = parseRankingsCSV(csv);
+    if (!parsed || Object.keys(parsed).length < 5) {
+      showToast('Bookmarklet: Could not parse rankings', 'err');
+      return;
+    }
+    S.sourceValues[srcKey] = parsed;
+    S.sourceStatus[srcKey] = 'ok';
+    S.sourceMeta[srcKey] = { count: Object.keys(parsed).length, loaded: Date.now(), file: `${srcKey} bookmarklet` };
+    if (!RANKING_SOURCES.find(s => s.key === srcKey)) {
+      const names = { dyz:'Dynatyze', ds2:'DraftSharks', dlf2:'DynastyLF' };
+      RANKING_SOURCES.push({ key: srcKey, name: names[srcKey] || srcKey, type:'bookmarklet', dynasty:true, redraft:false, color:'#14b8a6' });
+    }
+    // Persist in localStorage so it survives refresh
+    try {
+      localStorage.setItem('tradeiq_bm_' + srcKey, JSON.stringify(parsed));
+      localStorage.setItem('tradeiq_bm_ts_' + srcKey, String(Date.now()));
+    } catch(e) {}
+    rebuildPlayerValues();
+    renderSourcesUI();
+    showToast(`✅ Imported ${Object.keys(parsed).length} players from ${srcKey}!`);
+  } catch(e) {
+    console.warn('Bookmarklet import failed:', e);
+    showToast('Bookmarklet import failed — try again', 'err');
+  }
 }
 
 // Restore CSV sources from localStorage on startup
@@ -2876,6 +3049,7 @@ async function init() {
   S.sourceStatus['tiq'] = 'ok';
   S.sourceMeta['tiq'] = { count: Object.keys(VALUE_DB).length, loaded: Date.now() };
   restoreCSVSources();
+  restoreBookmarkletSources();
 
   // Fetch players (FantasyCalc live values first, then Sleeper roster)
   document.getElementById('pcBadge').innerHTML = '<span class="spin" style="display:inline-block;width:12px;height:12px;border-width:2px;margin-right:4px"></span> Loading…';
@@ -2895,6 +3069,8 @@ async function init() {
   FALLBACK_PLAYERS.forEach(p=>{ p.rookie = false; });
 
   S.ready = true;
+  // Handle bookmarklet import from URL hash (e.g. opened by bookmarklet on partner site)
+  handleBookmarkletImport();
   // Rebuild player values from all loaded sources
   rebuildPlayerValues();
   const srcCount = Object.values(S.sourceStatus).filter(s=>s==='ok').length;
