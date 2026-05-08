@@ -338,6 +338,19 @@
     .league-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
     @media(max-width:700px){.league-summary{grid-template-columns:repeat(2,1fr)}.team-card{grid-template-columns:32px 1fr auto}}
 
+    /* ── LEAGUE TRADE MODE ─────────────────── */
+    .trade-mode-bar{display:none;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+    .trade-partner-sel{padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;cursor:pointer;flex:1;min-width:160px;font-family:inherit}
+    .trade-partner-sel:focus{border-color:var(--primary)}
+    .lrp-list{max-height:210px;overflow-y:auto;margin-bottom:8px;padding-right:2px;display:none}
+    .lrp{display:flex;align-items:center;gap:7px;padding:6px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;margin-bottom:4px;cursor:pointer;transition:all .12s;user-select:none}
+    .lrp:hover{border-color:var(--primary);background:var(--primary-d)}
+    .lrp.in-trade{border-color:var(--success);background:rgba(34,197,94,.1);opacity:.7}
+    .lrp-name{flex:1;font-size:12px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .lrp-val{font-size:11px;font-weight:700;color:var(--primary-l);flex-shrink:0;min-width:32px;text-align:right}
+    .lrp-hint{font-size:11px;color:var(--text3);text-align:center;padding:14px 8px}
+    .fc-badge{font-size:10px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:var(--success);border-radius:4px;padding:1px 6px;margin-left:6px;white-space:nowrap}
+
     /* Auth sign-in page */
     .auth-hero{text-align:center;padding:12px 0 20px}
     .auth-hero .logo-big{font-size:36px;font-weight:900;letter-spacing:-2px;margin-bottom:6px}
@@ -469,16 +482,34 @@
         </div>
       </div>
 
+      <!-- Trade mode toggle (shown when league connected) -->
+      <div class="trade-mode-bar" id="tradeModeBar">
+        <div class="league-view-toggle">
+          <button class="lvt-btn on" data-tm="general" onclick="setTradeMode('general')">🔍 General</button>
+          <button class="lvt-btn" data-tm="league" onclick="setTradeMode('league')">🏈 My League</button>
+        </div>
+        <div id="tradePartnerWrap" style="display:none;flex:1;min-width:160px">
+          <select id="tradePartnerSel" class="trade-partner-sel" onchange="setTradingPartner(this.value)">
+            <option value="">— Select trading partner —</option>
+          </select>
+        </div>
+      </div>
+
       <div class="trade-cols">
         <!-- SIDE A -->
         <div class="trade-card">
           <div class="trade-card-hdr">
-            <div class="trade-card-ttl">You Receive</div>
+            <div class="trade-card-ttl" id="ttlA">You Receive</div>
             <div class="trade-card-val" id="valA">—</div>
           </div>
-          <div class="srch-wrap">
+          <!-- General mode: search box -->
+          <div class="srch-wrap" id="srchWrapA">
             <input class="srch" id="srchA" placeholder="Search players…" autocomplete="off">
             <div class="dd" id="ddA"></div>
+          </div>
+          <!-- League mode: partner's roster -->
+          <div class="lrp-list" id="leagueRosterA">
+            <div class="lrp-hint">Select a trading partner above</div>
           </div>
           <div id="chipsA"><div class="chip-empty">Search and add players above</div></div>
         </div>
@@ -503,12 +534,17 @@
         <!-- SIDE B -->
         <div class="trade-card">
           <div class="trade-card-hdr">
-            <div class="trade-card-ttl">You Give</div>
+            <div class="trade-card-ttl" id="ttlB">You Give</div>
             <div class="trade-card-val" id="valB">—</div>
           </div>
-          <div class="srch-wrap">
+          <!-- General mode: search box -->
+          <div class="srch-wrap" id="srchWrapB">
             <input class="srch" id="srchB" placeholder="Search players…" autocomplete="off">
             <div class="dd" id="ddB"></div>
+          </div>
+          <!-- League mode: your roster -->
+          <div class="lrp-list" id="leagueRosterB">
+            <div class="lrp-hint">Loading your roster…</div>
           </div>
           <div id="chipsB"><div class="chip-empty">Search and add players above</div></div>
         </div>
@@ -1906,17 +1942,84 @@ function showToast(msg, type='ok') {
 }
 
 // ═══════════════════════════════════════════════════════════
+// FANTASYCALC LIVE VALUES — auto-refreshed daily
+// ═══════════════════════════════════════════════════════════
+let FC_VALUES = null; // { byId: {sleeperId→{dv,rv,trend}}, byName: {lowerName→{…}} }
+const FC_CACHE_KEY = 'tradeiq_fc_values';
+const FC_TS_KEY    = 'tradeiq_fc_ts';
+const FC_TTL       = 23 * 60 * 60 * 1000; // 23 hours
+
+async function fetchFantasyCalcValues() {
+  // Try cache first
+  const ts = parseInt(localStorage.getItem(FC_TS_KEY) || '0');
+  if (Date.now() - ts < FC_TTL) {
+    try {
+      const cached = localStorage.getItem(FC_CACHE_KEY);
+      if (cached) { FC_VALUES = JSON.parse(cached); return; }
+    } catch(e) {}
+  }
+  try {
+    // Fetch both dynasty and redraft values in parallel
+    const [dyn, rdf] = await Promise.all([
+      fetch('https://api.fantasycalc.com/values/current?isDynasty=true&numQbs=1&numTeams=12&ppr=1&includeAdp=false').then(r=>r.json()),
+      fetch('https://api.fantasycalc.com/values/current?isDynasty=false&numQbs=1&numTeams=12&ppr=1&includeAdp=false').then(r=>r.json()),
+    ]);
+    const byId = {}, byName = {};
+    // Index redraft values by sleeperId for quick lookup
+    const rdMap = {};
+    (rdf||[]).forEach(item => {
+      if (item.player?.sleeperId) rdMap[item.player.sleeperId] = item.value;
+    });
+    (dyn||[]).forEach(item => {
+      if (!item?.player || !item.value) return;
+      const { name, sleeperId, nflTeam, age } = item.player;
+      const entry = {
+        dv: item.value,
+        rv: rdMap[sleeperId] || Math.round(item.value * 0.88),
+        trend: item.trend30Day > 100 ? 'up' : item.trend30Day < -100 ? 'down' : 'flat',
+        team: nflTeam, age,
+      };
+      if (sleeperId) byId[sleeperId] = entry;
+      if (name) byName[name.toLowerCase()] = entry;
+    });
+    FC_VALUES = { byId, byName };
+    localStorage.setItem(FC_CACHE_KEY, JSON.stringify(FC_VALUES));
+    localStorage.setItem(FC_TS_KEY, String(Date.now()));
+    console.log(`FantasyCalc: loaded ${Object.keys(byId).length} players`);
+  } catch(e) {
+    console.warn('FantasyCalc fetch failed (using VALUE_DB):', e);
+    FC_VALUES = { byId: {}, byName: {} };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
 // MERGE VALUE_DB INTO A PLAYER OBJECT
+// Priority: FantasyCalc live → hardcoded VALUE_DB → rank estimate
 // ═══════════════════════════════════════════════════════════
 function applyValueDB(p) {
+  // 1. FantasyCalc live (by Sleeper ID, then by name)
+  if (FC_VALUES) {
+    const fc = FC_VALUES.byId[p.id] || FC_VALUES.byName[(p.full_name||'').toLowerCase()];
+    if (fc) {
+      return { ...p,
+        dynasty_val: fc.dv,
+        redraft_val: fc.rv,
+        trend: fc.trend,
+        team: fc.team || p.team,
+        age: fc.age || p.age,
+        _source: 'fc',
+      };
+    }
+  }
+  // 2. Hardcoded VALUE_DB (name-keyed)
   const entry = VALUE_DB[p.full_name];
   if (entry) {
     return { ...p, dynasty_val: entry.dv, redraft_val: entry.rv, trend: entry.trend };
   }
-  // Fallback: estimate from search_rank if no VALUE_DB entry
+  // 3. Rank-based estimate
   const rank = p.search_rank || 999;
-  const dv = Math.max(200, Math.min(8500, 9000 - rank * 36));
-  const rv = Math.max(100, Math.min(8500, 8600 - rank * 34));
+  const dv = Math.max(150, Math.min(8500, 9000 - rank * 30));
+  const rv = Math.max(100, Math.min(8500, 8600 - rank * 28));
   return { ...p, dynasty_val: dv, redraft_val: rv };
 }
 
@@ -1937,7 +2040,7 @@ async function fetchPlayers() {
         p.active === true &&
         p.team &&
         p.status !== 'Inactive' &&
-        (p.search_rank || 0) < 1200
+        (p.search_rank || 0) < 2500
       )
       .map(p => applyValueDB({
         id: p.player_id,
@@ -2110,9 +2213,10 @@ async function init() {
     }
   } catch(e){}
 
-  // Fetch players
+  // Fetch players (FantasyCalc live values first, then Sleeper roster)
   document.getElementById('pcBadge').innerHTML = '<span class="spin" style="display:inline-block;width:12px;height:12px;border-width:2px;margin-right:4px"></span> Loading…';
 
+  await fetchFantasyCalcValues();
   const sleeperPlayers = await fetchPlayers();
   // Merge: Sleeper + 2026 rookies + picks
   S.players = [...sleeperPlayers, ...ROOKIES_2026, ...PICKS];
@@ -2121,8 +2225,9 @@ async function init() {
   FALLBACK_PLAYERS.forEach(p=>{ p.rookie = false; });
 
   S.ready = true;
-  const count = sleeperPlayers.filter(p=>p.position!=='PICK').length;
-  document.getElementById('pcBadge').textContent = `${S.players.length.toLocaleString()} players loaded`;
+  const fcCount = sleeperPlayers.filter(p => p._source === 'fc').length;
+  const fcBadge = fcCount > 0 ? `<span class="fc-badge">Live ✓</span>` : '';
+  document.getElementById('pcBadge').innerHTML = `${S.players.length.toLocaleString()} players ${fcBadge}`;
 
   // Setup searches
   buildSearch('srchA',       'ddA',       null, null);
@@ -2698,6 +2803,7 @@ function updateLeagueBar() {
     bar.style.display    = 'none';
     prompt.style.display = 'block';
   }
+  updateTradeModeBar();
 }
 
 function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
@@ -3166,6 +3272,117 @@ function scoreTeam(team, leagueSettings, scope, picksData) {
            overallGrade: '?', dualEliteQB, pickValue, scoredPlayers: activePlayers };
 }
 
+
+// ═══════════════════════════════════════════════════════════
+// LEAGUE TRADE MODE
+// ═══════════════════════════════════════════════════════════
+let S_tradeMode     = 'general'; // 'general' | 'league'
+let S_tradingWithId = null;      // rosterId of selected trading partner
+
+function updateTradeModeBar() {
+  const bar = document.getElementById('tradeModeBar');
+  if (!bar) return;
+  // Show the toggle only when we have multiple teams (logged in + league connected)
+  const hasLeague = (S.connectedLeague?.allTeams?.length || 0) > 1;
+  bar.style.display = hasLeague ? 'flex' : 'none';
+}
+
+function setTradeMode(mode) {
+  S_tradeMode = mode;
+  clearTrade();
+  document.querySelectorAll('[data-tm]').forEach(b => b.classList.toggle('on', b.dataset.tm === mode));
+
+  const isLeague = mode === 'league';
+  document.getElementById('srchWrapA').style.display     = isLeague ? 'none' : '';
+  document.getElementById('srchWrapB').style.display     = isLeague ? 'none' : '';
+  document.getElementById('leagueRosterA').style.display = isLeague ? 'block' : 'none';
+  document.getElementById('leagueRosterB').style.display = isLeague ? 'block' : 'none';
+  document.getElementById('tradePartnerWrap').style.display = isLeague ? 'flex' : 'none';
+  document.getElementById('ttlA').textContent = isLeague ? 'You Receive (Their Players)' : 'You Receive';
+  document.getElementById('ttlB').textContent = isLeague ? 'You Give (Your Players)' : 'You Give';
+
+  if (isLeague) {
+    populatePartnerDropdown();
+    renderLeagueRosters();
+  }
+}
+
+function populatePartnerDropdown() {
+  const sel = document.getElementById('tradePartnerSel');
+  const teams = (S.connectedLeague?.allTeams || [])
+    .filter(t => !t.isMe)
+    .sort((a,b) => a.ownerName.localeCompare(b.ownerName));
+  sel.innerHTML = `<option value="">— Select trading partner —</option>` +
+    teams.map(t => `<option value="${t.rosterId}">${escHtml(t.ownerName)}</option>`).join('');
+  if (S_tradingWithId) sel.value = S_tradingWithId;
+}
+
+function setTradingPartner(rosterId) {
+  S_tradingWithId = rosterId;
+  renderLeagueRosters();
+}
+
+function renderLeagueRosters() {
+  if (S_tradeMode !== 'league') return;
+  const myTeam      = S.connectedLeague?.allTeams?.find(t => t.isMe);
+  const partnerTeam = S_tradingWithId
+    ? S.connectedLeague?.allTeams?.find(t => String(t.rosterId) === String(S_tradingWithId))
+    : null;
+
+  // Partner roster → Side A (You Receive)
+  const rA = document.getElementById('leagueRosterA');
+  if (!partnerTeam) {
+    rA.innerHTML = '<div class="lrp-hint">Select a trading partner above to see their roster</div>';
+  } else {
+    const sorted = [...(partnerTeam.players||[])].sort((a,b)=>calcValue(b)-calcValue(a));
+    rA.innerHTML = sorted.length
+      ? sorted.map(p => rosterPickerChip(p, 'A')).join('')
+      : '<div class="lrp-hint">No players found for this team</div>';
+  }
+
+  // My roster → Side B (You Give)
+  const rB = document.getElementById('leagueRosterB');
+  if (!myTeam) {
+    rB.innerHTML = '<div class="lrp-hint">Import your league roster first</div>';
+  } else {
+    const sorted = [...(myTeam.players||[])].sort((a,b)=>calcValue(b)-calcValue(a));
+    rB.innerHTML = sorted.length
+      ? sorted.map(p => rosterPickerChip(p, 'B')).join('')
+      : '<div class="lrp-hint">No players on your roster</div>';
+  }
+}
+
+function rosterPickerChip(p, side) {
+  const pid   = p.id || p.player_id || '';
+  const arr   = side === 'A' ? S.tradeA : S.tradeB;
+  const isIn  = arr.some(x => (x.id||x.player_id) === pid);
+  const val   = calcValue(p);
+  const valFmt = val >= 1000 ? (val/1000).toFixed(1)+'k' : val;
+  return `<div class="lrp${isIn?' in-trade':''}" onclick="toggleLeagueTradePlayer('${escHtml(pid)}','${side}')">
+    <span class="pb pb-${p.position}">${p.position}</span>
+    <span class="lrp-name">${escHtml(p.full_name||'Unknown')}</span>
+    <span class="lrp-val">${valFmt}</span>
+    ${isIn ? '<span style="color:var(--success);font-size:13px;flex-shrink:0">✓</span>' : ''}
+  </div>`;
+}
+
+function toggleLeagueTradePlayer(pid, side) {
+  // Find player in any team roster
+  let player = null;
+  for (const team of (S.connectedLeague?.allTeams || [])) {
+    player = (team.players||[]).find(p => (p.id||p.player_id) === pid);
+    if (player) break;
+  }
+  if (!player) return;
+
+  const arr = side === 'A' ? S.tradeA : S.tradeB;
+  const idx = arr.findIndex(p => (p.id||p.player_id) === pid);
+  if (idx >= 0) arr.splice(idx, 1);
+  else arr.push(player);
+
+  renderTrade();
+  renderLeagueRosters(); // refresh checkmarks
+}
 
 // ═══════════════════════════════════════════════════════════
 // EVENT LISTENERS
