@@ -2964,8 +2964,9 @@ async function renderLeagueAnalyzer() {
     }
   }
 
-  // Score every team
-  const scored = lg.allTeams.map(team => scoreTeam(team, ls, S_leagueScope, S_picksData));
+  // Score every team, then assign relative (percentile) grades
+  const rawScored = lg.allTeams.map(team => scoreTeam(team, ls, S_leagueScope, S_picksData));
+  const scored = assignRelativeGrades(rawScored);
   scored.sort((a,b) => (S_leagueView === 'winnow' ? b.winNowScore - a.winNowScore : b.dynastyScore - a.dynastyScore));
 
   // Summary stats
@@ -3034,6 +3035,51 @@ async function renderLeagueAnalyzer() {
   }).join('');
 }
 
+// Convert league-wide percentile rank (0-100) to letter grade
+// Spread: ~top 15% = A range, next 20% = B, middle 30% = C, lower 20% = D, bottom 15% = F
+function pctToGrade(pct) {
+  if (pct >= 88) return 'A+';
+  if (pct >= 76) return 'A';
+  if (pct >= 63) return 'B+';
+  if (pct >= 50) return 'B';
+  if (pct >= 37) return 'C+';
+  if (pct >= 25) return 'C';
+  if (pct >= 12) return 'D';
+  return 'F';
+}
+
+// Assign relative grades after ALL teams are scored (called from renderLeagueAnalyzer)
+function assignRelativeGrades(scoredTeams) {
+  const positions = ['QB','RB','WR','TE'];
+  // Build sorted value arrays per position for percentile calc
+  const sorted = {};
+  positions.forEach(pos => {
+    sorted[pos] = scoredTeams.map(t => t.posRaw[pos] || 0).sort((a,b) => a-b);
+  });
+  const totalSorted = scoredTeams.map(t => t.dynastyScore).sort((a,b) => a-b);
+
+  return scoredTeams.map(team => {
+    const posGrades = {};
+    let totalPct = 0;
+    positions.forEach(pos => {
+      const raw = team.posRaw[pos] || 0;
+      const arr = sorted[pos];
+      // Percentile = fraction of teams this team beats (0–100)
+      const below = arr.filter(v => v < raw).length;
+      const tied  = arr.filter(v => v === raw).length;
+      const pct   = ((below + tied * 0.5) / Math.max(arr.length - 1, 1)) * 100;
+      posGrades[pos] = { grade: pctToGrade(pct), score: Math.round(pct) };
+      totalPct += pct;
+    });
+    // Overall grade: percentile of total score vs rest of league
+    const below = totalSorted.filter(v => v < team.dynastyScore).length;
+    const tied  = totalSorted.filter(v => v === team.dynastyScore).length;
+    const overallPct = ((below + tied * 0.5) / Math.max(totalSorted.length - 1, 1)) * 100;
+    const overallGrade = pctToGrade(overallPct);
+    return { ...team, posGrades, overallGrade };
+  });
+}
+
 function scoreTeam(team, leagueSettings, scope, picksData) {
   scope = scope || 'full';
   const mode    = leagueSettings?.mode    || 'dynasty';
@@ -3046,7 +3092,7 @@ function scoreTeam(team, leagueSettings, scope, picksData) {
   const savedSettings = { ...S.settings };
   S.settings = { ...S.settings, mode, qb, scoring, size, te };
 
-  // Decide which players to score
+  // Decide which players to score based on scope
   let activePlayers = team.players;
   if (scope === 'starters') activePlayers = getStarterPlayers(team.players, qb);
 
@@ -3054,7 +3100,6 @@ function scoreTeam(team, leagueSettings, scope, picksData) {
   let dynastyScore = activePlayers.reduce((sum, p) => sum + calcValue(p), 0);
 
   // ── Dual elite QB bonus (SF / 2QB leagues only) ──
-  // Having 2 QBs both valued >4500 is a structural advantage worth extra premium
   let dualEliteQB = false;
   if (qb === 'sf' || qb === '2qb') {
     const qbVals = team.players
@@ -3063,7 +3108,7 @@ function scoreTeam(team, leagueSettings, scope, picksData) {
       .sort((a,b) => b-a);
     if (qbVals.length >= 2 && qbVals[1] >= 4500) {
       dualEliteQB = true;
-      const bonus  = qb === '2qb' ? 0.04 : 0.06; // SF bonus slightly higher
+      const bonus = qb === '2qb' ? 0.04 : 0.06;
       dynastyScore = Math.round(dynastyScore * (1 + bonus));
     }
   }
@@ -3088,52 +3133,37 @@ function scoreTeam(team, leagueSettings, scope, picksData) {
   let pickValue = 0;
   if (scope === 'picks' && picksData !== null) {
     const allTeams = S.connectedLeague?.allTeams || [];
-    pickValue   = buildPickInventory(team.rosterId, allTeams, picksData);
+    pickValue    = buildPickInventory(team.rosterId, allTeams, picksData);
     dynastyScore += pickValue;
-    // Picks have minimal win-now value (future asset), small premium for near-term picks
-    winNowScore += Math.round(pickValue * 0.25);
+    winNowScore  += Math.round(pickValue * 0.25);
   }
 
-  // ── Position grading (always on full roster for positional depth) ──
+  // ── Raw positional scores (scope-aware) — used for relative grading ──
+  // Use activePlayers so Starters vs Full Roster changes the grades
   S.settings = { ...savedSettings, mode, qb, scoring, size, te };
   const byPos = { QB:[], RB:[], WR:[], TE:[] };
-  team.players.forEach(p => { if (byPos[p.position]) byPos[p.position].push(p); });
+  activePlayers.forEach(p => { if (byPos[p.position]) byPos[p.position].push(p); });
 
-  const posGrades = {};
+  const posRaw = {};
   ['QB','RB','WR','TE'].forEach(pos => {
     const players = byPos[pos];
-    if (!players.length) { posGrades[pos] = {grade:'F', score:0}; return; }
+    if (!players.length) { posRaw[pos] = 0; return; }
     const vals = players.map(p => calcValue(p)).sort((a,b) => b-a);
-
-    // Top-N matters for grading: QBs use top 1-2 (SF/2QB), others top 3
-    const topN  = pos === 'QB' ? (qb === '2qb' ? 2 : qb === 'sf' ? 1.5 : 1) : 3;
-    const topCt = Math.max(1, Math.round(topN));
+    // Top starters that matter per position
+    const topN  = pos === 'QB' ? (qb === '2qb' ? 2 : 1) : (pos === 'TE' ? 1 : 2);
+    const topCt = Math.max(1, Math.min(topN, vals.length));
     const topAvg = vals.slice(0, topCt).reduce((s,v)=>s+v,0) / topCt;
-
-    // Depth bonus: larger leagues need deeper rosters, scale accordingly
-    const depMax  = size >= 14 ? 0.4 : 0.3;
-    const dep     = Math.min(players.length / 7, depMax);
-
-    // Normalise to 0-100: elite ~8500+ = ~100
-    // TE normalised lower since values are compressed
-    const ceiling = pos === 'TE' ? 7500 : (pos === 'QB' && (qb==='sf'||qb==='2qb') ? 12000 : 8500);
-    const base    = Math.min(100, (topAvg / ceiling) * 100 * (0.65 + dep));
-
-    // In 16-team SF/2QB leagues, value a 2nd elite QB much higher
-    let bonus = 0;
-    if (pos === 'QB' && (qb === 'sf' || qb === '2qb') && vals.length >= 2 && vals[1] >= 4500) {
-      bonus = size >= 14 ? 15 : 10;
-    }
-    const score = Math.min(100, base + bonus);
-    posGrades[pos] = { grade: scoreToLetterGrade(score), score: Math.round(score) };
+    // Small depth bonus: having more players above a threshold adds value
+    const threshold = pos === 'QB' ? 3000 : 2500;
+    const depth = vals.filter(v => v >= threshold).length;
+    posRaw[pos] = Math.round(topAvg + depth * 150);
   });
   S.settings = savedSettings;
 
-  const avgPosScore  = Object.values(posGrades).reduce((s,g)=>s+g.score,0)/4;
-  const overallGrade = scoreToLetterGrade(avgPosScore);
-
-  return { ...team, dynastyScore, winNowScore, posGrades, overallGrade,
-           dualEliteQB, pickValue, scoredPlayers: activePlayers };
+  // posGrades and overallGrade are placeholder — assignRelativeGrades() fills them in
+  return { ...team, dynastyScore, winNowScore, posRaw,
+           posGrades: {QB:{grade:'?',score:50},RB:{grade:'?',score:50},WR:{grade:'?',score:50},TE:{grade:'?',score:50}},
+           overallGrade: '?', dualEliteQB, pickValue, scoredPlayers: activePlayers };
 }
 
 
