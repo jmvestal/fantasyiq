@@ -351,6 +351,32 @@
     .lrp-hint{font-size:11px;color:var(--text3);text-align:center;padding:14px 8px}
     .fc-badge{font-size:10px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:var(--success);border-radius:4px;padding:1px 6px;margin-left:6px;white-space:nowrap}
 
+    /* ── MULTI-SOURCE RANKINGS ──────────────── */
+    .src-btn{padding:5px 11px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:all .15s}
+    .src-btn:hover{border-color:var(--primary);color:var(--primary-l)}
+    .src-count{background:var(--primary);color:#fff;border-radius:10px;padding:0 6px;font-size:10px;font-weight:800;min-width:16px;text-align:center}
+    .src-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+    .src-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px}
+    .src-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .src-dot.ok{background:var(--success)}
+    .src-dot.loading{background:var(--warn);animation:pulse .8s ease-in-out infinite}
+    .src-dot.err{background:var(--danger)}
+    .src-dot.none{background:var(--text3)}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .src-name{font-size:13px;font-weight:600;flex:1}
+    .src-meta{font-size:11px;color:var(--text3)}
+    .src-action{font-size:11px;color:var(--primary-l);cursor:pointer;font-weight:600;text-decoration:underline;white-space:nowrap}
+    .drop-zone{border:2px dashed var(--border2);border-radius:12px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:12px}
+    .drop-zone:hover,.drop-zone.drag-over{border-color:var(--primary);background:var(--primary-d)}
+    .drop-zone-icon{font-size:32px;margin-bottom:8px}
+    .drop-zone-ttl{font-size:14px;font-weight:700;margin-bottom:4px}
+    .drop-zone-sub{font-size:12px;color:var(--text2);line-height:1.5}
+    .src-known{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+    .src-site-chip{padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);font-size:11px;color:var(--text2);cursor:default}
+    .src-site-chip.loaded{border-color:var(--success);color:var(--success)}
+    .consensus-bar{display:flex;align-items:center;gap:4px;margin-top:3px}
+    .csrc-dot{width:6px;height:6px;border-radius:50%;background:var(--primary-l);flex-shrink:0}
+
     /* Auth sign-in page */
     .auth-hero{text-align:center;padding:12px 0 20px}
     .auth-hero .logo-big{font-size:36px;font-weight:900;letter-spacing:-2px;margin-bottom:6px}
@@ -377,6 +403,9 @@
     </nav>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
       <div class="pc-badge" id="pcBadge">Loading players…</div>
+      <button class="src-btn" id="srcBtn" onclick="openModal('sourcesModal')" title="Manage ranking sources">
+        📊 Sources <span class="src-count" id="srcCount">0</span>
+      </button>
       <!-- Auth: signed-out state -->
       <button class="auth-btn" id="authBtn" onclick="openModal('authModal')">Sign In</button>
       <!-- Auth: signed-in state -->
@@ -748,6 +777,52 @@
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- ══ MODAL: SOURCES ══ -->
+<div class="mo" id="sourcesModal" onclick="moBackdropClose(event,'sourcesModal')">
+  <div class="mo-box wide">
+    <button class="mo-close" onclick="closeModal('sourcesModal')">✕</button>
+    <div class="mo-ttl">📊 Ranking Sources</div>
+    <div class="mo-sub">TradeIQ averages values from all loaded sources — dynasty and redraft separately. More sources = more accurate consensus.</div>
+
+    <!-- Active sources list -->
+    <div class="src-list" id="sourcesList"></div>
+
+    <!-- CSV Drop Zone -->
+    <div class="drop-zone" id="csvDropZone"
+      ondragover="event.preventDefault();this.classList.add('drag-over')"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="handleCSVDrop(event)"
+      onclick="document.getElementById('csvFileInput').click()">
+      <div class="drop-zone-icon">📂</div>
+      <div class="drop-zone-ttl">Drop a rankings CSV here (or click to browse)</div>
+      <div class="drop-zone-sub">Works with exports from: KTC · FantasyPros · DLF · DraftShark · Dynasty Nerds · ESPN · Fantrax · CBS · Any site with a CSV export</div>
+    </div>
+    <input type="file" id="csvFileInput" accept=".csv,.txt,.xls,.xlsx" style="display:none" onchange="handleCSVFile(this)">
+
+    <!-- How to export from each site -->
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:8px">How to export from each site</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
+        <div class="mo-note" style="margin-top:0"><strong>KeepTradeCut</strong><br>Rankings → Export → Download CSV</div>
+        <div class="mo-note" style="margin-top:0"><strong>FantasyPros</strong><br>Rankings → ECR → Export (top right)</div>
+        <div class="mo-note" style="margin-top:0"><strong>Dynasty League Football</strong><br>Rankings page → Export button</div>
+        <div class="mo-note" style="margin-top:0"><strong>DraftShark</strong><br>My Rankings → Download CSV</div>
+        <div class="mo-note" style="margin-top:0"><strong>Dynasty Nerds</strong><br>Rankings → Export to CSV</div>
+        <div class="mo-note" style="margin-top:0"><strong>ESPN</strong><br>Rankings → Print/Export → CSV</div>
+      </div>
+    </div>
+
+    <!-- FantasyPros API key (future) -->
+    <div style="margin-top:4px">
+      <label class="mo-label">FantasyPros API Key <span style="color:var(--text3);font-weight:400">(optional — auto-fetches ECR if you have access)</span></label>
+      <div style="display:flex;gap:8px">
+        <input class="mo-input" id="fpApiKey" placeholder="Enter your API key from api@fantasypros.com" style="margin-bottom:0;flex:1">
+        <button class="btn btn-p btn-sm" onclick="saveFPApiKey()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ══ MODAL: SIGN IN ══ -->
 <div class="mo" id="authModal" onclick="moBackdropClose(event,'authModal')">
@@ -1942,6 +2017,342 @@ function showToast(msg, type='ok') {
 }
 
 // ═══════════════════════════════════════════════════════════
+// MULTI-SOURCE CONSENSUS ENGINE
+// ═══════════════════════════════════════════════════════════
+
+// Source registry — each entry describes one ranking provider
+const RANKING_SOURCES = [
+  { key:'fc',  name:'FantasyCalc',         type:'auto',  dynasty:true,  redraft:true,  color:'#22c55e' },
+  { key:'ktc', name:'KeepTradeCut',        type:'csv',   dynasty:true,  redraft:true,  color:'#3b82f6' },
+  { key:'fp',  name:'FantasyPros ECR',     type:'csv',   dynasty:false, redraft:true,  color:'#f59e0b' },
+  { key:'dlf', name:'Dynasty LF',          type:'csv',   dynasty:true,  redraft:false, color:'#8b5cf6' },
+  { key:'ds',  name:'DraftShark',          type:'csv',   dynasty:true,  redraft:true,  color:'#ec4899' },
+  { key:'dn',  name:'Dynasty Nerds',       type:'csv',   dynasty:true,  redraft:false, color:'#06b6d4' },
+  { key:'espn',name:'ESPN',                type:'csv',   dynasty:false, redraft:true,  color:'#ef4444' },
+  { key:'fan', name:'Fantrax',             type:'csv',   dynasty:true,  redraft:true,  color:'#f97316' },
+  { key:'cbs', name:'CBS Sports',          type:'csv',   dynasty:false, redraft:true,  color:'#6366f1' },
+  { key:'tiq', name:'TradeIQ Baseline',    type:'builtin',dynasty:true, redraft:true,  color:'#7c3aed' },
+];
+
+// S.sourceValues = { [key]: { [normalizedName]: { dv, rv, trend } } }
+// S.sourceStatus = { [key]: 'ok' | 'loading' | 'err' | 'none' }
+// These are added dynamically to S in init()
+
+// Normalize player name for cross-source matching
+function normName(name) {
+  return String(name)
+    .toLowerCase()
+    .replace(/[''`]/g, "'")          // normalize apostrophes
+    .replace(/\./g, '')               // remove dots (D.K. → DK)
+    .replace(/[^a-z0-9 ']/g, '')     // strip other punctuation
+    .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, '') // strip suffixes
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Convert a rank (1-N) to a 0–9500 value on a decay curve
+function rankToValue(rank, total) {
+  total = Math.max(total, 150);
+  const pct = 1 - Math.min((rank - 1) / total, 1);
+  return Math.round(Math.pow(pct, 1.4) * 9400 + 100);
+}
+
+// Intelligently parse a CSV/TSV from any known ranking site
+function parseRankingsCSV(text) {
+  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim().split('\n').filter(l=>l.trim());
+  if (lines.length < 3) return null;
+
+  // Parse a single CSV row (handles quoted fields)
+  function splitRow(line) {
+    const cols=[]; let cur='', inQ=false;
+    for (const ch of line) {
+      if (ch==='"') { inQ=!inQ; }
+      else if ((ch===','||ch==='\t') && !inQ) { cols.push(cur.trim()); cur=''; }
+      else cur+=ch;
+    }
+    cols.push(cur.trim());
+    return cols;
+  }
+
+  const headers = splitRow(lines[0]).map(h => h.toLowerCase().replace(/"/g,'').trim());
+
+  // Flexible column detection
+  function findCol(...candidates) {
+    for (const c of candidates) {
+      const i = headers.findIndex(h => h === c || h.includes(c));
+      if (i >= 0) return i;
+    }
+    return -1;
+  }
+
+  const nameIdx  = findCol('player name','player','name','full_name','playername');
+  const rankIdx  = findCol('rank','ecr','overall rank','overall','rk','#','position rank');
+  const valueIdx = findCol('value','ktc value','dynasty value','redraft value','points','score','val','sf value','1qb value');
+  const dynIdx   = findCol('dynasty value','dynasty','1qb','sf value','overall value');
+  const rdfIdx   = findCol('redraft value','redraft','rest of season','ros');
+  const posIdx   = findCol('position','pos');
+  const trendIdx = findCol('trend','change','30 day','delta');
+
+  if (nameIdx < 0) return null;
+
+  const values = {};
+  const total  = lines.length - 1;
+
+  // Detect if this looks like it has direct values vs rank-only
+  const sampleVals = lines.slice(1,6).map(l => {
+    const cols = splitRow(l);
+    const v = parseFloat(cols[valueIdx] || cols[dynIdx] || '');
+    return v;
+  }).filter(v => !isNaN(v));
+  const hasDirectValues = sampleVals.length >= 2 && sampleVals.some(v => v > 500);
+
+  for (let i = 1; i < lines.length; i++) {
+    const cols = splitRow(lines[i]);
+    const raw  = cols[nameIdx];
+    if (!raw) continue;
+    // Strip team suffix common in exports: "Patrick Mahomes KC QB"
+    const name = raw.replace(/"/g,'').replace(/\s+(QB|RB|WR|TE|K|DEF)\s*$/, '').trim();
+    if (!name || name.length < 2) continue;
+
+    const rank = rankIdx >= 0 ? (parseInt(cols[rankIdx]) || i) : i;
+
+    let dv = 0, rv = 0;
+
+    if (hasDirectValues) {
+      const dynV = dynIdx >= 0 ? parseFloat(cols[dynIdx]) : 0;
+      const rdfV = rdfIdx >= 0 ? parseFloat(cols[rdfIdx]) : 0;
+      const genV = valueIdx >= 0 ? parseFloat(cols[valueIdx]) : 0;
+      // If values are on 0-10000 scale, use directly
+      // If they look like fractional scores (< 100), scale up
+      const scale = v => isNaN(v) ? 0 : v > 500 ? Math.min(9999,Math.round(v)) : v > 0 ? Math.round(v*95) : 0;
+      dv = scale(dynV || genV);
+      rv = scale(rdfV || genV);
+    }
+
+    // Fall back to rank-based if no direct values
+    if (!dv && !rv) {
+      const val = rankToValue(rank, total);
+      dv = val; rv = val;
+    }
+
+    const trend = trendIdx >= 0
+      ? (parseFloat(cols[trendIdx]) > 50 ? 'up' : parseFloat(cols[trendIdx]) < -50 ? 'down' : 'flat')
+      : 'flat';
+
+    const key = normName(name);
+    if (key.length >= 3) values[key] = { dv, rv, trend, rank };
+  }
+
+  return Object.keys(values).length >= 10 ? values : null;
+}
+
+// Detect which site a CSV came from based on headers/content
+function detectSourceFromCSV(text) {
+  const head = text.slice(0, 400).toLowerCase();
+  if (head.includes('keeptradecut') || head.includes('ktc'))  return 'ktc';
+  if (head.includes('fantasypros') || head.includes('ecr'))   return 'fp';
+  if (head.includes('dynastyleague') || head.includes('dlf')) return 'dlf';
+  if (head.includes('draftshark'))                            return 'ds';
+  if (head.includes('dynasty nerds') || head.includes('dn'))  return 'dn';
+  if (head.includes('espn'))                                  return 'espn';
+  if (head.includes('fantrax'))                               return 'fan';
+  if (head.includes('cbs'))                                   return 'cbs';
+  return null; // unknown — ask user
+}
+
+// Ask user to name an unknown source (simple prompt for now)
+function promptSourceName(text, parsed) {
+  const names = RANKING_SOURCES.filter(s => s.type === 'csv').map(s => s.name);
+  const choice = prompt(
+    `Recognized ${Object.keys(parsed).length} players.\nWhich site is this from?\n\n` +
+    RANKING_SOURCES.filter(s=>s.type==='csv').map((s,i)=>`${i+1}. ${s.name}`).join('\n') +
+    '\n\nEnter a number (or a custom name):',
+    '1'
+  );
+  if (!choice) return null;
+  const num = parseInt(choice);
+  if (num >= 1 && num <= RANKING_SOURCES.filter(s=>s.type==='csv').length) {
+    return RANKING_SOURCES.filter(s=>s.type==='csv')[num-1].key;
+  }
+  // Custom name — create a temp source
+  const key = 'custom_' + Date.now();
+  RANKING_SOURCES.push({ key, name: choice.trim(), type:'csv', dynasty:true, redraft:true, color:'#64748b' });
+  return key;
+}
+
+// Load values from a parsed CSV into S.sourceValues and rebuild consensus
+function loadSourceValues(key, parsed, fileName) {
+  S.sourceValues[key] = parsed;
+  S.sourceStatus[key] = 'ok';
+  S.sourceMeta = S.sourceMeta || {};
+  S.sourceMeta[key] = { file: fileName, loaded: Date.now(), count: Object.keys(parsed).length };
+  // Persist CSV sources in localStorage
+  try {
+    const stored = JSON.parse(localStorage.getItem('tradeiq_csv_sources')||'{}');
+    stored[key] = { parsed, fileName, loaded: Date.now() };
+    localStorage.setItem('tradeiq_csv_sources', JSON.stringify(stored));
+  } catch(e) {}
+  rebuildPlayerValues();
+  renderSourcesUI();
+  showToast(`Loaded ${Object.keys(parsed).length} players from ${fileName}`, 'ok');
+}
+
+// Rebuild all player dynasty_val / redraft_val from consensus of loaded sources
+function rebuildPlayerValues() {
+  if (!S.ready || !S.players?.length) return;
+  S.players.forEach(p => {
+    if (p.position === 'PICK') return; // picks have fixed values
+    const c = buildConsensus(p);
+    if (c.dv > 0) p.dynasty_val  = c.dv;
+    if (c.rv > 0) p.redraft_val  = c.rv;
+    if (c.trend)  p.trend        = c.trend;
+    p._srcCount = c.sources;
+  });
+  renderValuesTable();
+  renderTrade();
+  updateSourceCount();
+}
+
+// Build consensus value for one player across all loaded sources
+function buildConsensus(p) {
+  const pid     = normName(p.full_name || '');
+  const dvArr   = [], rvArr = [], trends = [];
+
+  for (const [key, vals] of Object.entries(S.sourceValues || {})) {
+    if (!vals) continue;
+    const entry = vals[pid];
+    if (!entry) continue;
+    if (entry.dv > 0) dvArr.push(entry.dv);
+    if (entry.rv > 0) rvArr.push(entry.rv);
+    if (entry.trend) trends.push(entry.trend);
+  }
+
+  // VALUE_DB as additional source if no others cover this player
+  const vdb = VALUE_DB[p.full_name];
+  if (dvArr.length === 0 && vdb) { dvArr.push(vdb.dv); rvArr.push(vdb.rv || vdb.dv); }
+
+  const avg = arr => arr.length ? Math.round(arr.reduce((s,v)=>s+v,0)/arr.length) : 0;
+  const upCt = trends.filter(t=>t==='up').length;
+  const dnCt = trends.filter(t=>t==='down').length;
+  const trend = upCt > dnCt ? 'up' : dnCt > upCt ? 'down' : 'flat';
+
+  return {
+    dv: avg(dvArr) || p.dynasty_val || 500,
+    rv: avg(rvArr) || p.redraft_val || 500,
+    trend,
+    sources: dvArr.length,
+  };
+}
+
+// Render the sources list in the modal
+function renderSourcesUI() {
+  const list = document.getElementById('sourcesList');
+  if (!list) return;
+  list.innerHTML = RANKING_SOURCES.map(src => {
+    const status = S.sourceStatus?.[src.key] || 'none';
+    const meta   = S.sourceMeta?.[src.key];
+    const count  = meta?.count ? `${meta.count} players` : '';
+    const file   = meta?.file ? ` · ${meta.file}` : '';
+    const typeLabel = src.type === 'auto' ? '⚡ Auto' : src.type === 'builtin' ? '✓ Built-in' : '📂 CSV';
+    return `<div class="src-row">
+      <div class="src-dot ${status}"></div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="src-name">${src.name}</span>
+          <span style="font-size:10px;color:var(--text3)">${typeLabel}</span>
+          ${src.dynasty ? '<span style="font-size:10px;background:#1e3a5f;color:#93c5fd;padding:1px 5px;border-radius:3px">Dynasty</span>' : ''}
+          ${src.redraft ? '<span style="font-size:10px;background:#14532d;color:#86efac;padding:1px 5px;border-radius:3px">Redraft</span>' : ''}
+        </div>
+        <div class="src-meta">${status==='ok' ? count+file : status==='loading' ? 'Loading…' : status==='err' ? 'Failed to load' : src.type==='csv'?'Not loaded — import a CSV below':src.type==='builtin'?'Always active':''}</div>
+      </div>
+      ${status === 'ok' && src.type === 'csv' ? `<span class="src-action" onclick="removeSource('${src.key}')">Remove</span>` : ''}
+    </div>`;
+  }).join('');
+  updateSourceCount();
+}
+
+function removeSource(key) {
+  delete S.sourceValues[key];
+  delete S.sourceStatus[key];
+  delete S.sourceMeta?.[key];
+  try {
+    const stored = JSON.parse(localStorage.getItem('tradeiq_csv_sources')||'{}');
+    delete stored[key];
+    localStorage.setItem('tradeiq_csv_sources', JSON.stringify(stored));
+  } catch(e) {}
+  rebuildPlayerValues();
+  renderSourcesUI();
+  showToast('Source removed');
+}
+
+function updateSourceCount() {
+  const el = document.getElementById('srcCount');
+  if (!el) return;
+  const n = Object.values(S.sourceStatus||{}).filter(s=>s==='ok').length;
+  el.textContent = n;
+  el.style.background = n >= 3 ? 'var(--success)' : n >= 1 ? 'var(--primary)' : 'var(--text3)';
+}
+
+// Handle drag-and-drop or file input
+function handleCSVDrop(e) {
+  e.preventDefault();
+  document.getElementById('csvDropZone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) processCSVFile(file);
+}
+function handleCSVFile(input) {
+  const file = input.files[0];
+  if (file) processCSVFile(file);
+  input.value = '';
+}
+function processCSVFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text   = e.target.result;
+    const parsed = parseRankingsCSV(text);
+    if (!parsed || Object.keys(parsed).length < 10) {
+      showToast('Could not parse rankings — check file format', 'err');
+      return;
+    }
+    let key = detectSourceFromCSV(text);
+    if (!key) key = promptSourceName(text, parsed);
+    if (!key) return;
+    loadSourceValues(key, parsed, file.name);
+  };
+  reader.readAsText(file);
+}
+
+// Save FantasyPros API key
+function saveFPApiKey() {
+  const key = document.getElementById('fpApiKey').value.trim();
+  if (!key) return;
+  localStorage.setItem('tradeiq_fp_key', key);
+  showToast('FantasyPros key saved — will use on next load');
+}
+
+// Restore CSV sources from localStorage on startup
+function restoreCSVSources() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('tradeiq_csv_sources')||'{}');
+    Object.entries(stored).forEach(([key, data]) => {
+      if (data?.parsed) {
+        S.sourceValues[key] = data.parsed;
+        S.sourceStatus[key] = 'ok';
+        S.sourceMeta = S.sourceMeta || {};
+        S.sourceMeta[key] = { file: data.fileName, loaded: data.loaded, count: Object.keys(data.parsed).length };
+        // Ensure custom sources are in RANKING_SOURCES list
+        if (!RANKING_SOURCES.find(s=>s.key===key)) {
+          RANKING_SOURCES.push({ key, name: key, type:'csv', dynasty:true, redraft:true, color:'#64748b' });
+        }
+      }
+    });
+  } catch(e) {}
+  // Restore FP API key
+  const fpKey = localStorage.getItem('tradeiq_fp_key');
+  if (fpKey) document.getElementById('fpApiKey').value = fpKey;
+}
+
+// ═══════════════════════════════════════════════════════════
 // FANTASYCALC LIVE VALUES — auto-refreshed daily
 // ═══════════════════════════════════════════════════════════
 let FC_VALUES = null; // { byId: {sleeperId→{dv,rv,trend}}, byName: {lowerName→{…}} }
@@ -1985,10 +2396,20 @@ async function fetchFantasyCalcValues() {
     FC_VALUES = { byId, byName };
     localStorage.setItem(FC_CACHE_KEY, JSON.stringify(FC_VALUES));
     localStorage.setItem(FC_TS_KEY, String(Date.now()));
+    // Register FC values as a source in the consensus engine
+    const fcSource = {};
+    Object.entries(byName).forEach(([name, entry]) => {
+      fcSource[normName(name)] = { dv: entry.dv, rv: entry.rv, trend: entry.trend };
+    });
+    S.sourceValues['fc'] = fcSource;
+    S.sourceStatus['fc'] = 'ok';
+    S.sourceMeta = S.sourceMeta || {};
+    S.sourceMeta['fc'] = { count: Object.keys(fcSource).length, loaded: Date.now(), file: 'FantasyCalc API' };
     console.log(`FantasyCalc: loaded ${Object.keys(byId).length} players`);
   } catch(e) {
     console.warn('FantasyCalc fetch failed (using VALUE_DB):', e);
     FC_VALUES = { byId: {}, byName: {} };
+    S.sourceStatus['fc'] = 'err';
   }
 }
 
@@ -2213,6 +2634,15 @@ async function init() {
     }
   } catch(e){}
 
+  // Init source tracking
+  S.sourceValues = {};
+  S.sourceStatus = {};
+  S.sourceMeta   = {};
+  // TradeIQ baseline always active
+  S.sourceStatus['tiq'] = 'ok';
+  S.sourceMeta['tiq'] = { count: Object.keys(VALUE_DB).length, loaded: Date.now() };
+  restoreCSVSources();
+
   // Fetch players (FantasyCalc live values first, then Sleeper roster)
   document.getElementById('pcBadge').innerHTML = '<span class="spin" style="display:inline-block;width:12px;height:12px;border-width:2px;margin-right:4px"></span> Loading…';
 
@@ -2225,9 +2655,12 @@ async function init() {
   FALLBACK_PLAYERS.forEach(p=>{ p.rookie = false; });
 
   S.ready = true;
-  const fcCount = sleeperPlayers.filter(p => p._source === 'fc').length;
-  const fcBadge = fcCount > 0 ? `<span class="fc-badge">Live ✓</span>` : '';
-  document.getElementById('pcBadge').innerHTML = `${S.players.length.toLocaleString()} players ${fcBadge}`;
+  // Rebuild player values from all loaded sources
+  rebuildPlayerValues();
+  const srcCount = Object.values(S.sourceStatus).filter(s=>s==='ok').length;
+  const liveBadge = srcCount > 0 ? `<span class="fc-badge">${srcCount} source${srcCount>1?'s':''} ✓</span>` : '';
+  document.getElementById('pcBadge').innerHTML = `${S.players.length.toLocaleString()} players ${liveBadge}`;
+  renderSourcesUI();
 
   // Setup searches
   buildSearch('srchA',       'ddA',       null, null);
