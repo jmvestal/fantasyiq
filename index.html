@@ -2030,7 +2030,7 @@ const RANKING_SOURCES = [
   { key:'dp',  name:'FantasyPros ECR',     type:'auto',       dynasty:true,  redraft:false, color:'#f59e0b' },
   { key:'dyz', name:'Dynatyze',            type:'bookmarklet',dynasty:true,  redraft:false, color:'#14b8a6', bmUrl:'https://dynatyze.com/football' },
   { key:'fp',  name:'FantasyPros (CSV)',   type:'csv',        dynasty:false, redraft:true,  color:'#d97706' },
-  { key:'dlf', name:'Dynasty LF',          type:'csv',        dynasty:true,  redraft:false, color:'#8b5cf6' },
+  { key:'dlf', name:'Dynasty LF',           type:'auto',       dynasty:true,  redraft:false, color:'#8b5cf6' },
   { key:'ds',  name:'DraftShark',          type:'csv',        dynasty:true,  redraft:true,  color:'#ec4899' },
   { key:'dn',  name:'Dynasty Nerds',       type:'csv',        dynasty:true,  redraft:false, color:'#06b6d4' },
   { key:'espn',name:'ESPN',                type:'csv',        dynasty:false, redraft:true,  color:'#ef4444' },
@@ -2880,6 +2880,112 @@ async function fetchFFCValues() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// DLF AUTO-FETCH — Dynasty League Football 1QB + SF consensus rankings
+// Hosted in this repo: /rankings/dlf-1qb.csv, dlf-sf.csv, dlf-rookies-sf.csv
+// ═══════════════════════════════════════════════════════════
+const DLF_CACHE_KEY = 'tradeiq_dlf_values';
+const DLF_TS_KEY    = 'tradeiq_dlf_ts';
+const DLF_TTL       = 7 * 24 * 60 * 60 * 1000; // 7 days (static files, update manually)
+
+async function fetchDLFValues() {
+  const ts = parseInt(localStorage.getItem(DLF_TS_KEY) || '0');
+  if (Date.now() - ts < DLF_TTL) {
+    try {
+      const cached = localStorage.getItem(DLF_CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        S.sourceValues['dlf'] = parsed;
+        S.sourceStatus['dlf'] = 'ok';
+        S.sourceMeta['dlf'] = { count: Object.keys(parsed).length, loaded: ts, file: 'DLF (cached)' };
+        return;
+      }
+    } catch(e) {}
+  }
+
+  const BASE = 'https://raw.githubusercontent.com/jmvestal/tradeiq/main/rankings/';
+  try {
+    const [r1qb, rsf, rrook] = await Promise.allSettled([
+      fetch(BASE + 'dlf-1qb.csv',      { signal: AbortSignal.timeout(10000) }).then(r => r.ok ? r.text() : null),
+      fetch(BASE + 'dlf-sf.csv',       { signal: AbortSignal.timeout(10000) }).then(r => r.ok ? r.text() : null),
+      fetch(BASE + 'dlf-rookies-sf.csv',{ signal: AbortSignal.timeout(10000) }).then(r => r.ok ? r.text() : null),
+    ]);
+
+    const text1qb  = r1qb.status  === 'fulfilled' ? r1qb.value  : null;
+    const textSF   = rsf.status   === 'fulfilled' ? rsf.value   : null;
+    const textRook = rrook.status === 'fulfilled' ? rrook.value : null;
+
+    if (!text1qb && !textSF) { S.sourceStatus['dlf'] = 'err'; return; }
+
+    // Parse a DLF CSV: uses Rank (overall) and Avg (consensus avg rank) and Pos columns
+    function parseDLF(text) {
+      if (!text) return {};
+      const lines = text.replace(/\r\n/g,'\n').trim().split('\n').filter(l=>l.trim());
+      const header = lines[0].split('\t').map(h=>h.trim().toLowerCase());
+      const rankIdx = header.indexOf('rank');
+      const avgIdx  = header.indexOf('avg');
+      const nameIdx = header.indexOf('name');
+      const posIdx  = header.indexOf('pos');
+      if (nameIdx < 0) return {};
+
+      const total = lines.length - 1;
+      const out = {};
+      lines.slice(1).forEach((line, i) => {
+        const cols = line.split('\t');
+        const name = (cols[nameIdx]||'').trim();
+        if (!name || name === '-') return;
+        const rank = rankIdx >= 0 ? (parseInt(cols[rankIdx]) || i+1) : i+1;
+        // Avg is fractional consensus rank — use it if available, else use integer rank
+        const avg  = avgIdx >= 0  ? (parseFloat(cols[avgIdx]) || rank) : rank;
+        const pos  = posIdx >= 0  ? (cols[posIdx]||'').replace(/\d+/g,'').trim().toUpperCase() : '';
+        // Per-row position cap so position-only files can't inflate a QB to 9500
+        const rowMax = POS_RANK_MAX[pos] || null;
+        // Use avg rank for a smoother consensus value
+        const val = rankToValue(Math.round(avg), total, rowMax);
+        out[normName(name)] = { val, rank, pos };
+      });
+      return out;
+    }
+
+    const data1qb  = parseDLF(text1qb);
+    const dataSF   = parseDLF(textSF);
+    const dataRook = parseDLF(textRook);
+
+    // Build source: dv = 1QB dynasty, dv_sf = SF dynasty, rv = 0 (dynasty file has no redraft)
+    const dlfSource = {};
+
+    // Merge 1QB and SF rankings by player name
+    const allNames = new Set([
+      ...Object.keys(data1qb),
+      ...Object.keys(dataSF),
+      ...Object.keys(dataRook),
+    ]);
+
+    allNames.forEach(name => {
+      const e1   = data1qb[name];
+      const eSF  = dataSF[name];
+      const eR   = dataRook[name];
+      const dv   = e1?.val  || eSF?.val  || eR?.val  || 0;
+      const dvSF = eSF?.val || e1?.val   || eR?.val  || 0;
+      if (dv > 0 || dvSF > 0) {
+        dlfSource[name] = { dv, dv_sf: dvSF, rv: 0 };
+      }
+    });
+
+    S.sourceValues['dlf'] = dlfSource;
+    S.sourceStatus['dlf'] = 'ok';
+    S.sourceMeta['dlf'] = { count: Object.keys(dlfSource).length, loaded: Date.now(), file: 'DLF (1QB + SF + Rookies)' };
+    try {
+      localStorage.setItem(DLF_CACHE_KEY, JSON.stringify(dlfSource));
+      localStorage.setItem(DLF_TS_KEY, String(Date.now()));
+    } catch(e) {}
+    console.log(`DLF: loaded ${Object.keys(dlfSource).length} players`);
+  } catch(e) {
+    console.warn('DLF fetch failed:', e);
+    S.sourceStatus['dlf'] = 'err';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
 // DYNASTYPROCESS AUTO-FETCH — weekly FantasyPros ECR data
 // from DynastyProcess GitHub (public, no login required)
 // ═══════════════════════════════════════════════════════════
@@ -3190,6 +3296,7 @@ async function init() {
     fetchKTCValues(),
     fetchFFCValues(),
     fetchDynastyProcessValues(),
+    fetchDLFValues(),
   ]);
   const sleeperPlayers = await fetchPlayers();
   // Merge: Sleeper + 2026 rookies + picks
