@@ -2023,7 +2023,7 @@ function showToast(msg, type='ok') {
 // Source registry — each entry describes one ranking provider
 const RANKING_SOURCES = [
   { key:'fc',  name:'FantasyCalc',         type:'auto',  dynasty:true,  redraft:true,  color:'#22c55e' },
-  { key:'ktc', name:'KeepTradeCut',        type:'csv',   dynasty:true,  redraft:true,  color:'#3b82f6' },
+  { key:'ktc', name:'KeepTradeCut',        type:'auto',  dynasty:true,  redraft:true,  color:'#3b82f6' },
   { key:'fp',  name:'FantasyPros ECR',     type:'csv',   dynasty:false, redraft:true,  color:'#f59e0b' },
   { key:'dlf', name:'Dynasty LF',          type:'csv',   dynasty:true,  redraft:false, color:'#8b5cf6' },
   { key:'ds',  name:'DraftShark',          type:'csv',   dynasty:true,  redraft:true,  color:'#ec4899' },
@@ -2414,6 +2414,74 @@ async function fetchFantasyCalcValues() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// KEEPTRADECUT AUTO-FETCH — unofficial public API, 24-hr cache
+// ═══════════════════════════════════════════════════════════
+const KTC_CACHE_KEY = 'tradeiq_ktc_values';
+const KTC_TS_KEY    = 'tradeiq_ktc_ts';
+const KTC_TTL       = 23 * 60 * 60 * 1000;
+
+async function fetchKTCValues() {
+  // Try cache first
+  const ts = parseInt(localStorage.getItem(KTC_TS_KEY) || '0');
+  if (Date.now() - ts < KTC_TTL) {
+    try {
+      const cached = localStorage.getItem(KTC_CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        S.sourceValues['ktc'] = parsed;
+        S.sourceStatus['ktc'] = 'ok';
+        S.sourceMeta['ktc'] = { count: Object.keys(parsed).length, loaded: ts, file: 'KTC API (cached)' };
+        return;
+      }
+    } catch(e) {}
+  }
+
+  // Try direct KTC API, then fall back to corsproxy if CORS blocks it
+  const KTC_URL = 'https://keeptradecut.com/fantasy-api/queue?format=1&filters=QB|WR|RB|TE|RDP&page=0&perPage=500&dynasty=1';
+  const PROXY   = 'https://corsproxy.io/?url=';
+
+  let data = null;
+  for (const url of [KTC_URL, PROXY + encodeURIComponent(KTC_URL)]) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (res.ok) { data = await res.json(); break; }
+    } catch(e) { /* try next */ }
+  }
+
+  if (!data?.length) {
+    S.sourceStatus['ktc'] = 'err';
+    console.warn('KTC fetch failed — CORS blocked. Use CSV import instead.');
+    return;
+  }
+
+  // Parse KTC response into consensus format
+  // KTC returns: { playerName, superflexValues:{value}, oneQBValues:{value, redraftValue}, age, team }
+  const ktcSource = {};
+  data.forEach(p => {
+    if (!p.playerName) return;
+    const dv  = p.oneQBValues?.value      || p.superflexValues?.value || 0;
+    const dvSF= p.superflexValues?.value  || dv;
+    const rv  = p.oneQBValues?.redraftValue || Math.round(dv * 0.82);
+    // Store 1QB dynasty value; SF bonus is handled by calcValue multiplier
+    ktcSource[normName(p.playerName)] = {
+      dv: dv,
+      dv_sf: dvSF,     // stored for SF-aware lookups
+      rv: rv,
+      trend: (p.oneQBValues?.trend > 50 ? 'up' : p.oneQBValues?.trend < -50 ? 'down' : 'flat'),
+    };
+  });
+
+  S.sourceValues['ktc'] = ktcSource;
+  S.sourceStatus['ktc'] = 'ok';
+  S.sourceMeta['ktc'] = { count: Object.keys(ktcSource).length, loaded: Date.now(), file: 'KTC API' };
+  try {
+    localStorage.setItem(KTC_CACHE_KEY, JSON.stringify(ktcSource));
+    localStorage.setItem(KTC_TS_KEY, String(Date.now()));
+  } catch(e) {}
+  console.log(`KTC: loaded ${Object.keys(ktcSource).length} players`);
+}
+
+// ═══════════════════════════════════════════════════════════
 // MERGE VALUE_DB INTO A PLAYER OBJECT
 // Priority: FantasyCalc live → hardcoded VALUE_DB → rank estimate
 // ═══════════════════════════════════════════════════════════
@@ -2646,7 +2714,11 @@ async function init() {
   // Fetch players (FantasyCalc live values first, then Sleeper roster)
   document.getElementById('pcBadge').innerHTML = '<span class="spin" style="display:inline-block;width:12px;height:12px;border-width:2px;margin-right:4px"></span> Loading…';
 
-  await fetchFantasyCalcValues();
+  // Fetch all auto-sources in parallel
+  await Promise.allSettled([
+    fetchFantasyCalcValues(),
+    fetchKTCValues(),
+  ]);
   const sleeperPlayers = await fetchPlayers();
   // Merge: Sleeper + 2026 rookies + picks
   S.players = [...sleeperPlayers, ...ROOKIES_2026, ...PICKS];
