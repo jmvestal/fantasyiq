@@ -932,8 +932,11 @@
         <!-- Setup bar -->
         <div class="draft-import-bar" id="wizSetupBar">
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;margin-bottom:3px">🧙 Live Draft Wizard</div>
-            <div style="font-size:11px;color:var(--text2)">Enter your draft settings, then mark picks as they happen. TradeIQ highlights the best value available each round.</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <div style="font-size:13px;font-weight:700">🧙 Live Draft Wizard</div>
+              <span class="info-chip" id="wizModeChip" style="font-size:10px"></span>
+            </div>
+            <div style="font-size:11px;color:var(--text2)">Rankings auto-update when you change league settings (Dynasty/Redraft, SF, scoring). Mark picks as they happen — TradeIQ highlights best value each round.</div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0">
             <select id="wizTotalTeams" class="trade-partner-sel" style="max-width:110px" onchange="initWizard()">
@@ -2399,6 +2402,12 @@ function setSetting(key, val) {
   renderValuesTable();
   if (S.sugGive.length) computeSuggest();
   if (S.bshData.length) runBSH();
+  // Refresh draft tab if it's active (rank cache auto-invalidates via settings key change)
+  if (document.getElementById('tab-draft')?.classList.contains('active')) {
+    updateWizDraftModeChip();
+    renderWizAvail();
+    updateWizRec();
+  }
 
   localStorage.setItem('tradeiq_settings', JSON.stringify(S.settings));
 }
@@ -5181,7 +5190,7 @@ const DS = {
 };
 
 function initDraftTab() {
-  // Build the "my pick" dropdown
+  // Build the "my pick" dropdown on first open
   const sel = document.getElementById('wizMyPick');
   if (sel && !sel.options.length) {
     const total = parseInt(document.getElementById('wizTotalTeams')?.value || 12);
@@ -5191,6 +5200,8 @@ function initDraftTab() {
       sel.appendChild(opt);
     }
   }
+  _wizRankCache = null; // force rank rebuild on tab open
+  updateWizDraftModeChip();
   renderWizAvail();
   renderWizRoster();
   updateWizRec();
@@ -5253,19 +5264,37 @@ function isMyTurn() {
 }
 
 // Get sorted available players (not drafted) for wizard
+// Returns sorted available players using current settings-aware calcValue
 function getWizAvailPlayers() {
   const draftedIds = new Set(DS.wizState.drafted.map(d => d.player.id));
   return (S.players || [])
-    .filter(p => p.position !== 'PICK' && !draftedIds.has(p.id) && p.dynasty_val > 0)
-    .sort((a,b) => (b.redraft_val || b.dynasty_val) - (a.redraft_val || a.dynasty_val));
+    .filter(p => p.position !== 'PICK' && !draftedIds.has(p.id) && calcValue(p) > 0)
+    .sort((a,b) => calcValue(b) - calcValue(a));
 }
 
+// Returns rank of a player in the full (un-filtered) board for current settings
 function getAdpRank(player) {
-  const avail = (S.players || [])
-    .filter(p => p.position !== 'PICK' && p.dynasty_val > 0)
-    .sort((a,b) => (b.redraft_val || b.dynasty_val) - (a.redraft_val || a.dynasty_val));
-  const idx = avail.findIndex(p => p.id === player.id);
+  const allRanked = (S.players || [])
+    .filter(p => p.position !== 'PICK' && calcValue(p) > 0)
+    .sort((a,b) => calcValue(b) - calcValue(a));
+  const idx = allRanked.findIndex(p => p.id === player.id);
   return idx >= 0 ? idx + 1 : null;
+}
+
+// Cached rank map — rebuilt whenever settings change to avoid O(n²) in renderWizAvail
+let _wizRankCache = null;
+let _wizRankSettingsKey = '';
+function getWizRankMap() {
+  const key = JSON.stringify(S.settings);
+  if (_wizRankSettingsKey !== key || !_wizRankCache) {
+    const allRanked = (S.players || [])
+      .filter(p => p.position !== 'PICK' && calcValue(p) > 0)
+      .sort((a,b) => calcValue(b) - calcValue(a));
+    _wizRankCache = {};
+    allRanked.forEach((p,i) => { _wizRankCache[p.id] = i + 1; });
+    _wizRankSettingsKey = key;
+  }
+  return _wizRankCache;
 }
 
 function renderWizAvail() {
@@ -5274,34 +5303,48 @@ function renderWizAvail() {
   if (!el) return;
   const search = (document.getElementById('wizSearch')?.value || '').toLowerCase().trim();
   const posF = DS.wizState.posFilter;
+  const rankMap = getWizRankMap(); // cached, settings-aware
   let players = getWizAvailPlayers();
   if (posF !== 'ALL') players = players.filter(p => p.position === posF);
   if (search) players = players.filter(p => (p.full_name||'').toLowerCase().includes(search));
   if (countEl) countEl.textContent = getWizAvailPlayers().length;
 
   const { overall } = getWizRoundPick();
-  const totalPicks = DS.wizState.totalTeams * DS.wizState.rounds;
 
-  el.innerHTML = players.slice(0, 100).map((p, i) => {
-    const rank = getAdpRank(p);
-    const diff = rank ? overall - rank : null;
+  el.innerHTML = players.slice(0, 120).map((p) => {
+    const rank = rankMap[p.id] || null;
+    // diff > 0 = player ranked higher than current pick = steal; diff < 0 = reach
+    const diff = rank ? rank - overall : null;
     let diffHtml = '';
     if (diff !== null) {
-      if (diff > 5) diffHtml = `<span class="dav-adp-diff adp-plus">+${diff}</span>`;
-      else if (diff < -5) diffHtml = `<span class="dav-adp-diff adp-minus">${diff}</span>`;
+      if (diff < -8) diffHtml = `<span class="dav-adp-diff adp-plus" title="Available ${Math.abs(diff)} picks later than ranked">+${Math.abs(diff)}</span>`;
+      else if (diff > 8) diffHtml = `<span class="dav-adp-diff adp-minus" title="Reaching ${diff} picks early">-${diff}</span>`;
     }
     const val = calcValue(p);
+    const mode = S.settings.mode;
+    const sub = mode === 'dynasty'
+      ? `${p.team||'FA'} · Age ${p.age||'?'}`
+      : `${p.team||'FA'} · ${p.position}`;
     return `<div class="dav-row" onclick="draftPlayer('${p.id}')">
       <div class="dav-rank">${rank||'?'}</div>
       <span class="pb pb-${p.position}">${p.position}</span>
       <div class="dav-info">
         <div class="dav-name">${escHtml(p.full_name)}</div>
-        <div class="dav-sub">${p.team||'FA'} · Age ${p.age||'?'}</div>
+        <div class="dav-sub">${sub}</div>
       </div>
       ${diffHtml}
       <div class="dav-val">${fmtVal(val)}</div>
     </div>`;
   }).join('') || '<div class="dd-none">No players found</div>';
+}
+
+// Update the mode chip shown in the wizard header
+function updateWizDraftModeChip() {
+  const el = document.getElementById('wizModeChip');
+  if (!el) return;
+  const { mode, qb, scoring, size, te } = S.settings;
+  const qbStr = qb === 'sf' ? 'SF' : qb === '2qb' ? '2-QB' : '1-QB';
+  el.textContent = `${mode === 'dynasty' ? '🏆 Dynasty' : '⚡ Redraft'} · ${size}-Team · ${qbStr} · ${scoring.toUpperCase()}${te==='on'?' · TE+':''}`;
 }
 
 function draftPlayer(id) {
