@@ -2,7 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TradeIQ">
+  <meta name="theme-color" content="#0e0e14">
+  <meta name="description" content="NFL Dynasty & Redraft Trade Analyzer — powered by multi-source consensus rankings">
+  <link rel="apple-touch-icon" href="https://jmvestal.github.io/tradeiq/icon-192.png">
+  <link rel="manifest" href="data:application/json,{%22name%22:%22TradeIQ%22,%22short_name%22:%22TradeIQ%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230e0e14%22,%22theme_color%22:%22%237c3aed%22}">
   <title>TradeIQ — NFL Dynasty & Redraft Trade Analyzer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -235,8 +242,123 @@
     .share-url{flex:1;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .info-chip{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:4px 9px;font-size:11px;color:var(--text2);display:inline-flex;align-items:center;gap:4px}
     .pkg-row{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-top:8px;font-size:12px;color:var(--text2);cursor:pointer}
-    @media(max-width:960px){.trade-cols{grid-template-columns:1fr}.trade-mid{flex-direction:row;padding-top:0;justify-content:center}.sidebar{display:none}.ros-layout{grid-template-columns:1fr}}
-    @media(max-width:600px){.main{padding:12px}.anl-grid{grid-template-columns:1fr}}
+    /* ── DRAFT TAB ─────────────────────────── */
+    .draft-mode-toggle{display:flex;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:3px;flex-shrink:0}
+    .dmt-btn{flex:1;padding:7px 18px;border-radius:7px;border:none;background:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+    .dmt-btn.on{background:var(--primary);color:#fff}
+    .draft-grid{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;margin-top:16px}
+    .draft-board{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+    .draft-board-ttl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:10px}
+    .draft-pick-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:5px}
+    .draft-pick-num{font-size:11px;font-weight:800;color:var(--text3);min-width:24px;text-align:center}
+    .draft-pick-info{flex:1;min-width:0}
+    .draft-pick-name{font-size:13px;font-weight:600}
+    .draft-pick-sub{font-size:11px;color:var(--text3)}
+    .draft-pick-grade{font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;flex-shrink:0}
+    .grade-steal{background:var(--success-d);color:var(--success)}
+    .grade-value{background:var(--blue-d);color:var(--blue)}
+    .grade-fair{background:var(--bg2);color:var(--text2)}
+    .grade-reach{background:var(--warn-d);color:var(--warn)}
+    .grade-bust{background:var(--danger-d);color:var(--danger)}
+    .draft-avail{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .draft-avail-hdr{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .draft-avail-list{max-height:calc(100vh - 280px);overflow-y:auto}
+    .dav-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+    .dav-row:hover{background:var(--bg3)}
+    .dav-row:last-child{border-bottom:none}
+    .dav-rank{font-size:12px;font-weight:800;color:var(--text3);min-width:28px;text-align:center}
+    .dav-info{flex:1;min-width:0}
+    .dav-name{font-size:13px;font-weight:600}
+    .dav-sub{font-size:11px;color:var(--text3);margin-top:1px}
+    .dav-val{font-size:13px;font-weight:800;color:var(--primary-l);min-width:40px;text-align:right}
+    .dav-adp-diff{font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;flex-shrink:0}
+    .adp-plus{background:var(--success-d);color:var(--success)}
+    .adp-minus{background:var(--danger-d);color:var(--danger)}
+    .dav-drafted{opacity:.35;text-decoration:line-through}
+    .wizard-roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-bottom:12px}
+    .wiz-slot{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;min-height:56px;position:relative}
+    .wiz-slot-pos{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:4px}
+    .wiz-slot-name{font-size:12px;font-weight:600;line-height:1.3}
+    .wiz-slot-empty{font-size:11px;color:var(--text3);font-style:italic}
+    .wiz-slot.filled{border-color:var(--primary-d)}
+    .wizard-rec-bar{background:var(--primary-d);border:1px solid rgba(124,58,237,.3);border-radius:10px;padding:12px 14px;margin-bottom:12px}
+    .wizard-rec-ttl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--primary-l);margin-bottom:6px}
+    .wizard-rec-name{font-size:15px;font-weight:800;letter-spacing:-.3px}
+    .wizard-rec-why{font-size:12px;color:var(--text2);margin-top:3px;line-height:1.5}
+    .draft-import-bar{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .draft-round-badge{background:var(--primary);color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:.04em}
+    .draft-summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+    @media(max-width:700px){.draft-summary-grid{grid-template-columns:repeat(2,1fr)}}
+
+    /* ── MOBILE BOTTOM TAB BAR ──────────────── */
+    .mob-tab-bar{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);z-index:200;padding-bottom:env(safe-area-inset-bottom,0px)}
+    .mob-tabs{display:flex;height:56px}
+    .mob-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;cursor:pointer;color:var(--text3);font-size:10px;font-weight:600;transition:color .15s;padding:0;-webkit-tap-highlight-color:transparent}
+    .mob-tab.active{color:var(--primary-l)}
+    .mob-tab-icon{font-size:20px;line-height:1}
+    .mob-tab-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+
+    /* ── MOBILE SETTINGS SHEET ──────────────── */
+    .mob-settings-sheet{position:fixed;inset:0;z-index:400;display:none;align-items:flex-end}
+    .mob-settings-sheet.open{display:flex}
+    .mob-settings-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.7)}
+    .mob-settings-panel{position:relative;width:100%;background:var(--bg2);border-top:1px solid var(--border2);border-radius:20px 20px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));max-height:80vh;overflow-y:auto;animation:slideUp .25s ease}
+    @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    .mob-settings-handle{width:40px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px}
+    .mob-settings-ttl{font-size:16px;font-weight:800;margin-bottom:16px;letter-spacing:-.3px}
+    .mob-settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .mob-s-section{background:var(--bg3);border-radius:10px;padding:12px}
+    .mob-s-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:8px}
+    .mob-tog-row{display:flex;gap:3px;flex-wrap:wrap}
+    .mob-tog{flex:1;min-width:0;padding:7px 4px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s}
+    .mob-tog.on{background:var(--primary);border-color:var(--primary);color:#fff}
+
+    /* ── COMPREHENSIVE RESPONSIVE ───────────── */
+    @media(max-width:960px){
+      .sidebar{display:none}
+      .trade-cols{grid-template-columns:1fr}
+      .trade-mid{flex-direction:row;padding-top:0;justify-content:center}
+      .ros-layout{grid-template-columns:1fr}
+      .draft-grid{grid-template-columns:1fr}
+      .draft-avail-list{max-height:400px}
+    }
+    @media(max-width:768px){
+      .mob-tab-bar{display:block}
+      .nav{display:none}
+      .hdr-inner{gap:8px}
+      .logo{font-size:16px;letter-spacing:-.5px}
+      .pc-badge{display:none}
+      .src-btn{padding:5px 8px;font-size:12px}
+      .auth-btn{padding:5px 10px;font-size:12px}
+      .main{padding:12px 12px calc(68px + env(safe-area-inset-bottom,0px))}
+      .anl-grid{grid-template-columns:1fr}
+      .platform-grid{grid-template-columns:repeat(2,1fr)}
+      .team-grade-bar{grid-template-columns:repeat(2,1fr)}
+      .league-summary{grid-template-columns:repeat(2,1fr)}
+      .draft-summary-grid{grid-template-columns:repeat(2,1fr)}
+      .sec-hdr{flex-direction:column;gap:10px}
+      .sec-hdr>div:last-child{width:100%;flex-wrap:wrap}
+      .tbar{flex-direction:column;align-items:stretch}
+      .tbar .tbl-srch{min-width:0}
+      .trade-card-val{font-size:18px}
+      .bsh-stats{flex-wrap:wrap}
+      .stat-row{flex-wrap:wrap}
+      .stat-card{min-width:calc(50% - 6px)}
+      .wizard-roster{grid-template-columns:repeat(3,1fr)}
+      .mo-box{padding:20px}
+      .toast{bottom:calc(68px + env(safe-area-inset-bottom,0px) + 8px);right:12px;left:12px;max-width:none}
+    }
+    @media(max-width:480px){
+      .main{padding:10px 10px calc(68px + env(safe-area-inset-bottom,0px))}
+      .trade-card{padding:12px}
+      .grade-ring{width:56px;height:56px}
+      .grade-ring .gr{font-size:18px}
+      .sec-ttl{font-size:16px}
+      .chip-name{font-size:12px}
+      .wizard-roster{grid-template-columns:repeat(2,1fr)}
+      .mob-settings-grid{grid-template-columns:1fr}
+      .draft-grid{grid-template-columns:1fr}
+    }
     ::-webkit-scrollbar{width:5px;height:5px}
     ::-webkit-scrollbar-track{background:var(--bg)}
     ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
@@ -415,6 +537,7 @@
       <button class="nav-btn" data-tab="values">📊 Player Values</button>
       <button class="nav-btn" data-tab="roster">🏈 My Team</button>
       <button class="nav-btn" data-tab="league">🏆 League</button>
+      <button class="nav-btn" data-tab="draft">🎯 Draft</button>
     </nav>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
       <div class="pc-badge" id="pcBadge">Loading players…</div>
@@ -788,7 +911,229 @@
       </div>
     </div>
 
+    <!-- ══ TAB: DRAFT ══ -->
+    <div id="tab-draft" class="tab">
+      <div class="sec-hdr">
+        <div>
+          <div class="sec-ttl">Draft Tools</div>
+          <div class="sec-sub">Analyze a completed draft or get live pick-by-pick guidance</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div class="draft-mode-toggle">
+            <button class="dmt-btn on" data-dm="wizard" onclick="setDraftMode('wizard')">🧙 Draft Wizard</button>
+            <button class="dmt-btn" data-dm="analyzer" onclick="setDraftMode('analyzer')">📋 Draft Analyzer</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── DRAFT WIZARD ─── -->
+      <div id="draftWizardPane">
+
+        <!-- Setup bar -->
+        <div class="draft-import-bar" id="wizSetupBar">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;margin-bottom:3px">🧙 Live Draft Wizard</div>
+            <div style="font-size:11px;color:var(--text2)">Enter your draft settings, then mark picks as they happen. TradeIQ highlights the best value available each round.</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0">
+            <select id="wizTotalTeams" class="trade-partner-sel" style="max-width:110px" onchange="initWizard()">
+              <option value="8">8 Teams</option>
+              <option value="10">10 Teams</option>
+              <option value="12" selected>12 Teams</option>
+              <option value="14">14 Teams</option>
+              <option value="16">16 Teams</option>
+            </select>
+            <select id="wizMyPick" class="trade-partner-sel" style="max-width:110px" onchange="initWizard()">
+            </select>
+            <select id="wizRounds" class="trade-partner-sel" style="max-width:110px" onchange="initWizard()">
+              <option value="5">5 Rounds</option>
+              <option value="10">10 Rounds</option>
+              <option value="15">15 Rounds</option>
+              <option value="20" selected>20 Rounds</option>
+              <option value="25">25 Rounds</option>
+            </select>
+            <button class="btn btn-p btn-sm" onclick="resetWizard()">↺ Reset</button>
+          </div>
+        </div>
+
+        <!-- Recommendation bar -->
+        <div class="wizard-rec-bar" id="wizRecBar" style="display:none">
+          <div class="wizard-rec-ttl">🎯 TradeIQ Recommends — Pick <span id="wizPickNum">1</span></div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <div style="flex:1;min-width:0">
+              <div class="wizard-rec-name" id="wizRecName">—</div>
+              <div class="wizard-rec-why" id="wizRecWhy">Loading...</div>
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0">
+              <button class="btn btn-p btn-sm" onclick="draftRecommended()">Draft This Pick</button>
+              <button class="btn btn-s btn-sm" onclick="skipWizRec()">Skip</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Your picks summary stats -->
+        <div class="draft-summary-grid" id="wizStats" style="display:none">
+          <div class="stat-card"><div class="stat-card-val" id="wizPickCount">0</div><div class="stat-card-lbl">Picks Made</div></div>
+          <div class="stat-card"><div class="stat-card-val" id="wizRoundNum">1</div><div class="stat-card-lbl">Current Round</div></div>
+          <div class="stat-card"><div class="stat-card-val" id="wizValueGrade" style="color:var(--success)">—</div><div class="stat-card-lbl">Draft Grade</div></div>
+          <div class="stat-card"><div class="stat-card-val" id="wizBestSteal">—</div><div class="stat-card-lbl">Best Value Pick</div></div>
+        </div>
+
+        <div class="draft-grid" id="wizMainGrid">
+          <!-- Left: your roster being built -->
+          <div class="draft-board">
+            <div class="draft-board-ttl">🏈 Your Roster</div>
+            <div class="wizard-roster" id="wizRosterSlots"></div>
+            <div class="draft-board-ttl" style="margin-top:14px">Your Picks</div>
+            <div id="wizPickList" style="max-height:300px;overflow-y:auto"></div>
+          </div>
+
+          <!-- Right: available players board -->
+          <div class="draft-avail">
+            <div class="draft-avail-hdr">
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:700">Available Players</div>
+                <div style="font-size:11px;color:var(--text2);margin-top:2px"><span id="wizAvailCount">—</span> players remaining</div>
+              </div>
+              <div class="pos-btns" id="wizPosBtns">
+                <button class="pos-btn on" data-pos="ALL" onclick="setWizPosFilter('ALL')">ALL</button>
+                <button class="pos-btn" data-pos="QB" onclick="setWizPosFilter('QB')">QB</button>
+                <button class="pos-btn" data-pos="RB" onclick="setWizPosFilter('RB')">RB</button>
+                <button class="pos-btn" data-pos="WR" onclick="setWizPosFilter('WR')">WR</button>
+                <button class="pos-btn" data-pos="TE" onclick="setWizPosFilter('TE')">TE</button>
+              </div>
+              <input class="srch" id="wizSearch" placeholder="Search…" style="max-width:160px;margin-left:4px" oninput="renderWizAvail()">
+            </div>
+            <div class="draft-avail-list" id="wizAvailList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── DRAFT ANALYZER ─── -->
+      <div id="draftAnalyzerPane" style="display:none">
+
+        <!-- Import options -->
+        <div class="draft-import-bar">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;margin-bottom:3px">📋 Draft Analyzer</div>
+            <div style="font-size:11px;color:var(--text2)">Paste a completed draft order (or use a Sleeper draft link) to grade every pick vs consensus value.</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0">
+            <button class="btn btn-s btn-sm" onclick="openModal('draftImportModal')">📥 Import Draft</button>
+            <button class="btn btn-s btn-sm" onclick="loadSampleDraft()">Load Sample</button>
+          </div>
+        </div>
+
+        <!-- Grade summary -->
+        <div id="draftAnlSummary" style="display:none">
+          <div class="draft-summary-grid" id="draftAnlStats"></div>
+
+          <!-- Pick grades table -->
+          <div class="draft-avail" style="margin-top:0">
+            <div class="draft-avail-hdr">
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:700">Pick Grades</div>
+                <div style="font-size:11px;color:var(--text2);margin-top:2px">Every pick graded vs consensus ranking</div>
+              </div>
+              <div class="pos-btns">
+                <button class="pos-btn on" data-anl="all" onclick="setAnlFilter('all')">All Picks</button>
+                <button class="pos-btn" data-anl="steals" onclick="setAnlFilter('steals')">🔥 Steals</button>
+                <button class="pos-btn" data-anl="reaches" onclick="setAnlFilter('reaches')">⚠️ Reaches</button>
+              </div>
+            </div>
+            <div id="draftAnlList"></div>
+          </div>
+
+          <!-- Team grades -->
+          <div class="draft-board" style="margin-top:14px">
+            <div class="draft-board-ttl">Team Draft Grades</div>
+            <div id="draftTeamGrades"></div>
+          </div>
+        </div>
+
+        <div id="draftAnlEmpty" class="empty-state" style="padding:60px 20px">
+          <span>📋</span>
+          Import a completed draft to see pick grades, value analysis, and team breakdowns.
+        </div>
+      </div>
+
+    </div><!-- /tab-draft -->
+
   </main>
+</div>
+
+<!-- ══ MOBILE BOTTOM TAB BAR ══ -->
+<nav class="mob-tab-bar" id="mobTabBar">
+  <div class="mob-tabs">
+    <button class="mob-tab active" data-tab="analyzer" onclick="switchTab('analyzer')">
+      <span class="mob-tab-icon">⚖️</span>
+      <span class="mob-tab-label">Trade</span>
+    </button>
+    <button class="mob-tab" data-tab="suggest" onclick="switchTab('suggest')">
+      <span class="mob-tab-icon">💡</span>
+      <span class="mob-tab-label">Targets</span>
+    </button>
+    <button class="mob-tab" data-tab="values" onclick="switchTab('values')">
+      <span class="mob-tab-icon">📊</span>
+      <span class="mob-tab-label">Values</span>
+    </button>
+    <button class="mob-tab" data-tab="draft" onclick="switchTab('draft')">
+      <span class="mob-tab-icon">🎯</span>
+      <span class="mob-tab-label">Draft</span>
+    </button>
+    <button class="mob-tab" data-tab="_settings" onclick="openMobSettings()">
+      <span class="mob-tab-icon">⚙️</span>
+      <span class="mob-tab-label">Settings</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ══ MOBILE SETTINGS SHEET ══ -->
+<div class="mob-settings-sheet" id="mobSettingsSheet" onclick="mobSettingsBackdrop(event)">
+  <div class="mob-settings-backdrop"></div>
+  <div class="mob-settings-panel">
+    <div class="mob-settings-handle"></div>
+    <div class="mob-settings-ttl">League Settings</div>
+    <div class="mob-settings-grid">
+      <div class="mob-s-section">
+        <div class="mob-s-label">Mode</div>
+        <div class="mob-tog-row">
+          <button class="mob-tog on" data-s="mode" data-v="dynasty" onclick="setSetting('mode','dynasty');syncMobToggles()">Dynasty</button>
+          <button class="mob-tog" data-s="mode" data-v="redraft" onclick="setSetting('mode','redraft');syncMobToggles()">Redraft</button>
+        </div>
+      </div>
+      <div class="mob-s-section">
+        <div class="mob-s-label">QB Format</div>
+        <div class="mob-tog-row">
+          <button class="mob-tog on" data-s="qb" data-v="1qb" onclick="setSetting('qb','1qb');syncMobToggles()">1-QB</button>
+          <button class="mob-tog" data-s="qb" data-v="sf" onclick="setSetting('qb','sf');syncMobToggles()">SF</button>
+          <button class="mob-tog" data-s="qb" data-v="2qb" onclick="setSetting('qb','2qb');syncMobToggles()">2QB</button>
+        </div>
+      </div>
+      <div class="mob-s-section">
+        <div class="mob-s-label">League Size</div>
+        <div class="mob-tog-row">
+          <button class="mob-tog" data-s="size" data-v="8" onclick="setSetting('size',8);syncMobToggles()">8</button>
+          <button class="mob-tog" data-s="size" data-v="10" onclick="setSetting('size',10);syncMobToggles()">10</button>
+          <button class="mob-tog on" data-s="size" data-v="12" onclick="setSetting('size',12);syncMobToggles()">12</button>
+          <button class="mob-tog" data-s="size" data-v="14" onclick="setSetting('size',14);syncMobToggles()">14</button>
+          <button class="mob-tog" data-s="size" data-v="16" onclick="setSetting('size',16);syncMobToggles()">16</button>
+        </div>
+      </div>
+      <div class="mob-s-section">
+        <div class="mob-s-label">Scoring</div>
+        <div class="mob-tog-row">
+          <button class="mob-tog on" data-s="scoring" data-v="ppr" onclick="setSetting('scoring','ppr');syncMobToggles()">PPR</button>
+          <button class="mob-tog" data-s="scoring" data-v="half" onclick="setSetting('scoring','half');syncMobToggles()">Half</button>
+          <button class="mob-tog" data-s="scoring" data-v="std" onclick="setSetting('scoring','std');syncMobToggles()">Std</button>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-p" style="flex:1" onclick="openModal('sourcesModal');closeMobSettings()">📊 Manage Sources</button>
+      <button class="btn btn-s" style="flex:1" onclick="closeMobSettings()">Done</button>
+    </div>
+  </div>
 </div>
 
 <!-- TOAST -->
@@ -855,6 +1200,40 @@
     <div class="or-divider">or</div>
     <button class="btn btn-s" style="width:100%;justify-content:center;font-size:13px" onclick="continueAsGuest()">Continue as Guest</button>
     <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:14px;line-height:1.5">Guest mode saves data locally on this device only.<br>Sign in with Google to sync across all devices.</p>
+  </div>
+</div>
+
+<!-- ══ MODAL: DRAFT IMPORT ══ -->
+<div class="mo" id="draftImportModal" onclick="moBackdropClose(event,'draftImportModal')">
+  <div class="mo-box wide">
+    <button class="mo-close" onclick="closeModal('draftImportModal')">✕</button>
+    <div class="mo-ttl">📥 Import Draft</div>
+    <div class="mo-sub">Import a completed draft to analyze every pick.</div>
+
+    <label class="mo-label">Sleeper Draft ID or URL</label>
+    <div style="display:flex;gap:8px">
+      <input class="mo-input" id="sleeperDraftId" placeholder="e.g. 1234567890123456789 or paste full URL" style="margin-bottom:0;flex:1">
+      <button class="btn btn-p btn-sm" onclick="importSleeperDraft()">Fetch</button>
+    </div>
+    <div class="mo-note" style="margin-top:8px"><strong>How to find:</strong> In Sleeper, open the draft → copy the URL. The long number is the Draft ID.</div>
+
+    <div class="or-divider">or paste manually</div>
+
+    <label class="mo-label">Paste Pick-by-Pick List <span style="color:var(--text3);font-weight:400">(one pick per line: "1.01 Player Name POS TEAM" or "PlayerName,POS,Round,Pick")</span></label>
+    <textarea class="mo-input" id="draftPasteInput" placeholder="1.01 Ja'Marr Chase WR CIN&#10;1.02 Bijan Robinson RB ATL&#10;1.03 Jaxon Smith-Njigba WR SEA&#10;..." style="height:180px;font-family:monospace;font-size:12px;resize:vertical"></textarea>
+
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <select class="trade-partner-sel" id="draftImportTeams" style="flex:1">
+        <option value="8">8 Teams</option>
+        <option value="10">10 Teams</option>
+        <option value="12" selected>12 Teams</option>
+        <option value="14">14 Teams</option>
+        <option value="16">16 Teams</option>
+      </select>
+      <input class="mo-input" id="draftMyTeam" placeholder="Your team name or number (optional)" style="flex:2;margin-bottom:0">
+    </div>
+
+    <button class="btn btn-p" style="width:100%;margin-top:12px" onclick="processPastedDraft()">Analyze Draft</button>
   </div>
 </div>
 
@@ -2037,9 +2416,31 @@ function updateModeChip() {
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.mob-tab').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+name)?.classList.add('active');
-  document.querySelector(`[data-tab="${name}"]`)?.classList.add('active');
+  document.querySelector(`.nav-btn[data-tab="${name}"]`)?.classList.add('active');
+  document.querySelector(`.mob-tab[data-tab="${name}"]`)?.classList.add('active');
   if (name === 'league') renderLeagueAnalyzer();
+  if (name === 'draft') initDraftTab();
+  window.scrollTo(0,0);
+}
+
+function openMobSettings() {
+  document.getElementById('mobSettingsSheet').classList.add('open');
+  syncMobToggles();
+}
+function closeMobSettings() {
+  document.getElementById('mobSettingsSheet').classList.remove('open');
+}
+function mobSettingsBackdrop(e) {
+  if (e.target === e.currentTarget || e.target.classList.contains('mob-settings-backdrop')) closeMobSettings();
+}
+function syncMobToggles() {
+  const s = S.settings;
+  document.querySelectorAll('.mob-settings-panel [data-s]').forEach(btn => {
+    const key = btn.dataset.s;
+    btn.classList.toggle('on', String(btn.dataset.v) === String(s[key]));
+  });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -4756,6 +5157,517 @@ function applyEngineScores() {
     p._engineTier  = result.tier;
     p._breakdown   = result.breakdown;
   });
+}
+
+// ═══════════════════════════════════════════════════════════
+// DRAFT TOOLS — Wizard + Analyzer
+// ═══════════════════════════════════════════════════════════
+const DS = {
+  mode: 'wizard',         // 'wizard' | 'analyzer'
+  wizState: {
+    totalTeams: 12,
+    myPick: 1,
+    rounds: 20,
+    currentPick: 1,       // overall pick number
+    drafted: [],          // [{player, overallPick, round, pickInRound, isMyPick, adpRank}]
+    myPicks: [],          // player objects I drafted
+    skips: [],            // recommended but skipped
+    posFilter: 'ALL',
+  },
+  anlState: {
+    picks: [],            // [{player, round, pickInRound, overallPick, team, grade, diff}]
+    filter: 'all',
+  },
+};
+
+function initDraftTab() {
+  // Build the "my pick" dropdown
+  const sel = document.getElementById('wizMyPick');
+  if (sel && !sel.options.length) {
+    const total = parseInt(document.getElementById('wizTotalTeams')?.value || 12);
+    for (let i = 1; i <= total; i++) {
+      const opt = document.createElement('option');
+      opt.value = i; opt.text = `Pick ${i}`;
+      sel.appendChild(opt);
+    }
+  }
+  renderWizAvail();
+  renderWizRoster();
+  updateWizRec();
+  document.getElementById('wizStats').style.display = DS.wizState.drafted.length ? 'grid' : 'none';
+  document.getElementById('wizRecBar').style.display = S.ready ? 'block' : 'none';
+}
+
+function initWizard() {
+  const total = parseInt(document.getElementById('wizTotalTeams')?.value || 12);
+  const rounds = parseInt(document.getElementById('wizRounds')?.value || 20);
+  // Rebuild pick dropdown
+  const sel = document.getElementById('wizMyPick');
+  if (sel) {
+    const prev = sel.value;
+    sel.innerHTML = '';
+    for (let i = 1; i <= total; i++) {
+      const opt = document.createElement('option');
+      opt.value = i; opt.text = `Pick ${i}`;
+      sel.appendChild(opt);
+    }
+    sel.value = Math.min(prev || 1, total);
+  }
+  DS.wizState.totalTeams = total;
+  DS.wizState.myPick = parseInt(sel?.value || 1);
+  DS.wizState.rounds = rounds;
+  resetWizard();
+}
+
+function resetWizard() {
+  DS.wizState.totalTeams = parseInt(document.getElementById('wizTotalTeams')?.value || 12);
+  DS.wizState.myPick = parseInt(document.getElementById('wizMyPick')?.value || 1);
+  DS.wizState.rounds = parseInt(document.getElementById('wizRounds')?.value || 20);
+  DS.wizState.currentPick = 1;
+  DS.wizState.drafted = [];
+  DS.wizState.myPicks = [];
+  DS.wizState.posFilter = 'ALL';
+  renderWizAvail();
+  renderWizRoster();
+  updateWizRec();
+  document.getElementById('wizStats').style.display = 'none';
+  document.getElementById('wizRecBar').style.display = S.ready ? 'block' : 'none';
+  // reset pos filter btns
+  document.querySelectorAll('#wizPosBtns .pos-btn').forEach(b => b.classList.toggle('on', b.dataset.pos === 'ALL'));
+}
+
+function getWizRoundPick() {
+  const t = DS.wizState.totalTeams;
+  const overall = DS.wizState.currentPick;
+  const round = Math.ceil(overall / t);
+  // snake draft: odd rounds → normal order, even → reverse
+  const pickInRound = ((round % 2 === 1)
+    ? ((overall - 1) % t) + 1
+    : t - ((overall - 1) % t));
+  return { round, pickInRound, overall };
+}
+
+function isMyTurn() {
+  const { pickInRound } = getWizRoundPick();
+  return pickInRound === DS.wizState.myPick;
+}
+
+// Get sorted available players (not drafted) for wizard
+function getWizAvailPlayers() {
+  const draftedIds = new Set(DS.wizState.drafted.map(d => d.player.id));
+  return (S.players || [])
+    .filter(p => p.position !== 'PICK' && !draftedIds.has(p.id) && p.dynasty_val > 0)
+    .sort((a,b) => (b.redraft_val || b.dynasty_val) - (a.redraft_val || a.dynasty_val));
+}
+
+function getAdpRank(player) {
+  const avail = (S.players || [])
+    .filter(p => p.position !== 'PICK' && p.dynasty_val > 0)
+    .sort((a,b) => (b.redraft_val || b.dynasty_val) - (a.redraft_val || a.dynasty_val));
+  const idx = avail.findIndex(p => p.id === player.id);
+  return idx >= 0 ? idx + 1 : null;
+}
+
+function renderWizAvail() {
+  const el = document.getElementById('wizAvailList');
+  const countEl = document.getElementById('wizAvailCount');
+  if (!el) return;
+  const search = (document.getElementById('wizSearch')?.value || '').toLowerCase().trim();
+  const posF = DS.wizState.posFilter;
+  let players = getWizAvailPlayers();
+  if (posF !== 'ALL') players = players.filter(p => p.position === posF);
+  if (search) players = players.filter(p => (p.full_name||'').toLowerCase().includes(search));
+  if (countEl) countEl.textContent = getWizAvailPlayers().length;
+
+  const { overall } = getWizRoundPick();
+  const totalPicks = DS.wizState.totalTeams * DS.wizState.rounds;
+
+  el.innerHTML = players.slice(0, 100).map((p, i) => {
+    const rank = getAdpRank(p);
+    const diff = rank ? overall - rank : null;
+    let diffHtml = '';
+    if (diff !== null) {
+      if (diff > 5) diffHtml = `<span class="dav-adp-diff adp-plus">+${diff}</span>`;
+      else if (diff < -5) diffHtml = `<span class="dav-adp-diff adp-minus">${diff}</span>`;
+    }
+    const val = calcValue(p);
+    return `<div class="dav-row" onclick="draftPlayer('${p.id}')">
+      <div class="dav-rank">${rank||'?'}</div>
+      <span class="pb pb-${p.position}">${p.position}</span>
+      <div class="dav-info">
+        <div class="dav-name">${escHtml(p.full_name)}</div>
+        <div class="dav-sub">${p.team||'FA'} · Age ${p.age||'?'}</div>
+      </div>
+      ${diffHtml}
+      <div class="dav-val">${fmtVal(val)}</div>
+    </div>`;
+  }).join('') || '<div class="dd-none">No players found</div>';
+}
+
+function draftPlayer(id) {
+  const p = (S.players||[]).find(x=>x.id===id);
+  if (!p) return;
+  const info = getWizRoundPick();
+  const isMe = isMyTurn();
+  DS.wizState.drafted.push({ player:p, ...info, isMyPick:isMe, adpRank:getAdpRank(p) });
+  if (isMe) DS.wizState.myPicks.push(p);
+  DS.wizState.currentPick++;
+  renderWizAvail();
+  renderWizRoster();
+  updateWizRec();
+  updateWizStats();
+  document.getElementById('wizStats').style.display = 'grid';
+  // Skip to my next turn if not my pick (show advancing)
+  const maxPick = DS.wizState.totalTeams * DS.wizState.rounds;
+  if (DS.wizState.currentPick > maxPick) {
+    showToast('Draft complete! 🎉');
+  }
+}
+
+function draftRecommended() {
+  const avail = getWizAvailPlayers();
+  if (!avail.length) return;
+  // recommend top value available
+  const rec = getRec();
+  if (rec) draftPlayer(rec.id);
+}
+
+function skipWizRec() {
+  const rec = getRec();
+  if (rec) DS.wizState.skips.push(rec.id);
+  updateWizRec();
+}
+
+function getRec() {
+  const avail = getWizAvailPlayers().filter(p => !DS.wizState.skips.includes(p.id));
+  if (!avail.length) return null;
+  // Weigh by roster needs
+  const myPicks = DS.wizState.myPicks;
+  const qbs = myPicks.filter(p=>p.position==='QB').length;
+  const rbs = myPicks.filter(p=>p.position==='RB').length;
+  const wrs = myPicks.filter(p=>p.position==='WR').length;
+  const tes = myPicks.filter(p=>p.position==='TE').length;
+  const round = getWizRoundPick().round;
+  // Simple need scoring
+  let best = avail[0];
+  let bestScore = -1;
+  avail.slice(0, 20).forEach(p => {
+    const baseVal = calcValue(p) / 9500;
+    let needBonus = 0;
+    if (p.position==='QB' && qbs===0 && round>=3) needBonus=0.15;
+    if (p.position==='RB' && rbs<2) needBonus=0.08;
+    if (p.position==='WR' && wrs<2) needBonus=0.06;
+    if (p.position==='TE' && tes===0 && round>=4) needBonus=0.05;
+    const score = baseVal + needBonus;
+    if (score > bestScore) { bestScore=score; best=p; }
+  });
+  return best;
+}
+
+function updateWizRec() {
+  const bar = document.getElementById('wizRecBar');
+  if (!bar || !S.ready) return;
+  bar.style.display = 'block';
+  const { overall, round, pickInRound } = getWizRoundPick();
+  const maxPick = DS.wizState.totalTeams * DS.wizState.rounds;
+  if (overall > maxPick) {
+    bar.innerHTML = '<div class="wizard-rec-ttl">✅ Draft Complete!</div><div class="wizard-rec-name">All rounds finished.</div>';
+    return;
+  }
+  document.getElementById('wizPickNum').textContent = `${overall} (R${round}, P${pickInRound})`;
+  const mine = isMyTurn();
+  const rec = getRec();
+  if (rec) {
+    document.getElementById('wizRecName').textContent = rec.full_name;
+    const myPicks = DS.wizState.myPicks;
+    const pos = rec.position;
+    const count = myPicks.filter(p=>p.position===pos).length;
+    const reason = mine
+      ? `Best value available${count===0?` — your first ${pos}`:`${count>0?` — your ${count+1}${count===1?'nd':count===2?'rd':'th'} ${pos}`:''}`}`
+      : `Monitoring — ${DS.wizState.totalTeams - pickInRound} picks until your turn`;
+    document.getElementById('wizRecWhy').textContent = reason;
+    document.querySelector('[onclick="draftRecommended()"]').style.display = mine ? 'inline-flex' : 'none';
+  } else {
+    document.getElementById('wizRecName').textContent = 'No players available';
+    document.getElementById('wizRecWhy').textContent = '';
+  }
+}
+
+function updateWizStats() {
+  const myPicks = DS.wizState.myPicks;
+  document.getElementById('wizPickCount').textContent = myPicks.length;
+  document.getElementById('wizRoundNum').textContent = getWizRoundPick().round;
+  // Grade
+  if (myPicks.length) {
+    const totalPossible = DS.wizState.rounds;
+    const steals = myPicks.filter(p => {
+      const overall = DS.wizState.drafted.find(d=>d.player.id===p.id)?.overall || 999;
+      const rank = getAdpRank(p) || 999;
+      return overall > rank + 8;
+    }).length;
+    const pct = steals / Math.max(myPicks.length,1);
+    const grade = pct > .4 ? 'A' : pct > .25 ? 'B+' : pct > .1 ? 'B' : 'C';
+    document.getElementById('wizValueGrade').textContent = grade;
+  }
+  // Best steal
+  if (myPicks.length) {
+    let bestSteal = null, bestDiff = 0;
+    DS.wizState.drafted.filter(d=>d.isMyPick).forEach(d => {
+      const diff = d.overall - (d.adpRank||d.overall);
+      if (diff > bestDiff) { bestDiff=diff; bestSteal=d.player; }
+    });
+    document.getElementById('wizBestSteal').textContent = bestSteal
+      ? bestSteal.full_name.split(' ').pop()
+      : '—';
+  }
+}
+
+function renderWizRoster() {
+  const el = document.getElementById('wizRosterSlots');
+  const listEl = document.getElementById('wizPickList');
+  if (!el) return;
+  const myPicks = DS.wizState.myPicks;
+  const positions = ['QB','QB','RB','RB','WR','WR','WR','TE','FLEX'];
+  el.innerHTML = positions.map(pos => {
+    const filled = myPicks.filter(p => p.position === pos);
+    // FLEX: any RB/WR/TE not already counted
+    const player = filled.length ? filled[0] : null;
+    if (player) {
+      return `<div class="wiz-slot filled">
+        <div class="wiz-slot-pos">${pos}</div>
+        <div class="wiz-slot-name">${player.full_name}</div>
+      </div>`;
+    }
+    return `<div class="wiz-slot">
+      <div class="wiz-slot-pos">${pos}</div>
+      <div class="wiz-slot-empty">Empty</div>
+    </div>`;
+  }).join('');
+
+  // My picks list
+  if (listEl) {
+    listEl.innerHTML = DS.wizState.drafted.filter(d=>d.isMyPick).map(d => {
+      const diff = d.overall - (d.adpRank||d.overall);
+      let gradeClass = 'grade-fair', gradeLabel = 'Fair';
+      if (diff > 12) { gradeClass='grade-steal'; gradeLabel='🔥 Steal'; }
+      else if (diff > 5) { gradeClass='grade-value'; gradeLabel='Value'; }
+      else if (diff < -12) { gradeClass='grade-bust'; gradeLabel='Reach'; }
+      return `<div class="draft-pick-row">
+        <div class="draft-pick-num">${d.round}.${String(d.pickInRound).padStart(2,'0')}</div>
+        <span class="pb pb-${d.player.position}">${d.player.position}</span>
+        <div class="draft-pick-info">
+          <div class="draft-pick-name">${escHtml(d.player.full_name)}</div>
+          <div class="draft-pick-sub">Rank ${d.adpRank||'?'} · Pick ${d.overall}</div>
+        </div>
+        <div class="draft-pick-grade ${gradeClass}">${gradeLabel}</div>
+      </div>`;
+    }).join('') || '<div class="dd-none">No picks yet</div>';
+  }
+}
+
+function setWizPosFilter(pos) {
+  DS.wizState.posFilter = pos;
+  document.querySelectorAll('#wizPosBtns .pos-btn').forEach(b => b.classList.toggle('on', b.dataset.pos===pos));
+  renderWizAvail();
+}
+
+// ─── DRAFT ANALYZER ───
+function setDraftMode(mode) {
+  DS.mode = mode;
+  document.querySelectorAll('[data-dm]').forEach(b => b.classList.toggle('on', b.dataset.dm===mode));
+  document.getElementById('draftWizardPane').style.display = mode==='wizard' ? 'block' : 'none';
+  document.getElementById('draftAnalyzerPane').style.display = mode==='analyzer' ? 'block' : 'none';
+}
+
+function setAnlFilter(f) {
+  DS.anlState.filter = f;
+  document.querySelectorAll('[data-anl]').forEach(b => b.classList.toggle('on', b.dataset.anl===f));
+  renderAnlList();
+}
+
+async function importSleeperDraft() {
+  const raw = document.getElementById('sleeperDraftId')?.value?.trim();
+  if (!raw) return;
+  const id = raw.replace(/.*\/([0-9]+).*/,'$1');
+  showToast('Fetching Sleeper draft…');
+  try {
+    const [picksRes, metaRes] = await Promise.all([
+      fetch(`https://api.sleeper.app/v1/draft/${id}/picks`),
+      fetch(`https://api.sleeper.app/v1/draft/${id}`)
+    ]);
+    const picks = await picksRes.json();
+    const meta = await metaRes.json();
+    if (!Array.isArray(picks)) throw new Error('Invalid draft ID');
+    const teams = meta.settings?.teams || 12;
+    const processed = picks.map(pk => {
+      const pid = pk.player_id;
+      const player = (S.players||[]).find(p=>(p.player_id||p.id)===pid) ||
+        { id:'sl_'+pid, player_id:pid, full_name: (pk.metadata?.first_name+' '+pk.metadata?.last_name).trim(), position: pk.metadata?.position||'?', team: pk.metadata?.team||'' };
+      return {
+        player,
+        round: pk.round,
+        pickInRound: pk.pick_no,
+        overallPick: (pk.round-1)*teams + pk.pick_no,
+        team: pk.picked_by,
+        grade: null, diff: null
+      };
+    });
+    gradeAnlPicks(processed, teams);
+    closeModal('draftImportModal');
+  } catch(e) {
+    showToast('Could not fetch draft: '+e.message,'err');
+  }
+}
+
+function processPastedDraft() {
+  const raw = document.getElementById('draftPasteInput')?.value?.trim();
+  const teams = parseInt(document.getElementById('draftImportTeams')?.value||12);
+  if (!raw) return;
+  const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  const picks = [];
+  lines.forEach((line, idx) => {
+    // Try formats: "1.01 Name POS TEAM" or "Name,POS,Round,Pick"
+    let player=null, round=null, pickInRound=null;
+    const pickMatch = line.match(/^(\d+)\.(\d+)\s+(.+?)\s+([A-Z]{2})\s+([A-Z]{2,3})?/);
+    if (pickMatch) {
+      round=parseInt(pickMatch[1]); pickInRound=parseInt(pickMatch[2]);
+      const name=pickMatch[3], pos=pickMatch[4], team=pickMatch[5]||'';
+      player = (S.players||[]).find(p=>(p.full_name||'').toLowerCase()===name.toLowerCase()) ||
+        { id:'anl_'+idx, full_name:name, position:pos, team };
+    } else {
+      // CSV: Name,POS,TEAM or Name,POS,Round,Pick
+      const parts = line.split(',').map(s=>s.trim());
+      if (parts.length>=2) {
+        const name=parts[0], pos=parts[1];
+        round=parseInt(parts[2])||Math.ceil((idx+1)/teams);
+        pickInRound=parseInt(parts[3])||((idx)%teams+1);
+        player = (S.players||[]).find(p=>(p.full_name||'').toLowerCase()===name.toLowerCase()) ||
+          { id:'anl_'+idx, full_name:name, position:pos, team:'' };
+      }
+    }
+    if (player && round) {
+      picks.push({ player, round, pickInRound: pickInRound||1, overallPick:(round-1)*teams+(pickInRound||1), team:'', grade:null, diff:null });
+    }
+  });
+  if (!picks.length) { showToast('Could not parse any picks','err'); return; }
+  gradeAnlPicks(picks, teams);
+  closeModal('draftImportModal');
+}
+
+function gradeAnlPicks(picks, teams) {
+  // Build rank map from current values
+  const ranked = (S.players||[])
+    .filter(p=>p.position!=='PICK'&&p.dynasty_val>0)
+    .sort((a,b)=>(b.redraft_val||b.dynasty_val)-(a.redraft_val||a.dynasty_val));
+  const rankMap = {};
+  ranked.forEach((p,i)=>{ rankMap[p.id]=i+1; });
+
+  picks.forEach(pk => {
+    const valRank = rankMap[pk.player?.id] || null;
+    if (valRank) {
+      pk.diff = pk.overallPick - valRank; // positive = drafted later than ranked (steal)
+      if (pk.diff > 15) pk.grade = 'steal';
+      else if (pk.diff > 6) pk.grade = 'value';
+      else if (pk.diff >= -6) pk.grade = 'fair';
+      else if (pk.diff >= -15) pk.grade = 'reach';
+      else pk.grade = 'bust';
+    } else {
+      pk.grade = 'fair'; pk.diff = 0;
+    }
+  });
+
+  DS.anlState.picks = picks;
+  renderAnlSummary(teams);
+  setDraftMode('analyzer');
+  showToast(`Graded ${picks.length} picks ✅`);
+}
+
+function renderAnlSummary(teams) {
+  const picks = DS.anlState.picks;
+  document.getElementById('draftAnlEmpty').style.display = 'none';
+  document.getElementById('draftAnlSummary').style.display = 'block';
+  const steals = picks.filter(p=>p.grade==='steal'||p.grade==='value').length;
+  const reaches = picks.filter(p=>p.grade==='reach'||p.grade==='bust').length;
+  document.getElementById('draftAnlStats').innerHTML = `
+    <div class="stat-card"><div class="stat-card-val">${picks.length}</div><div class="stat-card-lbl">Total Picks</div></div>
+    <div class="stat-card"><div class="stat-card-val" style="color:var(--success)">${steals}</div><div class="stat-card-lbl">Steals / Value</div></div>
+    <div class="stat-card"><div class="stat-card-val" style="color:var(--warn)">${reaches}</div><div class="stat-card-lbl">Reaches</div></div>
+    <div class="stat-card"><div class="stat-card-val">${teams}</div><div class="stat-card-lbl">Teams</div></div>
+  `;
+  renderAnlList();
+  renderTeamGrades(teams);
+}
+
+function renderAnlList() {
+  const el = document.getElementById('draftAnlList');
+  if (!el) return;
+  const f = DS.anlState.filter;
+  let picks = DS.anlState.picks;
+  if (f==='steals') picks = picks.filter(p=>p.grade==='steal'||p.grade==='value');
+  if (f==='reaches') picks = picks.filter(p=>p.grade==='reach'||p.grade==='bust');
+
+  const gradeLabels = {steal:'🔥 Steal',value:'📈 Value',fair:'✓ Fair',reach:'⚠️ Reach',bust:'❌ Reach'};
+  const gradeClasses = {steal:'grade-steal',value:'grade-value',fair:'grade-fair',reach:'grade-reach',bust:'grade-bust'};
+  el.innerHTML = picks.map(pk => {
+    const diffStr = pk.diff > 0 ? `+${pk.diff} picks late` : pk.diff < 0 ? `${pk.diff} picks early` : 'On value';
+    return `<div class="dav-row">
+      <div class="dav-rank">${pk.round}.${String(pk.pickInRound).padStart(2,'0')}</div>
+      <span class="pb pb-${pk.player?.position||'?'}">${pk.player?.position||'?'}</span>
+      <div class="dav-info">
+        <div class="dav-name">${escHtml(pk.player?.full_name||'Unknown')}</div>
+        <div class="dav-sub">${pk.player?.team||'FA'} · ${diffStr}${pk.team?` · ${pk.team}`:''}</div>
+      </div>
+      <div class="draft-pick-grade ${gradeClasses[pk.grade]||'grade-fair'}">${gradeLabels[pk.grade]||'Fair'}</div>
+    </div>`;
+  }).join('') || '<div class="dd-none">No picks match filter</div>';
+}
+
+function renderTeamGrades(teams) {
+  const el = document.getElementById('draftTeamGrades');
+  if (!el) return;
+  // Group by team (pick # mod teams)
+  const byTeam = {};
+  DS.anlState.picks.forEach(pk => {
+    const t = pk.team || `Team ${((pk.overallPick-1) % teams) + 1}`;
+    if (!byTeam[t]) byTeam[t] = [];
+    byTeam[t].push(pk);
+  });
+  const teamScores = Object.entries(byTeam).map(([name, picks]) => {
+    const avg = picks.reduce((s,p)=>s+(p.diff||0),0)/picks.length;
+    const grade = avg > 8 ? 'A' : avg > 3 ? 'B+' : avg > -2 ? 'B' : avg > -7 ? 'C' : 'D';
+    return { name, grade, avg: avg.toFixed(1), picks };
+  }).sort((a,b)=>parseFloat(b.avg)-parseFloat(a.avg));
+
+  el.innerHTML = teamScores.map(t => `
+    <div class="draft-pick-row">
+      <div style="font-size:22px;font-weight:900;min-width:36px;text-align:center;color:${t.grade.startsWith('A')?'#22c55e':t.grade.startsWith('B')?'#60a5fa':'#f59e0b'}">${t.grade}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${escHtml(t.name)}</div>
+        <div style="font-size:11px;color:var(--text3)">${t.picks.length} picks · Avg value diff: ${t.avg>0?'+':''}${t.avg}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadSampleDraft() {
+  // Pre-load a sample 12-team PPR draft to demo the analyzer
+  const samplePaste = [
+    '1.01 Ja\'Marr Chase WR CIN',
+    '1.02 Bijan Robinson RB ATL',
+    '1.03 Jaxon Smith-Njigba WR SEA',
+    '1.04 Puka Nacua WR LAR',
+    '1.05 Justin Jefferson WR MIN',
+    '1.06 CeeDee Lamb WR DAL',
+    '1.07 Malik Nabers WR NYG',
+    '1.08 Drake London WR ATL',
+    '1.09 Jahmyr Gibbs RB DET',
+    '1.10 Amon-Ra St. Brown WR DET',
+    '1.11 Tetairoa McMillan WR CAR',
+    '1.12 De\'Von Achane RB MIA',
+  ].join('\n');
+  document.getElementById('draftPasteInput').value = samplePaste;
+  document.getElementById('draftImportTeams').value = '12';
+  openModal('draftImportModal');
 }
 </script>
 </body>
