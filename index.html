@@ -357,6 +357,19 @@
     .src-count{background:var(--primary);color:#fff;border-radius:10px;padding:0 6px;font-size:10px;font-weight:800;min-width:16px;text-align:center}
     .bm-link{font-size:11px;font-weight:600;color:#14b8a6;border:1px solid #14b8a6;border-radius:5px;padding:3px 8px;text-decoration:none;white-space:nowrap;cursor:grab;flex-shrink:0;transition:all .15s}
     .bm-link:hover{background:rgba(20,184,166,.15)}
+
+    /* ── TRADEIQ ENGINE ─────────────────── */
+    .eng-t1{background:rgba(255,215,0,.15);color:#ffd700;border:1px solid rgba(255,215,0,.3)}
+    .eng-t2{background:rgba(124,58,237,.18);color:#a78bfa;border:1px solid rgba(124,58,237,.3)}
+    .eng-t3{background:rgba(34,197,94,.13);color:#4ade80;border:1px solid rgba(34,197,94,.25)}
+    .eng-t4{background:rgba(59,130,246,.13);color:#60a5fa;border:1px solid rgba(59,130,246,.25)}
+    .eng-t5{background:rgba(100,116,139,.13);color:#94a3b8;border:1px solid rgba(100,116,139,.2)}
+    .eng-t6{background:rgba(71,85,105,.1);color:#64748b;border:1px solid rgba(71,85,105,.2)}
+    .eng-tier-chip{font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:5px;vertical-align:middle;letter-spacing:.04em;text-transform:uppercase}
+    .eng-score-cell{font-size:12px;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap}
+    .chip-bd{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+    .chip-bd span{font-size:10px;color:var(--text3);background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:1px 5px}
+    .chip-eng-total{font-size:10px;font-weight:700;color:var(--primary-l) !important;background:var(--primary-d) !important;border-color:var(--primary) !important}
     .src-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
     .src-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px}
     .src-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -667,6 +680,7 @@
               <th onclick="sortTable('age')">Age</th>
               <th onclick="sortTable('value')">Value</th>
               <th>Tier</th>
+              <th onclick="sortTable('engine')" title="TradeIQ composite score (0–100): Production · Age · Opportunity · Physical · Efficiency. Hover a row to see breakdown.">TIQ Score ▸</th>
               <th onclick="sortTable('trend')">Trend</th>
             </tr>
           </thead>
@@ -1606,12 +1620,27 @@ function renderTrade() {
 
 function renderChips(arr, side) {
   return arr.map(p => {
-    const v = calcValue(p);
+    const v    = calcValue(p);
+    const tier = p._engineTier;
+    const tierBadge = tier ? `<span class="eng-tier-chip ${tier.cls}">${tier.label}</span>` : '';
+    const bdHtml = p._breakdown ? (() => {
+      const b = p._breakdown;
+      const mode = S.settings.mode;
+      return `<div class="chip-bd">
+        <span title="Production">P:${Math.round(b.production)}</span>
+        <span title="Age">A:${Math.round(b.age)}</span>
+        <span title="Opportunity">O:${Math.round(b.opportunity)}</span>
+        <span title="Physical">Ph:${Math.round(b.physical)}</span>
+        <span title="Efficiency">E:${Math.round(b.efficiency)}</span>
+        ${p._engineScore!=null?`<span class="chip-eng-total" title="TradeIQ Score">TIQ:${p._engineScore}</span>`:''}
+      </div>`;
+    })() : '';
     return `<div class="chip">
       <span class="pb pb-${p.position}">${p.position}</span>
       <div class="chip-info">
-        <div class="chip-name">${p.full_name}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
+        <div class="chip-name">${p.full_name}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}${tierBadge}</div>
         <div class="chip-sub">${p.team||''}${p.age?' · Age '+p.age:''}</div>
+        ${bdHtml}
       </div>
       <div class="chip-val">${fmtVal(v)}</div>
       <button class="chip-rm" onclick="removeFromTrade('${p.id}','${side}')">×</button>
@@ -1704,7 +1733,8 @@ function renderValuesTable() {
       else if (col === 'team') { av = a.team||'';  bv = b.team||''; }
       else if (col === 'age')  { av = a.age||99;   bv = b.age||99; }
       else if (col === 'rank') { av = a.search_rank||9999; bv = b.search_rank||9999; }
-      else if (col === 'trend'){ av = a.trend||'';  bv = b.trend||''; }
+      else if (col === 'trend') { av = a.trend||'';       bv = b.trend||''; }
+      else if (col === 'engine'){ av = a._engineScore||0; bv = b._engineScore||0; }
       else { av = a._val; bv = b._val; }
       if (av < bv) return dir === 'asc' ? -1 : 1;
       if (av > bv) return dir === 'asc' ? 1 : -1;
@@ -1714,9 +1744,15 @@ function renderValuesTable() {
   const maxV = Math.max(...rows.map(r=>r._val), 1);
   const tbody = document.getElementById('valTbody');
   tbody.innerHTML = rows.slice(0,300).map((p,i) => {
-    const v = p._val;
+    const v    = p._val;
     const tier = getTier(v);
     const barW = Math.round(v / maxV * 100);
+    const engT = p._engineTier;
+    const engScore = p._engineScore;
+    const bdTip = p._breakdown ? (() => {
+      const b = p._breakdown;
+      return `P:${Math.round(b.production)} A:${Math.round(b.age)} O:${Math.round(b.opportunity)} Ph:${Math.round(b.physical)} E:${Math.round(b.efficiency)}`;
+    })() : '';
     return `<tr>
       <td><span style="color:var(--text3);font-size:12px">${i+1}</span></td>
       <td><strong>${p.full_name}</strong>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</td>
@@ -1730,9 +1766,12 @@ function renderValuesTable() {
         </div>
       </td>
       <td><span class="tier-badge ${tier.cls}">${tier.label}</span></td>
+      <td title="${bdTip}">
+        ${engScore != null ? `<span class="eng-score-cell ${engT?.cls||''}">${engScore}<span style="font-size:9px;opacity:.6;margin-left:2px">/100</span></span>` : '—'}
+      </td>
       <td>${trendHtml(p)}</td>
     </tr>`;
-  }).join('') || `<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--text3)">No players found</td></tr>`;
+  }).join('') || `<tr><td colspan="9" style="padding:24px;text-align:center;color:var(--text3)">No players found</td></tr>`;
 
   // update sub
   document.getElementById('valTableSub').textContent = `${rows.length} players · ${S.settings.mode === 'dynasty' ? 'Dynasty' : 'Redraft'} · ${S.settings.size}-Team · ${S.settings.qb.toUpperCase()} · ${S.settings.scoring.toUpperCase()}`;
@@ -2275,6 +2314,8 @@ function rebuildPlayerValues() {
     if (c.trend)  p.trend        = c.trend;
     p._srcCount = c.sources;
   });
+  // Run engine scores after consensus values are set (engine uses dynasty_val as production proxy)
+  applyEngineScores();
   renderValuesTable();
   renderTrade();
   updateSourceCount();
@@ -3308,7 +3349,7 @@ async function init() {
   S.ready = true;
   // Handle bookmarklet import from URL hash (e.g. opened by bookmarklet on partner site)
   handleBookmarkletImport();
-  // Rebuild player values from all loaded sources
+  // Rebuild player values from all loaded sources (also runs engine scores)
   rebuildPlayerValues();
   const srcCount = Object.values(S.sourceStatus).filter(s=>s==='ok').length;
   const liveBadge = srcCount > 0 ? `<span class="fc-badge">${srcCount} source${srcCount>1?'s':''} ✓</span>` : '';
@@ -4530,6 +4571,192 @@ document.addEventListener('keydown', e => {
     ['authModal','connectModal','platformModal','leaguePickerModal'].forEach(closeModal);
   }
 });
+
+// ═══════════════════════════════════════════════════════════
+// TRADEIQ VALUATION ENGINE v1.0
+// Composite score (0–100) from Production, Age, Opportunity,
+// Physical, and Efficiency. Weights shift for dynasty vs redraft.
+// ═══════════════════════════════════════════════════════════
+const TradeIQEngine = (() => {
+
+  const WEIGHTS = {
+    dynasty: { production:0.20, age:0.35, opportunity:0.20, physical:0.15, efficiency:0.10 },
+    redraft:  { production:0.40, age:0.10, opportunity:0.30, physical:0.05, efficiency:0.15 },
+  };
+
+  const PEAK_AGE    = { QB:27, RB:24, WR:26, TE:27 };
+  const AGE_PENALTY = { QB:3,  RB:7,  WR:4,  TE:4  };
+  const POS_AVG_PPG = { QB:22, RB:14, WR:13, TE:10 };
+  // Position dynasty ceilings (KTC scale) — used to normalise value → PPG proxy
+  const POS_MAX_DV  = { QB:7800, RB:9800, WR:9800, TE:8200 };
+
+  function productionScore(player) {
+    const pos = player.position;
+    const avg = POS_AVG_PPG[pos] || 12;
+    // dynasty_val → PPG proxy: top player = 2× avg PPG → score 100
+    // "average starter" (≈40% of posMax) → 0.8× avg PPG → score 40
+    const maxDV = POS_MAX_DV[pos] || 9000;
+    const ppg = ((player.dynasty_val || 0) / (maxDV * 0.5)) * avg;
+    return Math.min(100, Math.max(0, (ppg / avg) * 50));
+  }
+
+  function ageScore(player, mode) {
+    const pos  = player.position;
+    const age  = player.age || 25;
+    const peak = PEAK_AGE[pos]    || 26;
+    const pen  = AGE_PENALTY[pos] || 4;
+    const diff = age - peak;
+    if (diff < 0) {
+      const upside = mode === 'dynasty' ? Math.abs(diff) * 3 : 0;
+      return Math.min(100, 85 + upside);
+    }
+    return Math.min(100, Math.max(0, 100 - pen * diff));
+  }
+
+  function opportunityScore(player) {
+    const pos = player.position;
+    let score = 50;
+    if (['WR','TE'].includes(pos) && player.target_share != null)
+      score = player.target_share * 380;
+    else if (pos === 'RB' && player.carry_share != null)
+      score = player.carry_share * 130;
+    else if (pos === 'QB' && player.snap_pct != null)
+      score = player.snap_pct * 100;
+    if (player.depth_chart_order === 1) score += 10;
+    if (player.depth_chart_order >= 3) score -= 15;
+    return Math.min(100, Math.max(0, score));
+  }
+
+  function physicalScore(player) {
+    const pos = player.position;
+    let score = 50;
+    if (pos === 'QB') {
+      if ((player.height_inches||0) >= 74) score += 10;
+      if ((player.forty_time||99)   <= 4.9) score += 8;
+    }
+    if (pos === 'RB') {
+      const wt = player.weight_lbs || 0;
+      if (wt >= 200 && wt <= 220)         score += 10;
+      if ((player.forty_time||99) <= 4.45) score += 12;
+      if ((player.forty_time||99) <= 4.35) score += 5;
+    }
+    if (pos === 'WR') {
+      if ((player.forty_time||99) <= 4.45) score += 15;
+      if ((player.forty_time||99) <= 4.35) score += 5;
+      if ((player.height_inches||0) >= 73 && (player.weight_lbs||0) >= 200) score += 10;
+    }
+    if (pos === 'TE') {
+      if ((player.height_inches||0) >= 76) score += 8;
+      if ((player.forty_time||99)   <= 4.7) score += 12;
+      if ((player.forty_time||99)   <= 4.6) score += 5;
+      const wt = player.weight_lbs || 0;
+      if (wt >= 240 && wt <= 260)           score += 8;
+    }
+    return Math.min(100, Math.max(0, score));
+  }
+
+  function efficiencyScore(player) {
+    let score = 50;
+    if (player.yards_per_route_run != null)
+      score = (player.yards_per_route_run / 2.0) * 85;
+    else if (player.yards_after_contact != null)
+      score = (player.yards_after_contact / 3.0) * 85;
+    else if (player.cpoe != null)
+      score = 50 + player.cpoe * 5;
+    return Math.min(100, Math.max(0, score));
+  }
+
+  function applySettings(base, player, settings) {
+    let v = base;
+    const pos = player.position;
+    if (settings.qbFormat === 'SF'  && pos === 'QB') v *= 1.25;
+    if (settings.qbFormat === '2QB' && pos === 'QB') v *= 1.20;
+    if (settings.tePremium && pos === 'TE')           v *= 1.15;
+    if (settings.scoring === 'PPR') {
+      if (['WR','TE'].includes(pos)) v *= 1.05;
+      if (pos === 'RB') v *= 0.97;
+    }
+    if (settings.scoring === 'Std') {
+      if (pos === 'RB') v *= 1.05;
+      if (['WR','TE'].includes(pos)) v *= 0.97;
+    }
+    return Math.min(100, v);
+  }
+
+  function assignTier(score) {
+    if (score >= 88) return { n:1, label:'Elite',   cls:'eng-t1' };
+    if (score >= 75) return { n:2, label:'Stud',    cls:'eng-t2' };
+    if (score >= 62) return { n:3, label:'Starter', cls:'eng-t3' };
+    if (score >= 48) return { n:4, label:'Flex',    cls:'eng-t4' };
+    if (score >= 35) return { n:5, label:'Depth',   cls:'eng-t5' };
+    return                        { n:6, label:'Bench',  cls:'eng-t6' };
+  }
+
+  function scorePlayer(player, mode, settings) {
+    const isRookie = (player.years_exp === 0 || player.rookie === true) && mode === 'dynasty';
+    const w = WEIGHTS[mode] || WEIGHTS.dynasty;
+    const bd = {
+      production:  productionScore(player),
+      age:         ageScore(player, mode),
+      opportunity: opportunityScore(player),
+      physical:    physicalScore(player),
+      efficiency:  efficiencyScore(player),
+    };
+    const raw = bd.production*w.production + bd.age*w.age +
+                bd.opportunity*w.opportunity + bd.physical*w.physical +
+                bd.efficiency*w.efficiency;
+    const adjusted = Math.round(applySettings(raw, player, settings));
+    const tier = assignTier(adjusted);
+    return { total: adjusted, tier, breakdown: bd, isRookie };
+  }
+
+  // Parse Sleeper height string ("6'2\"" or plain number) → inches
+  function parseHeight(h) {
+    if (!h) return null;
+    if (typeof h === 'number') return h;
+    const m = String(h).match(/(\d+)'(\d+)/);
+    if (m) return parseInt(m[1]) * 12 + parseInt(m[2]);
+    const n = parseInt(h);
+    return isNaN(n) ? null : n;
+  }
+
+  // Map a Sleeper/TradeIQ player object to engine input
+  function preparePlayer(p) {
+    return {
+      ...p,
+      height_inches: parseHeight(p.height),
+      weight_lbs:    parseInt(p.weight) || null,
+      forty_time:    p.forty_time ? parseFloat(p.forty_time) : null,
+      // Opportunity signals (populated if available from stats import)
+      target_share:  p.target_share  || null,
+      carry_share:   p.carry_share   || null,
+      snap_pct:      p.snap_pct      || null,
+      years_exp:     p.years_exp     || 0,
+    };
+  }
+
+  return { scorePlayer, preparePlayer, assignTier, parseHeight };
+})();
+
+// Apply engine scores to all loaded players (runs after consensus values are set)
+function applyEngineScores() {
+  if (!S.ready || !S.players?.length) return;
+  const mode = S.settings.mode;
+  const settings = {
+    qbFormat:   S.settings.qb === 'sf' ? 'SF' : S.settings.qb === '2qb' ? '2QB' : '1QB',
+    scoring:    S.settings.scoring === 'ppr' ? 'PPR' : 'Std',
+    tePremium:  S.settings.te === 'on',
+    leagueSize: S.settings.size,
+  };
+  S.players.forEach(p => {
+    if (p.position === 'PICK') { p._engineScore = null; return; }
+    const prepped  = TradeIQEngine.preparePlayer(p);
+    const result   = TradeIQEngine.scorePlayer(prepped, mode, settings);
+    p._engineScore = result.total;
+    p._engineTier  = result.tier;
+    p._breakdown   = result.breakdown;
+  });
+}
 </script>
 </body>
 </html>
