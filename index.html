@@ -931,6 +931,7 @@
         <div class="home-landing">
           <div class="home-landing-logo"><em>Fantasy</em>IQ</div>
           <div class="home-landing-tag">The free NFL fantasy analyzer built for serious players.</div>
+          <button class="btn btn-p" style="font-size:15px;padding:12px 40px;border-radius:10px;margin-bottom:20px" onclick="openModal('authModal')">Sign In</button>
           <div class="home-feat-grid">
             <div class="home-feat-card" onclick="switchTab('analyzer')">
               <div class="home-feat-icon">⚖️</div>
@@ -963,7 +964,6 @@
               <div class="home-feat-desc">Roster valuation and personalized team analysis.</div>
             </div>
           </div>
-          <button class="btn btn-p" style="font-size:15px;padding:12px 40px;border-radius:10px" onclick="openModal('authModal')">Sign In</button>
         </div>
       </div>
       <!-- Option C: logged in + league imported -->
@@ -1521,6 +1521,20 @@
             </select>
             <select id="dsimSlot" class="trade-partner-sel" style="max-width:120px"></select>
             <select id="dsimRounds" class="trade-partner-sel" style="max-width:110px"></select>
+            <select id="dsimQB" class="trade-partner-sel" style="max-width:100px">
+              <option value="1qb" selected>1 QB</option>
+              <option value="sf">Superflex</option>
+              <option value="2qb">2 QB</option>
+            </select>
+            <select id="dsimScoring" class="trade-partner-sel" style="max-width:100px">
+              <option value="ppr" selected>PPR</option>
+              <option value="half">Half PPR</option>
+              <option value="std">Non-PPR</option>
+            </select>
+            <select id="dsimTE" class="trade-partner-sel" style="max-width:110px">
+              <option value="off" selected>Std TE</option>
+              <option value="on">TE Premium</option>
+            </select>
             <select id="dsimSpeed" class="trade-partner-sel" style="max-width:110px">
               <option value="fast">Fast CPU</option>
               <option value="normal" selected>Normal CPU</option>
@@ -9195,6 +9209,9 @@ const DSIM = {
   rounds: 4,
   snake: true,
   speed: 'normal',
+  scoring: 'ppr',
+  qb: '1qb',
+  te: 'off',
   available: [],
   drafted: new Set(),
   rosters: [],
@@ -9203,6 +9220,7 @@ const DSIM = {
   currentOverall: 0,
   posFilter: 'ALL',
   _cpuTimer: null,
+  _savedSettings: null,
 };
 
 // ── Setup helpers ─────────────────────────────────────────
@@ -9273,8 +9291,15 @@ function startDraftSim() {
   DSIM.mySlot    = parseInt(document.getElementById('dsimSlot')?.value || 1) - 1;
   DSIM.rounds    = parseInt(document.getElementById('dsimRounds')?.value || 4);
   DSIM.speed     = document.getElementById('dsimSpeed')?.value || 'normal';
+  DSIM.scoring   = document.getElementById('dsimScoring')?.value || 'ppr';
+  DSIM.qb        = document.getElementById('dsimQB')?.value || '1qb';
+  DSIM.te        = document.getElementById('dsimTE')?.value || 'off';
   DSIM.active    = true;
   DSIM.done      = false;
+
+  // Override global settings with sim-specific scoring so calcValue() reflects sim format
+  DSIM._savedSettings = { ...S.settings };
+  S.settings = { ...S.settings, mode: 'redraft', scoring: DSIM.scoring, qb: DSIM.qb, te: DSIM.te };
   DSIM.drafted   = new Set();
   DSIM.picks     = [];
   DSIM.posFilter = 'ALL';
@@ -9325,6 +9350,8 @@ function startDraftSim() {
 
 function resetDraftSim() {
   if (DSIM._cpuTimer) { clearTimeout(DSIM._cpuTimer); DSIM._cpuTimer = null; }
+  // Restore global settings that were overridden for sim scoring
+  if (DSIM._savedSettings) { S.settings = DSIM._savedSettings; DSIM._savedSettings = null; }
   DSIM.active = false;
   DSIM.done   = false;
   DSIM.drafted = new Set();
