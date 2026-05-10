@@ -3086,23 +3086,26 @@ function sortTable(col) {
 // ── Infer starting slot counts from connected league or settings ──────
 function getRosterSlots() {
   const raw = S.connectedLeague?.rosterPositions || [];
-  if (raw.length) {
+  // Filter out bench/IR/taxi spots — only count starting slots
+  const starters = raw.filter(p => !['BN','IR','TAXI'].includes(p));
+  if (starters.length) {
     return {
-      QB:    raw.filter(p => p === 'QB').length,
-      RB:    raw.filter(p => p === 'RB').length,
-      WR:    raw.filter(p => p === 'WR').length,
-      TE:    raw.filter(p => p === 'TE').length,
-      FLEX:  raw.filter(p => ['FLEX','REC_FLEX','WRRB_FLEX'].includes(p)).length,
-      SFLEX: raw.filter(p => p === 'SUPER_FLEX').length,
-      K:     raw.filter(p => p === 'K').length,
-      DEF:   raw.filter(p => ['DEF','DST'].includes(p)).length,
+      QB:    starters.filter(p => p === 'QB').length,
+      RB:    starters.filter(p => p === 'RB').length,
+      WR:    starters.filter(p => p === 'WR').length,
+      TE:    starters.filter(p => p === 'TE').length,
+      FLEX:  starters.filter(p => ['FLEX','REC_FLEX','WRRB_FLEX','TE_FLEX'].includes(p)).length,
+      SFLEX: starters.filter(p => p === 'SUPER_FLEX').length,
+      K:     starters.filter(p => p === 'K').length,
+      DEF:   starters.filter(p => ['DEF','DST'].includes(p)).length,
+      IDP:   starters.filter(p => p === 'IDP_FLEX').length,
     };
   }
-  // Fallback: infer from QB format setting
+  // Fallback: infer from QB format setting (used when no league imported)
   const qb = S.settings.qb;
-  if (qb === '2qb') return { QB:2, RB:2, WR:2, TE:1, FLEX:1, SFLEX:0, K:1, DEF:1 };
-  if (qb === 'sf')  return { QB:1, RB:2, WR:3, TE:1, FLEX:1, SFLEX:1, K:1, DEF:1 };
-  return                   { QB:1, RB:2, WR:3, TE:1, FLEX:2, SFLEX:0, K:1, DEF:1 };
+  if (qb === '2qb') return { QB:2, RB:2, WR:2, TE:1, FLEX:1, SFLEX:0, K:1, DEF:1, IDP:0 };
+  if (qb === 'sf')  return { QB:1, RB:2, WR:3, TE:1, FLEX:1, SFLEX:1, K:1, DEF:1, IDP:0 };
+  return                   { QB:1, RB:2, WR:3, TE:1, FLEX:2, SFLEX:0, K:1, DEF:1, IDP:0 };
 }
 
 function renderRosterList() {
@@ -3144,6 +3147,7 @@ function renderRosterList() {
   const sflexStarters = pick(['QB','RB','WR','TE'], slots.SFLEX);
   const kStarters     = pick(['K'], slots.K);
   const defStarters   = pick(['DEF','DST'], slots.DEF);
+  const idpStarters   = pick(['DE','DT','LB','CB','S','FS','SS','DB','OLB','ILB','MLB','DL','IDP'], slots.IDP || 0);
   const bench         = sorted.filter(p => !used.has(p.id));
 
   // Build one player row
@@ -3188,6 +3192,7 @@ function renderRosterList() {
   html += group('TE',   teStarters,    slots.TE,    'is-slot-TE');
   if (slots.FLEX  > 0) html += group('FLEX',  flexStarters,  slots.FLEX,  'is-flex');
   if (slots.SFLEX > 0) html += group('SFLX',  sflexStarters, slots.SFLEX, 'is-flex');
+  if ((slots.IDP||0) > 0) html += group('IDP', idpStarters, slots.IDP, 'is-special');
 
   if (hasSpecial) {
     html += '<div class="ros-section-hdr" style="margin-top:4px">K / Defense</div>';
@@ -5704,10 +5709,20 @@ async function silentSleeperRefresh(lg) {
     if (!userRoster) return;
     const allIds = [...(userRoster.players||[]), ...(userRoster.reserve||[])].map(String);
     const rosterPlayers = allIds.map(id => S.players.find(p=>String(p.player_id||p.id)===String(id))).filter(Boolean);
-    const updatedLeague = { ...S.connectedLeague, rosterIds: allIds, connectedAt: Date.now() };
+    // Re-capture rosterPositions and settings from fresh leagueInfo on every refresh
+    const freshPositions = leagueInfo.roster_positions || lg.rosterPositions || [];
+    const freshSettings  = detectSleeperSettings(leagueInfo);
+    const updatedLeague  = {
+      ...S.connectedLeague,
+      rosterIds:       allIds,
+      rosterPositions: freshPositions,
+      settings:        freshSettings,
+      connectedAt:     Date.now(),
+    };
     S.connectedLeague = updatedLeague;
     S.roster = rosterPlayers;
     saveConnectedLeague(updatedLeague);
+    applyLeagueSettings(freshSettings);
     renderRosterList();
     if (S.roster.length) document.getElementById('bshBtn').disabled = false;
     showToast('🏈 Roster refreshed from Sleeper');
