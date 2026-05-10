@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <rect width="1200" height="630" fill="#0e0e14"/>
-  <!-- gradient background -->
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#0e0e14"/>
@@ -12,16 +11,16 @@
     </linearGradient>
   </defs>
   <rect width="1200" height="630" fill="url(#bg)"/>
-  <rect x="0" y="0" width="600" height="630" fill="url(#glow)"/>
+  <rect x="0" y="0" width="620" height="630" fill="url(#glow)"/>
   <!-- logo -->
   <text x="80" y="200" font-family="system-ui,-apple-system,sans-serif" font-size="120" font-weight="900" letter-spacing="-6" fill="#9d5af0">Trade</text>
   <text x="576" y="200" font-family="system-ui,-apple-system,sans-serif" font-size="120" font-weight="900" letter-spacing="-6" fill="#e2e8f0">IQ</text>
   <!-- tagline -->
   <text x="80" y="270" font-family="system-ui,-apple-system,sans-serif" font-size="36" font-weight="400" fill="#94a3b8">NFL Dynasty &amp; Redraft Trade Analyzer</text>
   <!-- features -->
-  <text x="80" y="360" font-family="system-ui,-apple-system,sans-serif" font-size="28" fill="#64748b">✓  Multi-source consensus rankings</text>
-  <text x="80" y="410" font-family="system-ui,-apple-system,sans-serif" font-size="28" fill="#64748b">✓  Live Draft Wizard</text>
-  <text x="80" y="460" font-family="system-ui,-apple-system,sans-serif" font-size="28" fill="#64748b">✓  KTC · FantasyCalc · DLF · FantasyPros</text>
+  <text x="80" y="360" font-family="system-ui,-apple-system,sans-serif" font-size="28" fill="#64748b">✓  Proprietary consensus rankings engine</text>
+  <text x="80" y="410" font-family="system-ui,-apple-system,sans-serif" font-size="28" fill="#64748b">✓  Weekly waiver wire &amp; dynasty buy/sell</text>
+  <text x="80" y="460" font-family="system-ui,-apple-system,sans-serif" font-size="28" fill="#64748b">✓  Live Draft Wizard &amp; trade analyzer</text>
   <!-- CTA -->
   <rect x="80" y="510" width="300" height="64" rx="12" fill="#7c3aed"/>
   <text x="230" y="551" font-family="system-ui,-apple-system,sans-serif" font-size="24" font-weight="700" fill="white" text-anchor="middle">Free to Use</text>
@@ -30,9 +29,9 @@
   <text x="940" y="140" font-family="system-ui,-apple-system,sans-serif" font-size="16" fill="#64748b" text-anchor="middle" font-weight="700" letter-spacing="2">TRADE GRADE</text>
   <text x="940" y="220" font-family="system-ui,-apple-system,sans-serif" font-size="96" font-weight="900" fill="#22c55e" text-anchor="middle">A</text>
   <rect x="750" y="310" width="380" height="130" rx="16" fill="#14141e" stroke="#252535" stroke-width="2"/>
-  <text x="940" y="355" font-family="system-ui,-apple-system,sans-serif" font-size="14" fill="#64748b" text-anchor="middle" font-weight="700" letter-spacing="2">CONSENSUS SOURCES</text>
+  <text x="940" y="355" font-family="system-ui,-apple-system,sans-serif" font-size="14" fill="#64748b" text-anchor="middle" font-weight="700" letter-spacing="2">DYNASTY BUY / SELL</text>
   <circle cx="800" cy="400" r="8" fill="#22c55e"/>
-  <text x="820" y="405" font-family="system-ui,-apple-system,sans-serif" font-size="18" fill="#94a3b8">KeepTradeCut</text>
-  <circle x="800" cy="400" cx="960" r="8" fill="#3b82f6"/>
-  <text x="980" y="405" font-family="system-ui,-apple-system,sans-serif" font-size="18" fill="#94a3b8">FantasyCalc</text>
+  <text x="820" y="405" font-family="system-ui,-apple-system,sans-serif" font-size="18" fill="#94a3b8">📈 Buy Low</text>
+  <circle cx="960" cy="400" r="8" fill="#ef4444"/>
+  <text x="980" y="405" font-family="system-ui,-apple-system,sans-serif" font-size="18" fill="#94a3b8">📉 Sell High</text>
 </svg>

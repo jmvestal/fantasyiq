@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="TradeIQ">
   <meta name="theme-color" content="#0e0e14">
-  <meta name="description" content="TradeIQ — Free NFL Dynasty & Redraft Trade Analyzer. Multi-source consensus rankings from KTC, FantasyCalc, DLF & more. Analyze trades, draft live, and dominate your fantasy league.">
+  <meta name="description" content="TradeIQ — Free NFL Dynasty & Redraft Trade Analyzer. Proprietary consensus rankings, live Draft Wizard, waiver wire, and dynasty buy/sell advice. Built for serious fantasy players.">
   <!-- Open Graph / Social sharing -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://jmvestal.github.io/tradeiq/">
@@ -19,7 +19,7 @@
   <!-- Twitter / X -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="TradeIQ — NFL Fantasy Trade Analyzer">
-  <meta name="twitter:description" content="Free Dynasty & Redraft trade analyzer with live consensus rankings from KTC, FantasyCalc, DLF & more.">
+  <meta name="twitter:description" content="Free NFL Dynasty & Redraft trade analyzer with proprietary consensus rankings, waiver wire, buy/sell advice, and live Draft Wizard.">
   <meta name="twitter:image" content="https://jmvestal.github.io/tradeiq/og-image.svg">
   <!-- PWA / icons -->
   <link rel="manifest" href="manifest.json">
@@ -28,7 +28,7 @@
   <link rel="icon" type="image/png" href="favicon-32.png" sizes="32x32">
   <title>TradeIQ — NFL Dynasty & Redraft Trade Analyzer</title>
   <!-- Structured data for Google -->
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"TradeIQ","url":"https://jmvestal.github.io/tradeiq/","description":"Free NFL Dynasty & Redraft Trade Analyzer with multi-source consensus rankings from KTC, FantasyCalc, DLF and more.","applicationCategory":"SportsApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"keywords":"fantasy football trade analyzer, dynasty trade calculator, NFL dynasty rankings, KTC values, FantasyCalc"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"TradeIQ","url":"https://jmvestal.github.io/tradeiq/","description":"Free NFL Dynasty & Redraft Trade Analyzer with proprietary consensus rankings, weekly waiver wire, dynasty buy/sell advice, and live Draft Wizard.","applicationCategory":"SportsApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"keywords":"fantasy football trade analyzer, dynasty trade calculator, NFL dynasty rankings, dynasty buy sell, waiver wire, fantasy football draft tool"}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <!-- Firebase SDK (compat v9) -->
@@ -312,10 +312,10 @@
     /* ── MOBILE BOTTOM TAB BAR ──────────────── */
     .mob-tab-bar{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);z-index:200;padding-bottom:env(safe-area-inset-bottom,0px)}
     .mob-tabs{display:flex;height:56px}
-    .mob-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;cursor:pointer;color:var(--text3);font-size:10px;font-weight:600;transition:color .15s;padding:0;-webkit-tap-highlight-color:transparent}
+    .mob-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:none;border:none;cursor:pointer;color:var(--text3);font-size:10px;font-weight:600;transition:color .15s;padding:0 1px;-webkit-tap-highlight-color:transparent;min-width:0}
     .mob-tab.active{color:var(--primary-l)}
-    .mob-tab-icon{font-size:20px;line-height:1}
-    .mob-tab-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+    .mob-tab-icon{font-size:18px;line-height:1}
+    .mob-tab-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 
     /* ── MOBILE SETTINGS SHEET ──────────────── */
     .mob-settings-sheet{position:fixed;inset:0;z-index:400;display:none;align-items:flex-end}
@@ -534,19 +534,69 @@
     .consensus-bar{display:flex;align-items:center;gap:4px;margin-top:3px}
     .csrc-dot{width:6px;height:6px;border-radius:50%;background:var(--primary-l);flex-shrink:0}
 
+    /* ── WAIVER WIRE ────────────────────── */
+    .wire-row{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;transition:border-color .15s}
+    .wire-row:hover{border-color:var(--border2)}
+    .wire-rank{font-size:13px;font-weight:900;color:var(--text3);min-width:22px;text-align:center;padding-top:2px}
+    .wire-info{flex:1;min-width:0}
+    .wire-name{font-size:14px;font-weight:700;display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+    .wire-sub{font-size:11px;color:var(--text3);margin-top:2px}
+    .wire-reason{font-size:12px;color:var(--text2);margin-top:5px;line-height:1.6}
+    .wire-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap}
+    .wire-must{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.25)}
+    .wire-stream{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.25)}
+    .wire-stash{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.25)}
+    .wire-deep{background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.2)}
+    .wire-legend{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+    .wire-week-bar{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+
+    /* ── DYNASTY BUY/SELL ───────────────── */
+    .bs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:6px}
+    .bs-col{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .bs-col-hdr{padding:10px 14px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)}
+    .buy-hdr{background:var(--success-d);color:var(--success)}
+    .hold-hdr{background:var(--warn-d);color:var(--warn)}
+    .sell-hdr{background:var(--danger-d);color:var(--danger)}
+    .bs-col-body{max-height:620px;overflow-y:auto;padding:8px}
+    .bs-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:6px;display:flex;align-items:center;gap:9px;transition:border-color .12s;cursor:default}
+    .bs-card:hover{border-color:var(--border2)}
+    .bs-badge{font-size:10px;font-weight:800;padding:3px 6px;border-radius:6px;flex-shrink:0;width:34px;text-align:center}
+    .bs-BUY{background:var(--success-d);color:var(--success)}
+    .bs-HOLD{background:var(--warn-d);color:var(--warn)}
+    .bs-SELL{background:var(--danger-d);color:var(--danger)}
+    .bs-name{font-size:12px;font-weight:700;line-height:1.3}
+    .bs-reason{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.45}
+    .bs-meta{font-size:10px;color:var(--text3);margin-top:3px}
+    @media(max-width:768px){.bs-grid{grid-template-columns:1fr}}
+
+    /* ── EMAIL SUBSCRIPTION ─────────────── */
+    .email-sub-bar{background:linear-gradient(135deg,var(--primary-d),rgba(124,58,237,.08));border:1px solid rgba(124,58,237,.3);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+    .email-sub-bar h4{font-size:14px;font-weight:700;color:var(--primary-l);margin-bottom:3px}
+    .email-sub-bar p{font-size:12px;color:var(--text2);line-height:1.5}
+    .email-tier-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+    .email-tier-card{background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:all .15s}
+    .email-tier-card:hover{border-color:var(--primary)}
+    .email-tier-card.selected{border-color:var(--primary);background:var(--primary-d)}
+    .email-tier-card h4{font-size:13px;font-weight:700;margin-bottom:5px}
+    .email-tier-card ul{list-style:none;font-size:12px;color:var(--text2);line-height:1.8}
+    @media(max-width:480px){.email-tier-row{grid-template-columns:1fr}}
+
     /* Auth sign-in page */
     .auth-hero{text-align:center;padding:12px 0 20px}
     .auth-hero .logo-big{font-size:36px;font-weight:900;letter-spacing:-2px;margin-bottom:6px}
     .auth-hero .logo-big em{color:var(--primary-l);font-style:normal}
-    .gsi-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px 16px;background:#fff;border:none;border-radius:10px;color:#1f2937;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:8px}
-    .gsi-btn:hover{background:#f3f4f6;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.3)}
-    .gsi-btn svg{width:20px;height:20px;flex-shrink:0}
     .or-divider{display:flex;align-items:center;gap:10px;color:var(--text3);font-size:12px;margin:14px 0}
     .or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+    .auth-tab-btn{flex:1;padding:9px;background:none;border:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+    .auth-tab-btn.auth-tab-active{background:var(--primary-d);color:var(--primary-l)}
+    .auth-error{font-size:12px;color:var(--danger);text-align:center;margin-top:6px;min-height:18px}
+    .val-both{display:flex;flex-direction:column;gap:1px}
+    .val-dyn{font-weight:700;font-size:13px;color:var(--primary-l)}
+    .val-rdr{font-size:11px;color:var(--text3)}
   </style>
 </head>
 <body>
-<noscript><p style="padding:20px;color:#e2e8f0;background:#0e0e14;font-family:sans-serif">TradeIQ — Free NFL Dynasty &amp; Redraft Trade Analyzer. Multi-source consensus rankings from KTC, FantasyCalc, DLF &amp; more. <a href="https://jmvestal.github.io/tradeiq/" style="color:#9d5af0">Open TradeIQ</a></p></noscript>
+<noscript><p style="padding:20px;color:#e2e8f0;background:#0e0e14;font-family:sans-serif">TradeIQ — Free NFL Dynasty &amp; Redraft Trade Analyzer with proprietary consensus rankings, waiver wire, and dynasty buy/sell advice. <a href="https://jmvestal.github.io/tradeiq/" style="color:#9d5af0">Open TradeIQ</a></p></noscript>
 
 <!-- ═══ HEADER ═══ -->
 <header class="hdr">
@@ -556,14 +606,17 @@
       <button class="nav-btn active" data-tab="analyzer">⚖️ Trade Analyzer</button>
       <button class="nav-btn" data-tab="suggest">💡 Suggest Targets</button>
       <button class="nav-btn" data-tab="values">📊 Player Values</button>
+      <button class="nav-btn" data-tab="wire">📋 Waiver Wire</button>
+      <button class="nav-btn" data-tab="buysell">📈 Buy/Sell</button>
       <button class="nav-btn" data-tab="roster">🏈 My Team</button>
       <button class="nav-btn" data-tab="league">🏆 League</button>
       <button class="nav-btn" data-tab="draft">🎯 Draft</button>
     </nav>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
       <div class="pc-badge" id="pcBadge">Loading players…</div>
-      <button class="src-btn" id="srcBtn" onclick="openModal('sourcesModal')" title="Manage ranking sources">
-        📊 Sources <span class="src-count" id="srcCount">0</span>
+      <!-- Sources button hidden from public UI — access via Ctrl+Shift+S -->
+      <button class="src-btn" id="srcBtn" onclick="openModal('sourcesModal')" title="Admin: ranking sources" style="display:none">
+        📊 <span class="src-count" id="srcCount">0</span>
       </button>
       <!-- Auth: signed-out state -->
       <button class="auth-btn" id="authBtn" onclick="openModal('authModal')">Sign In</button>
@@ -822,7 +875,8 @@
               <th onclick="sortTable('pos')">Pos</th>
               <th onclick="sortTable('team')">Team</th>
               <th onclick="sortTable('age')">Age</th>
-              <th onclick="sortTable('value')">Value</th>
+              <th onclick="sortTable('value')">Dynasty</th>
+              <th>Redraft</th>
               <th>Tier</th>
               <th onclick="sortTable('engine')" title="TradeIQ composite score (0–100): Production · Age · Opportunity · Physical · Efficiency. Hover a row to see breakdown.">TIQ Score ▸</th>
               <th onclick="sortTable('trend')">Trend</th>
@@ -1094,6 +1148,98 @@
 
     </div><!-- /tab-draft -->
 
+    <!-- ══ TAB: WAIVER WIRE ══ -->
+    <div id="tab-wire" class="tab">
+      <div class="sec-hdr">
+        <div>
+          <div class="sec-ttl">📋 Waiver Wire</div>
+          <div class="sec-sub" id="wireSubHead">Weekly waiver targets — updated every Tuesday</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div class="pos-btns" id="wirePosFilter">
+            <button class="pos-btn on" data-wp="ALL" onclick="setWirePos('ALL')">All</button>
+            <button class="pos-btn" data-wp="QB" onclick="setWirePos('QB')">QB</button>
+            <button class="pos-btn" data-wp="RB" onclick="setWirePos('RB')">RB</button>
+            <button class="pos-btn" data-wp="WR" onclick="setWirePos('WR')">WR</button>
+            <button class="pos-btn" data-wp="TE" onclick="setWirePos('TE')">TE</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Offseason banner -->
+      <div id="wireOffseasonBanner" class="bsh-summary" style="margin-bottom:16px">
+        <h4>⏳ Offseason Mode — Camp &amp; Preseason Watchlist</h4>
+        <p>Full weekly waiver wire targets go live Week 1 of the 2026 NFL season. Until then, here are the players worth monitoring in camp and preseason — early adds before ADP adjusts.</p>
+      </div>
+
+      <!-- In-season week bar (hidden in offseason) -->
+      <div id="wireWeekBar" style="display:none" class="wire-week-bar">
+        <span id="wireWeekLabel" style="font-size:14px;font-weight:800">Week 0</span>
+        <span style="font-size:12px;color:var(--text3)">Updated <span id="wireUpdated">—</span></span>
+        <span style="flex:1"></span>
+        <span style="font-size:11px;color:var(--text3)">Based on injuries, matchups &amp; usage trends</span>
+      </div>
+
+      <!-- Priority legend -->
+      <div class="wire-legend">
+        <span class="wire-badge wire-must">🔥 Must-Add</span>
+        <span class="wire-badge wire-stream">⚡ Streamer</span>
+        <span class="wire-badge wire-stash">📦 Stash</span>
+        <span class="wire-badge wire-deep">🔍 Deep Dive</span>
+        <span style="font-size:11px;color:var(--text3);padding:2px 4px;align-self:center">— Updated weekly. Click "Analyze" to pull a player into the Trade Analyzer.</span>
+      </div>
+
+      <div id="wireList"></div>
+    </div><!-- /tab-wire -->
+
+    <!-- ══ TAB: DYNASTY BUY/SELL ══ -->
+    <div id="tab-buysell" class="tab">
+      <div class="sec-hdr">
+        <div>
+          <div class="sec-ttl">📈 Dynasty Buy/Sell</div>
+          <div class="sec-sub">Trade targets based on current market values, age curves &amp; trend data</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div class="pos-btns" id="bsPosFilter">
+            <button class="pos-btn on" data-bs="ALL" onclick="setBsPos('ALL')">All</button>
+            <button class="pos-btn" data-bs="QB" onclick="setBsPos('QB')">QB</button>
+            <button class="pos-btn" data-bs="RB" onclick="setBsPos('RB')">RB</button>
+            <button class="pos-btn" data-bs="WR" onclick="setBsPos('WR')">WR</button>
+            <button class="pos-btn" data-bs="TE" onclick="setBsPos('TE')">TE</button>
+          </div>
+          <button class="btn btn-sm btn-s" onclick="renderBuySellTab()">↻ Refresh</button>
+        </div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="bsh-stats" id="bsStatsRow">
+        <div class="bsh-stat buy"><div class="bsh-stat-num" id="bsCountBuy">—</div><div class="bsh-stat-lbl">Buy</div></div>
+        <div class="bsh-stat hold"><div class="bsh-stat-num" id="bsCountHold">—</div><div class="bsh-stat-lbl">Hold</div></div>
+        <div class="bsh-stat sell"><div class="bsh-stat-num" id="bsCountSell">—</div><div class="bsh-stat-lbl">Sell</div></div>
+      </div>
+
+      <div class="bsh-summary" style="margin-bottom:14px">
+        <h4>💡 How This Works</h4>
+        <p>Players trending up with age on their side = Buy. Aging veterans or declining usage = Sell. These are <strong>trade recommendations</strong> — not start/sit advice. Use the Trade Analyzer to check specific deals.</p>
+      </div>
+
+      <!-- Three-column grid -->
+      <div class="bs-grid" id="bsGrid">
+        <div class="bs-col">
+          <div class="bs-col-hdr buy-hdr">📈 Buy</div>
+          <div class="bs-col-body" id="bsBuyList"><div class="empty-state" style="padding:20px"><span>📈</span>Loading…</div></div>
+        </div>
+        <div class="bs-col">
+          <div class="bs-col-hdr hold-hdr">⏸ Hold</div>
+          <div class="bs-col-body" id="bsHoldList"><div class="empty-state" style="padding:20px"><span>⏸</span>Loading…</div></div>
+        </div>
+        <div class="bs-col">
+          <div class="bs-col-hdr sell-hdr">📉 Sell</div>
+          <div class="bs-col-body" id="bsSellList"><div class="empty-state" style="padding:20px"><span>📉</span>Loading…</div></div>
+        </div>
+      </div>
+    </div><!-- /tab-buysell -->
+
   </main>
 </div>
 
@@ -1113,9 +1259,13 @@
       <span class="mob-tab-icon">⚖️</span>
       <span class="mob-tab-label">Trade</span>
     </button>
-    <button class="mob-tab" data-tab="suggest" onclick="switchTab('suggest')">
-      <span class="mob-tab-icon">💡</span>
-      <span class="mob-tab-label">Targets</span>
+    <button class="mob-tab" data-tab="wire" onclick="switchTab('wire')">
+      <span class="mob-tab-icon">📋</span>
+      <span class="mob-tab-label">Wire</span>
+    </button>
+    <button class="mob-tab" data-tab="buysell" onclick="switchTab('buysell')">
+      <span class="mob-tab-icon">📈</span>
+      <span class="mob-tab-label">Buy/Sell</span>
     </button>
     <button class="mob-tab" data-tab="values" onclick="switchTab('values')">
       <span class="mob-tab-icon">📊</span>
@@ -1124,6 +1274,10 @@
     <button class="mob-tab" data-tab="draft" onclick="switchTab('draft')">
       <span class="mob-tab-icon">🎯</span>
       <span class="mob-tab-label">Draft</span>
+    </button>
+    <button class="mob-tab" data-tab="roster" onclick="switchTab('roster')">
+      <span class="mob-tab-icon">🏈</span>
+      <span class="mob-tab-label">My Team</span>
     </button>
     <button class="mob-tab" data-tab="_settings" onclick="openMobSettings()">
       <span class="mob-tab-icon">⚙️</span>
@@ -1174,8 +1328,7 @@
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-top:14px">
-      <button class="btn btn-p" style="flex:1" onclick="openModal('sourcesModal');closeMobSettings()">📊 Manage Sources</button>
-      <button class="btn btn-s" style="flex:1" onclick="closeMobSettings()">Done</button>
+      <button class="btn btn-s" style="width:100%" onclick="closeMobSettings()">Done</button>
     </div>
   </div>
 </div>
@@ -1201,30 +1354,14 @@
       onclick="document.getElementById('csvFileInput').click()">
       <div class="drop-zone-icon">📂</div>
       <div class="drop-zone-ttl">Drop one or more ranking CSVs here (or click to browse)</div>
-      <div class="drop-zone-sub">Multiple files for the same site are merged & averaged automatically · Works with: KTC · FantasyPros · DLF · DraftShark · Dynasty Nerds · ESPN · Fantrax · CBS · Any site with CSV export</div>
+      <div class="drop-zone-sub">Multiple files are merged &amp; averaged automatically · Supports standard ranking CSV exports from any fantasy platform</div>
     </div>
     <input type="file" id="csvFileInput" accept=".csv,.txt,.xls,.xlsx" multiple style="display:none" onchange="handleCSVFile(this)">
 
-    <!-- How to export from each site -->
+    <!-- CSV format tips (admin only) -->
     <div style="margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:8px">How to export from each site</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
-        <div class="mo-note" style="margin-top:0"><strong>KeepTradeCut</strong><br>Rankings → Export → Download CSV</div>
-        <div class="mo-note" style="margin-top:0"><strong>FantasyPros</strong><br>Rankings → ECR → Export (top right)</div>
-        <div class="mo-note" style="margin-top:0"><strong>Dynasty League Football</strong><br>Rankings page → Export button</div>
-        <div class="mo-note" style="margin-top:0"><strong>DraftShark</strong><br>My Rankings → Download CSV</div>
-        <div class="mo-note" style="margin-top:0"><strong>Dynasty Nerds</strong><br>Rankings → Export to CSV</div>
-        <div class="mo-note" style="margin-top:0"><strong>ESPN</strong><br>Rankings → Print/Export → CSV</div>
-      </div>
-    </div>
-
-    <!-- FantasyPros API key (future) -->
-    <div style="margin-top:4px">
-      <label class="mo-label">FantasyPros API Key <span style="color:var(--text3);font-weight:400">(optional — auto-fetches ECR if you have access)</span></label>
-      <div style="display:flex;gap:8px">
-        <input class="mo-input" id="fpApiKey" placeholder="Enter your API key from api@fantasypros.com" style="margin-bottom:0;flex:1">
-        <button class="btn btn-p btn-sm" onclick="saveFPApiKey()">Save</button>
-      </div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:8px">CSV Format Tips</div>
+      <div class="mo-note" style="margin-top:0">Most fantasy ranking CSVs are auto-detected. Required: player name column. Optional but useful: position, team, rank/value. Extra columns are ignored.</div>
     </div>
   </div>
 </div>
@@ -1235,15 +1372,34 @@
     <button class="mo-close" onclick="closeModal('authModal')">✕</button>
     <div class="auth-hero">
       <div class="logo-big"><em>Trade</em><span style="color:var(--text)">IQ</span></div>
-      <div style="font-size:13px;color:var(--text2);margin-top:4px">Sign in to save leagues, sync across devices &amp; unlock team analysis</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:4px">Save your leagues, sync across devices &amp; unlock team analysis</div>
     </div>
-    <button class="gsi-btn" onclick="signInWithGoogle()">
-      <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-      Continue with Google
-    </button>
+    <!-- Tab switcher -->
+    <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px">
+      <button id="authTabSignIn" class="auth-tab-btn auth-tab-active" onclick="authSwitchTab('signin')">Sign In</button>
+      <button id="authTabRegister" class="auth-tab-btn" onclick="authSwitchTab('register')">Create Account</button>
+    </div>
+    <!-- Sign In form -->
+    <div id="authSignInForm">
+      <input class="mo-input" id="authEmailIn" type="email" placeholder="Email address" autocomplete="email">
+      <input class="mo-input" id="authPassIn" type="password" placeholder="Password" autocomplete="current-password" style="margin-bottom:4px" onkeydown="if(event.key==='Enter')signInWithEmail()">
+      <div id="authSignInErr" class="auth-error"></div>
+      <button class="btn btn-p" style="width:100%;justify-content:center;margin-top:8px" onclick="signInWithEmail()">Sign In</button>
+      <div style="text-align:center;margin-top:10px">
+        <a href="#" style="font-size:12px;color:var(--primary-l)" onclick="event.preventDefault();sendPasswordReset()">Forgot password?</a>
+      </div>
+    </div>
+    <!-- Create Account form -->
+    <div id="authRegisterForm" style="display:none">
+      <input class="mo-input" id="authEmailReg" type="email" placeholder="Email address" autocomplete="email">
+      <input class="mo-input" id="authPassReg" type="password" placeholder="Password (min 6 characters)" autocomplete="new-password">
+      <input class="mo-input" id="authPassReg2" type="password" placeholder="Confirm password" autocomplete="new-password" style="margin-bottom:4px" onkeydown="if(event.key==='Enter')registerWithEmail()">
+      <div id="authRegisterErr" class="auth-error"></div>
+      <button class="btn btn-p" style="width:100%;justify-content:center;margin-top:8px" onclick="registerWithEmail()">Create Account</button>
+    </div>
     <div class="or-divider">or</div>
     <button class="btn btn-s" style="width:100%;justify-content:center;font-size:13px" onclick="continueAsGuest()">Continue as Guest</button>
-    <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:14px;line-height:1.5">Guest mode saves data locally on this device only.<br>Sign in with Google to sync across all devices.</p>
+    <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:14px;line-height:1.5">Guest mode saves data locally on this device only.</p>
   </div>
 </div>
 
@@ -1329,6 +1485,51 @@
     <button class="mo-close" onclick="closeModal('platformModal')">✕</button>
     <div class="mo-ttl" id="platformModalTitle"></div>
     <div id="platformModalBody"></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: EMAIL SUBSCRIPTION ══ -->
+<div class="mo" id="emailSubModal" onclick="moBackdropClose(event,'emailSubModal')">
+  <div class="mo-box">
+    <button class="mo-close" onclick="skipEmailSub()">✕</button>
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:36px;margin-bottom:8px">📬</div>
+      <div class="mo-ttl">Stay Ahead Every Week</div>
+      <div class="mo-sub">Get TradeIQ's weekly email — free for all registered users</div>
+    </div>
+
+    <div class="email-tier-row">
+      <div class="email-tier-card selected">
+        <h4 style="color:var(--text)">✅ Free Weekly Email</h4>
+        <ul>
+          <li>Top 5 waiver wire adds</li>
+          <li>2 dynasty buy/sell alerts</li>
+          <li>Notable value movers</li>
+          <li>Week in review</li>
+        </ul>
+      </div>
+      <div class="email-tier-card" style="opacity:.7;cursor:default">
+        <h4 style="color:var(--primary-l)">⭐ Premium (Coming Soon)</h4>
+        <ul>
+          <li>Full 20-player wire rankings</li>
+          <li>Full buy/sell report</li>
+          <li>Injury impact analysis</li>
+          <li>League-specific trade alerts</li>
+          <li>Auction draft prep</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="background:var(--bg3);border-radius:8px;padding:11px 13px;font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.6">
+      📧 We'll send to <strong style="color:var(--text)" id="emailSubAddr"></strong> — no spam, unsubscribe anytime.
+    </div>
+
+    <button class="btn btn-p" style="width:100%;justify-content:center;font-size:14px;padding:12px" onclick="confirmEmailSub()">
+      ✅ Yes, Subscribe Me Free
+    </button>
+    <button class="btn btn-s" style="width:100%;justify-content:center;margin-top:8px;font-size:13px" onclick="skipEmailSub()">
+      No thanks
+    </button>
   </div>
 </div>
 
@@ -1755,6 +1956,102 @@ const PICKS = [
 ];
 
 // ═══════════════════════════════════════════════════════════
+// WEEKLY WAIVER WIRE — update every Tuesday during season
+// priority: 'must-add' | 'streamer' | 'stash' | 'deep'
+// ═══════════════════════════════════════════════════════════
+const WEEKLY_WIRE = {
+  week: 0,
+  season: 2026,
+  updated: '2026-05-09',
+  offseason: true,  // flip to false Week 1 of season
+  picks: [
+    // ── Preseason camp watchlist ──────────────────────────
+    {name:'Cam Skattebo',       pos:'RB', team:'NYG', owned:'52%', priority:'must-add',
+     reason:'Likely NYG RB1 out of the gate — best handcuff situation in the class. Grab him now before redraft ADP adjusts.'},
+    {name:'Tyler Warren',       pos:'TE', team:'IND', owned:'61%', priority:'must-add',
+     reason:'Top-5 TE talent at a major value gap. If you\'re in a 12-team league and he\'s available, he shouldn\'t be.'},
+    {name:'Colston Loveland',   pos:'TE', team:'CHI', owned:'44%', priority:'must-add',
+     reason:'Caleb Williams\' safety valve with TE1 upside. Dynasty must-add; redraft leagues should be adding now.'},
+    {name:'Harold Fannin Jr.',  pos:'TE', team:'CLE', owned:'38%', priority:'must-add',
+     reason:'Volume monster at a position with no established starter above him. Camp reports say he\'s the starter from Day 1.'},
+    {name:'Jayden Daniels',     pos:'QB', team:'WAS', owned:'72%', priority:'streamer',
+     reason:'Year 2 leap candidate with elite legs and a solid WR room. Top-5 QB in dynasty; streaming value in redraft too.'},
+    {name:'Demario Douglas',    pos:'WR', team:'NE',  owned:'29%', priority:'streamer',
+     reason:'Target hog in NE\'s slot — quietly led the team in targets last season. Cheap in redraft leagues.'},
+    {name:'Nathaniel Dell',     pos:'WR', team:'HOU', owned:'33%', priority:'stash',
+     reason:'Post-ACL recovery — if he\'s healthy in camp, grab him before the news breaks. High ceiling with CJ Stroud.'},
+    {name:'Darius Taylor',      pos:'RB', team:'MIN', owned:'18%', priority:'stash',
+     reason:'2026 rookie RB with a path to early-down carries in MIN. Stash in dynasty leagues before he pops.'},
+    {name:'Max Klare',          pos:'TE', team:'LAR', owned:'12%', priority:'stash',
+     reason:'2026 rookie TE in a pass-heavy offense with a hole at TE2. Speculative but high upside.'},
+    {name:'Rashid Shaheed',     pos:'WR', team:'NO',  owned:'22%', priority:'deep',
+     reason:'Explosive playmaker when healthy — only worth adding in deep leagues but keeps the upside in camp.'},
+  ]
+};
+
+// ═══════════════════════════════════════════════════════════
+// DYNASTY BUY/SELL OVERRIDES — manual weekly editorial picks
+// trend:'up' auto-bubbles to Buy, trend:'down' to Sell
+// Add names here to override the algorithm
+// ═══════════════════════════════════════════════════════════
+const BUYSELL_OVERRIDES = {
+  buy: [
+    'Tyler Warren','Colston Loveland','Tucker Kraft','Harold Fannin Jr.',
+    'Jayden Daniels','Drake Maye','Cam Skattebo','Rome Odunze',
+    'Brian Thomas Jr.','Darius Taylor','Oronde Gadsden II','Kenyon Sadiq',
+  ],
+  sell: [
+    'Davante Adams','Stefon Diggs','Christian McCaffrey','Keenan Allen',
+    'DeAndre Hopkins','Travis Kelce','George Kittle','Cooper Kupp',
+  ],
+  hold: [
+    "CeeDee Lamb","Ja'Marr Chase",'Justin Jefferson','Tyreek Hill',
+    'Amon-Ra St. Brown','Bijan Robinson','Trey McBride','Brock Bowers',
+  ]
+};
+
+// Custom reasons for override players (optional — falls back to algorithmic reason)
+const BUYSELL_REASONS = {
+  'Tyler Warren':        'Colts TE1 with elite route running — buy before the market catches up.',
+  'Colston Loveland':    'Best rookie TE in years. Bears target hog in the making. Buy now.',
+  'Harold Fannin Jr.':  'Undefined role becomes TE1 role. Add before camp confirms it.',
+  'Cam Skattebo':        'NYG RB1 with zero competition. Redraft value is criminally low.',
+  'Drake Maye':          'Year 2 breakout imminent with a better supporting cast. Buy.',
+  'Jayden Daniels':      'Elite dual-threat with a stacked WR room. Premium asset.',
+  'Davante Adams':       'Age 33, likely facing contract uncertainty. Sell while market is high.',
+  'Christian McCaffrey': 'Injury history + age — SF could need to plan around him. Sell high.',
+  'Travis Kelce':        'Age 37. Has no dynasty value. Should be moved for any useful asset.',
+  'Cooper Kupp':         'Constantly injured. Fire sale now while name recognition helps.',
+  "Ja'Marr Chase":       'WR1 talent locked in — hold unless you get a massive offer.',
+  'CeeDee Lamb':         'Elite WR1 entering prime years. Never sell unless rebuilding.',
+};
+
+// ═══════════════════════════════════════════════════════════
+// FEATURE ROADMAP — ideas to track for product development
+// ═══════════════════════════════════════════════════════════
+/*
+ PLANNED / IN PROGRESS:
+ [x] Weekly Waiver Wire (redraft)
+ [x] Dynasty Buy/Sell tab
+ [x] Email subscription system (Brevo)
+ [ ] Yahoo/ESPN roster import
+ [ ] Auction draft tool
+ [ ] IDP support
+ [ ] Custom scoring import
+ [ ] Best ball optimizer
+ [ ] Trade history tracker
+ [ ] Player injury/news feed
+ [ ] Sit/start tool
+ [ ] Fantasy basketball support (NBA)
+ [ ] Fantasy baseball support
+ [ ] Premium tier features
+ [ ] Push notifications for waiver wire
+ [ ] League chat / trade proposals
+ [ ] ADP tracker (trend over time)
+ [ ] Mock draft simulator
+*/
+
+// ═══════════════════════════════════════════════════════════
 // VALUE ENGINE
 // ═══════════════════════════════════════════════════════════
 function calcValue(p) {
@@ -1784,7 +2081,7 @@ function calcValue(p) {
       v = Math.round(v * (0.85 + opt * 0.15));
     }
   } else {
-    v = p.redraft_val || p.dynasty_val || 500;
+    v = (p.redraft_val > 0 ? p.redraft_val : p.dynasty_val) || 500;
   }
 
   // ── QB FORMAT ──
@@ -2219,7 +2516,7 @@ function renderValuesTable() {
   let rows = S.players
     .filter(p => pos === 'ALL' || p.position === pos)
     .filter(p => !q || p.full_name.toLowerCase().includes(q) || (p.team||'').toLowerCase().includes(q))
-    .map(p => ({ ...p, _val: calcValue(p) }))
+    .map(p => ({ ...p, _val: p.dynasty_val || 0 }))
     .sort((a,b) => {
       let av, bv;
       if (col === 'value') { av = a._val; bv = b._val; }
@@ -2248,6 +2545,14 @@ function renderValuesTable() {
       const b = p._breakdown;
       return `P:${Math.round(b.production)} A:${Math.round(b.age)} O:${Math.round(b.opportunity)} Ph:${Math.round(b.physical)} E:${Math.round(b.efficiency)}`;
     })() : '';
+    const dvRaw = p.dynasty_val || 0;
+    const rvRaw = p.redraft_val || 0;
+    const dvBar = Math.round(dvRaw / maxV * 100);
+    // Redraft display: apply same QB/TE/scoring mods but in redraft mode
+    const rvDisplay = fmtVal(rvRaw);
+    const dvDiff = dvRaw && rvRaw ? dvRaw - rvRaw : 0;
+    const diffLabel = dvDiff > 500 ? `<span style="font-size:10px;color:var(--success);margin-left:3px">+DYN</span>`
+                    : dvDiff < -500 ? `<span style="font-size:10px;color:var(--warn);margin-left:3px">+RDR</span>` : '';
     return `<tr>
       <td><span style="color:var(--text3);font-size:12px">${i+1}</span></td>
       <td><strong>${p.full_name}</strong>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</td>
@@ -2256,10 +2561,12 @@ function renderValuesTable() {
       <td style="color:var(--text2)">${p.age||'—'}</td>
       <td>
         <div class="mini-bar">
-          <span style="font-weight:700;font-size:13px;min-width:42px">${fmtVal(v)}</span>
-          <div class="mini-track"><div class="mini-fill" style="width:${barW}%"></div></div>
+          <span style="font-weight:700;font-size:13px;min-width:42px;color:var(--primary-l)">${fmtVal(dvRaw)}</span>
+          <div class="mini-track"><div class="mini-fill" style="width:${dvBar}%"></div></div>
+          ${diffLabel}
         </div>
       </td>
+      <td><span style="font-size:12px;color:var(--text2)">${rvDisplay}</span></td>
       <td><span class="tier-badge ${tier.cls}">${tier.label}</span></td>
       <td title="${bdTip}">
         ${engScore != null ? `<span class="eng-score-cell ${engT?.cls||''}">${engScore}<span style="font-size:9px;opacity:.6;margin-left:2px">/100</span></span>` : '—'}
@@ -2269,7 +2576,7 @@ function renderValuesTable() {
   }).join('') || `<tr><td colspan="9" style="padding:24px;text-align:center;color:var(--text3)">No players found</td></tr>`;
 
   // update sub
-  document.getElementById('valTableSub').textContent = `${rows.length} players · ${S.settings.mode === 'dynasty' ? 'Dynasty' : 'Redraft'} · ${S.settings.size}-Team · ${S.settings.qb.toUpperCase()} · ${S.settings.scoring.toUpperCase()}`;
+  document.getElementById('valTableSub').textContent = `${rows.length} players · Dynasty & Redraft values shown · ${S.settings.size}-Team · ${S.settings.qb.toUpperCase()} · ${S.settings.scoring.toUpperCase()}`;
 
   // sort indicators
   document.querySelectorAll('#valTable th').forEach(th => { th.classList.remove('sort-asc','sort-desc'); });
@@ -2544,6 +2851,8 @@ function switchTab(name) {
   document.querySelector(`.mob-tab[data-tab="${name}"]`)?.classList.add('active');
   if (name === 'league') renderLeagueAnalyzer();
   if (name === 'draft') initDraftTab();
+  if (name === 'wire') renderWireTab();
+  if (name === 'buysell') renderBuySellTab();
   window.scrollTo(0,0);
 }
 
@@ -3563,6 +3872,195 @@ async function fetchDLFValues() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// CONSENSUS RANKINGS — manifest-driven multi-source system
+//
+// HOW TO ADD A NEW SOURCE:
+//   1. Upload their CSV to /rankings/ folder in GitHub
+//   2. Add one entry to /rankings/sources.json
+//   3. Done — engine picks it up automatically
+//
+// sources.json format:
+// [
+//   {"key":"boone",  "name":"Boone",  "1qb":"boone-1qb.csv", "sf":"boone-sf.csv"},
+//   {"key":"barrett","name":"Barrett","1qb":"barrett-1qb.csv"},
+//   {"key":"heath",  "name":"Heath",  "sf":"heath-sf.csv"}
+// ]
+//
+// CSV format (auto-detected, column order flexible):
+//   Rank, Player, Position, Team           ← rank-based (auto-converted to 0–10000)
+//   Rank, Player, Position, Team, Value    ← value-based (used directly)
+//
+// Cache TTL: 24 hours per source. Ctrl+Shift+S → Force Refresh to bust cache.
+// Dynasty only — rv:0 so redraft values are never affected.
+// ═══════════════════════════════════════════════════════════
+const CUSTOM_BASE     = 'https://raw.githubusercontent.com/jmvestal/tradeiq/main/rankings/';
+const CUSTOM_CACHE_KEY = 'tradeiq_custom_v2';
+const CUSTOM_TS_KEY    = 'tradeiq_custom_ts';
+const CUSTOM_TTL       = 24 * 60 * 60 * 1000; // 24 hours
+
+// ── Shared CSV parser for all creator sources ──────────────
+function parseCreatorCSV(text) {
+  if (!text) return {};
+  const lines = text.trim().split('\n').filter(l => l.trim() && !l.startsWith('#'));
+  if (lines.length < 2) return {};
+
+  const rawHdr = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g,''));
+  const col = (names) => rawHdr.findIndex(h => names.some(n => h.includes(n)));
+
+  const iRank = col(['rank','rk','no','num']);
+  const iName = col(['player','name','playername','fullname']);
+  const iVal  = col(['value','val','score','pts','dynastyval','dv']);
+
+  if (iName === -1) return {}; // name column required
+
+  const dataLines = lines.slice(1);
+  const total = dataLines.length;
+
+  // Rank → value curve: #1 = 9800, last = 200, quadratic decay
+  const rankToVal = (rank, n) => Math.round(200 + Math.pow(1 - (rank-1)/Math.max(n-1,1), 2) * 9600);
+
+  const result = {};
+  dataLines.forEach((line, idx) => {
+    const parts = line.split(',').map(p => p.trim().replace(/^"|"$/g,''));
+    const name = parts[iName]?.trim();
+    if (!name || name.length < 2) return;
+
+    const rank   = iRank !== -1 ? (parseInt(parts[iRank]) || idx+1) : idx+1;
+    const rawVal = iVal  !== -1 ? parseFloat(parts[iVal]) : null;
+
+    let dv;
+    if (rawVal != null && rawVal > 100)      dv = Math.round(rawVal);        // 0–10000 scale
+    else if (rawVal != null && rawVal > 0)   dv = Math.round(rawVal * 100);  // 0–100 scale
+    else                                     dv = rankToVal(rank, total);
+
+    const key = normName(name);
+    if (key) result[key] = { dv, rank };
+  });
+  return result;
+}
+
+// ── Merge 1QB + SF files into a single source object ──────
+function mergeCreatorFiles(data1qb, dataSF) {
+  const merged = {};
+  const allKeys = new Set([...Object.keys(data1qb), ...Object.keys(dataSF)]);
+  allKeys.forEach(k => {
+    const d1 = data1qb[k];
+    const ds = dataSF[k];
+    let dv = 0;
+    if (d1) dv = d1.dv;
+    if (ds) {
+      // SF values are ~1.35x 1QB values — normalize before blending
+      const sfNorm = Math.round(ds.dv / 1.35);
+      dv = d1 ? Math.round((d1.dv + sfNorm) / 2) : sfNorm;
+    }
+    if (dv > 0) merged[k] = { dv, rv: 0 }; // rv:0 = dynasty only, no redraft impact
+  });
+  return merged;
+}
+
+async function fetchCustomRankings() {
+  // Try full bundle cache first
+  const ts = parseInt(localStorage.getItem(CUSTOM_TS_KEY) || '0');
+  if (Date.now() - ts < CUSTOM_TTL) {
+    try {
+      const cached = JSON.parse(localStorage.getItem(CUSTOM_CACHE_KEY) || 'null');
+      if (cached && typeof cached === 'object') {
+        let restored = 0;
+        for (const [key, vals] of Object.entries(cached)) {
+          if (!vals || typeof vals !== 'object') continue;
+          S.sourceValues[key] = vals;
+          S.sourceStatus[key] = 'ok';
+          S.sourceMeta[key]   = { count: Object.keys(vals).length, loaded: ts, file: `${key} (cached)` };
+          restored++;
+        }
+        if (restored > 0) return;
+      }
+    } catch(e) {}
+  }
+
+  // Fetch the manifest
+  try {
+    const mResp = await fetch(CUSTOM_BASE + 'sources.json', { signal: AbortSignal.timeout(8000) });
+    if (!mResp.ok) return; // No manifest yet — silent skip
+
+    const manifest = await mResp.json();
+    if (!Array.isArray(manifest) || !manifest.length) return;
+
+    const bundle = {}; // all sources to cache together
+
+    // Fetch all sources in parallel
+    await Promise.allSettled(manifest.map(async (src) => {
+      if (!src.key) return;
+      const file1qb = src['1qb'] || src['oneqb'] || null;
+      const fileSF  = src['sf']  || src['superflex'] || null;
+      if (!file1qb && !fileSF) return;
+
+      // Fetch whichever files exist
+      const fetches = [];
+      if (file1qb) fetches.push(
+        fetch(CUSTOM_BASE + file1qb, { signal: AbortSignal.timeout(8000) })
+          .then(r => r.ok ? r.text() : null).then(t => ({ type:'1qb', text:t })).catch(()=>null)
+      );
+      if (fileSF) fetches.push(
+        fetch(CUSTOM_BASE + fileSF, { signal: AbortSignal.timeout(8000) })
+          .then(r => r.ok ? r.text() : null).then(t => ({ type:'sf', text:t })).catch(()=>null)
+      );
+
+      const results = (await Promise.allSettled(fetches)).filter(r => r.status==='fulfilled' && r.value);
+      let text1qb = null, textSF = null;
+      for (const r of results) {
+        if (r.value?.type === '1qb') text1qb = r.value.text;
+        if (r.value?.type === 'sf')  textSF  = r.value.text;
+      }
+      if (!text1qb && !textSF) return;
+
+      const data1qb = parseCreatorCSV(text1qb);
+      const dataSF  = parseCreatorCSV(textSF);
+      const merged  = mergeCreatorFiles(data1qb, dataSF);
+
+      if (!Object.keys(merged).length) return;
+
+      const label = src.name || src.key;
+      S.sourceValues[src.key] = merged;
+      S.sourceStatus[src.key] = 'ok';
+      S.sourceMeta[src.key]   = { count: Object.keys(merged).length, loaded: Date.now(), file: label };
+      bundle[src.key] = merged;
+
+      console.log(`Rankings [${label}]: ${Object.keys(merged).length} players loaded`);
+    }));
+
+    // Cache the full bundle
+    if (Object.keys(bundle).length) {
+      try {
+        localStorage.setItem(CUSTOM_CACHE_KEY, JSON.stringify(bundle));
+        localStorage.setItem(CUSTOM_TS_KEY, String(Date.now()));
+      } catch(e) {}
+    }
+
+  } catch(e) {
+    // Manifest not found yet — silent, expected during initial setup
+  }
+}
+
+// Force-refresh all custom rankings (clears cache, re-fetches manifest + all CSVs)
+function forceRefreshCustomRankings() {
+  localStorage.removeItem(CUSTOM_CACHE_KEY);
+  localStorage.removeItem(CUSTOM_TS_KEY);
+  // Clear any loaded custom source keys
+  for (const key of Object.keys(S.sourceValues||{})) {
+    if (!['tiq','fc','ktc','ffc','dlf','dp'].includes(key)) {
+      delete S.sourceValues[key];
+      delete S.sourceStatus[key];
+      delete S.sourceMeta?.[key];
+    }
+  }
+  fetchCustomRankings().then(() => {
+    rebuildPlayerValues();
+    showToast('✅ Rankings refreshed from latest sources');
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
 // DYNASTYPROCESS AUTO-FETCH — weekly FantasyPros ECR data
 // from DynastyProcess GitHub (public, no login required)
 // ═══════════════════════════════════════════════════════════
@@ -3906,6 +4404,7 @@ async function init() {
     fetchFFCValues(),
     fetchDynastyProcessValues(),
     fetchDLFValues(),
+    fetchCustomRankings(),
   ]);
   const sleeperPlayers = await fetchPlayers();
   // Merge: Sleeper + 2026 rookies + picks
@@ -3921,9 +4420,9 @@ async function init() {
   rebuildPlayerValues();
   const srcCount = Object.values(S.sourceStatus).filter(s=>s==='ok').length;
   const isOffline = sleeperPlayers === FALLBACK_PLAYERS;
-  const liveBadge = srcCount > 0 ? `<span class="fc-badge">${srcCount} source${srcCount>1?'s':''} ✓</span>` : '';
-  const offlineBadge = isOffline ? `<span class="fc-badge" style="background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.3);color:var(--warn)">⚠ Offline mode</span>` : '';
-  document.getElementById('pcBadge').innerHTML = `${S.players.length.toLocaleString()} players ${liveBadge}${offlineBadge}`;
+  // Badge shows player count only — source count is internal
+  const offlineBadge = isOffline ? ` <span class="fc-badge" style="background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.3);color:var(--warn)">⚠ Offline</span>` : '';
+  document.getElementById('pcBadge').innerHTML = `${S.players.length.toLocaleString()} players${offlineBadge}`;
   renderSourcesUI();
   // Fire analytics
   trackEvent('app_loaded', { sources: srcCount, players: S.players.length, offline: isOffline });
@@ -3995,18 +4494,78 @@ function handleAuthStateChange(user) {
     closeModal('authModal');
     loadConnectedLeagues();
     showToast(`Welcome back, ${first}! 👋`);
+    checkAndPromptSubscription(user);
   } else {
     btn.style.display  = 'block';
     pill.style.display = 'none';
   }
 }
 
-async function signInWithGoogle() {
+// ── Email/Password auth ──────────────────────────────────
+function authSwitchTab(tab) {
+  const isSignIn = tab === 'signin';
+  document.getElementById('authSignInForm').style.display   = isSignIn ? '' : 'none';
+  document.getElementById('authRegisterForm').style.display = isSignIn ? 'none' : '';
+  document.getElementById('authTabSignIn').classList.toggle('auth-tab-active', isSignIn);
+  document.getElementById('authTabRegister').classList.toggle('auth-tab-active', !isSignIn);
+  document.getElementById('authSignInErr').textContent   = '';
+  document.getElementById('authRegisterErr').textContent = '';
+}
+
+async function signInWithEmail() {
   if (!fbAuth) { showToast('Firebase not configured yet', 'err'); return; }
+  const email = document.getElementById('authEmailIn').value.trim();
+  const pass  = document.getElementById('authPassIn').value;
+  const errEl = document.getElementById('authSignInErr');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Enter your email and password.'; return; }
   try {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    await fbAuth.signInWithPopup(provider);
-  } catch(e) { showToast(e.message || 'Sign-in failed', 'err'); }
+    await fbAuth.signInWithEmailAndPassword(email, pass);
+    closeModal('authModal');
+  } catch(e) {
+    errEl.textContent = e.code === 'auth/user-not-found'  ? 'No account found — create one above.' :
+                        e.code === 'auth/wrong-password'  ? 'Incorrect password.' :
+                        e.code === 'auth/invalid-email'   ? 'Invalid email address.' :
+                        e.code === 'auth/too-many-requests' ? 'Too many attempts — try again later.' :
+                        e.message || 'Sign-in failed.';
+  }
+}
+
+async function registerWithEmail() {
+  if (!fbAuth) { showToast('Firebase not configured yet', 'err'); return; }
+  const email  = document.getElementById('authEmailReg').value.trim();
+  const pass   = document.getElementById('authPassReg').value;
+  const pass2  = document.getElementById('authPassReg2').value;
+  const errEl  = document.getElementById('authRegisterErr');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Enter email and password.'; return; }
+  if (pass !== pass2)  { errEl.textContent = 'Passwords do not match.'; return; }
+  if (pass.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
+  try {
+    await fbAuth.createUserWithEmailAndPassword(email, pass);
+    closeModal('authModal');
+    showToast('Account created! Welcome to TradeIQ 🎉');
+  } catch(e) {
+    errEl.textContent = e.code === 'auth/email-already-in-use' ? 'Email already in use — sign in instead.' :
+                        e.code === 'auth/invalid-email'        ? 'Invalid email address.' :
+                        e.code === 'auth/weak-password'        ? 'Password is too weak.' :
+                        e.message || 'Registration failed.';
+  }
+}
+
+async function sendPasswordReset() {
+  if (!fbAuth) return;
+  const email = document.getElementById('authEmailIn').value.trim();
+  const errEl = document.getElementById('authSignInErr');
+  if (!email) { errEl.textContent = 'Enter your email address first.'; return; }
+  try {
+    await fbAuth.sendPasswordResetEmail(email);
+    errEl.style.color = 'var(--success)';
+    errEl.textContent = 'Reset email sent! Check your inbox.';
+  } catch(e) {
+    errEl.style.color = 'var(--danger)';
+    errEl.textContent = e.message || 'Failed to send reset email.';
+  }
 }
 
 function continueAsGuest() {
@@ -4032,6 +4591,23 @@ function toggleUserMenu(e) {
 
 document.addEventListener('click', () => {
   document.getElementById('userMenu')?.classList.remove('open');
+});
+
+// ── ADMIN SHORTCUT: Ctrl+Shift+S → sources panel + force refresh ──
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+    e.preventDefault();
+    const btn = document.getElementById('srcBtn');
+    if (btn) {
+      btn.style.display = btn.style.display === 'none' ? 'flex' : 'none';
+      if (btn.style.display !== 'none') openModal('sourcesModal');
+    }
+  }
+  // Ctrl+Shift+R → force refresh custom rankings
+  if (e.ctrlKey && e.shiftKey && e.key === 'R') {
+    e.preventDefault();
+    forceRefreshCustomRankings();
+  }
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -5871,6 +6447,267 @@ function renderTeamGrades(teams) {
       </div>
     </div>
   `).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// WAIVER WIRE TAB
+// ═══════════════════════════════════════════════════════════
+function setWirePos(pos) {
+  S.wirePos = pos;
+  document.querySelectorAll('#wirePosFilter .pos-btn').forEach(b =>
+    b.classList.toggle('on', b.dataset.wp === pos));
+  renderWireTab();
+}
+
+function renderWireTab() {
+  const pos = S.wirePos || 'ALL';
+  const w = WEEKLY_WIRE;
+
+  // Header subtitle
+  const subEl = document.getElementById('wireSubHead');
+  if (subEl) subEl.textContent = w.offseason
+    ? 'Preseason camp watchlist — updated weekly | Full weekly targets start Week 1 2026'
+    : `Week ${w.week} waiver targets — updated ${w.updated}`;
+
+  // Offseason vs in-season banners
+  const offBanner = document.getElementById('wireOffseasonBanner');
+  const weekBar   = document.getElementById('wireWeekBar');
+  if (offBanner) offBanner.style.display = w.offseason ? 'block' : 'none';
+  if (weekBar) {
+    weekBar.style.display = w.offseason ? 'none' : 'flex';
+    if (!w.offseason) {
+      const wl = document.getElementById('wireWeekLabel');
+      const wu = document.getElementById('wireUpdated');
+      if (wl) wl.textContent = `Week ${w.week} Targets`;
+      if (wu) wu.textContent = w.updated;
+    }
+  }
+
+  const priorityOrder = {'must-add':0,'streamer':1,'stash':2,'deep':3};
+  let picks = [...w.picks];
+  if (pos !== 'ALL') picks = picks.filter(p => p.pos === pos);
+  picks.sort((a,b) => (priorityOrder[a.priority]||3) - (priorityOrder[b.priority]||3));
+
+  const list = document.getElementById('wireList');
+  if (!list) return;
+  if (!picks.length) {
+    list.innerHTML = `<div class="empty-state"><span>📋</span>No ${pos} targets this week — check back Tuesday</div>`;
+    return;
+  }
+
+  const badgeClass = {'must-add':'wire-must','streamer':'wire-stream','stash':'wire-stash','deep':'wire-deep'};
+  const badgeLabel = {'must-add':'🔥 Must-Add','streamer':'⚡ Streamer','stash':'📦 Stash','deep':'🔍 Deep Dive'};
+
+  list.innerHTML = picks.map((p, i) => {
+    const bc = badgeClass[p.priority] || 'wire-deep';
+    const bl = badgeLabel[p.priority] || p.priority;
+    return `<div class="wire-row">
+      <div class="wire-rank">${i+1}</div>
+      <div class="pb pb-${escHtml(p.pos)}" style="align-self:flex-start;margin-top:2px">${escHtml(p.pos)}</div>
+      <div class="wire-info">
+        <div class="wire-name">${escHtml(p.name)}<span class="wire-badge ${bc}" style="margin-left:7px">${bl}</span></div>
+        <div class="wire-sub">${escHtml(p.team)} · ${p.owned||'—'} owned</div>
+        <div class="wire-reason">${escHtml(p.reason)}</div>
+      </div>
+      <button class="btn btn-xs btn-p" style="flex-shrink:0;margin-top:2px" onclick="wireAnalyze(${JSON.stringify(p.name)})">+ Analyze</button>
+    </div>`;
+  }).join('');
+}
+
+function wireAnalyze(name) {
+  const p = S.players.find(x => x.full_name === name);
+  if (p) {
+    if (!S.tradeA.find(x => x.id === p.id)) S.tradeA.push(p);
+    switchTab('analyzer');
+    renderTrade();
+    showToast(`${name} added to Trade Analyzer`);
+  } else {
+    showToast('Player not found — try searching manually', 'err');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// DYNASTY BUY/SELL TAB
+// ═══════════════════════════════════════════════════════════
+function setBsPos(pos) {
+  S.bsPos = pos;
+  document.querySelectorAll('#bsPosFilter .pos-btn').forEach(b =>
+    b.classList.toggle('on', b.dataset.bs === pos));
+  renderBuySellTab();
+}
+
+function getBuySellReason(p, action) {
+  // Check custom reason first
+  if (BUYSELL_REASONS[p.full_name]) return BUYSELL_REASONS[p.full_name];
+  const age = p.age || 0;
+  const trend = VALUE_DB[p.full_name]?.trend || 'flat';
+  if (action === 'BUY') {
+    if (age <= 22) return 'Young talent at a value discount — window to buy is open now.';
+    if (age <= 25 && trend === 'up') return 'Ascending player in prime buy window — get in before price rises.';
+    if (trend === 'up') return 'Market trending up — buy before value adjusts higher.';
+    return 'Buy-low opportunity based on current market pricing.';
+  }
+  if (action === 'SELL') {
+    if (age >= 32) return 'Age declining fast — move now before roster value drops further.';
+    if (trend === 'down') return 'Value trending downward — sell before floor gets lower.';
+    return 'Approaching or past peak dynasty value — best time to sell.';
+  }
+  // HOLD
+  if (age <= 24) return 'Too young to sell — hold through any early turbulence.';
+  if (trend === 'up') return 'Still ascending — hold unless you get an overpay offer.';
+  return 'Stable value. No compelling reason to move right now.';
+}
+
+function renderBuySellTab() {
+  if (!S.players || !S.players.length) {
+    document.getElementById('bsBuyList').innerHTML  = '<div class="empty-state" style="padding:16px"><span>⏳</span>Loading players…</div>';
+    document.getElementById('bsHoldList').innerHTML = '';
+    document.getElementById('bsSellList').innerHTML = '';
+    return;
+  }
+
+  const pos = S.bsPos || 'ALL';
+  const buySet  = new Set(BUYSELL_OVERRIDES.buy.map(n => n.toLowerCase()));
+  const sellSet = new Set(BUYSELL_OVERRIDES.sell.map(n => n.toLowerCase()));
+  const holdSet = new Set(BUYSELL_OVERRIDES.hold.map(n => n.toLowerCase()));
+
+  const buys = [], holds = [], sells = [];
+
+  const eligible = S.players.filter(p => {
+    if (p.position === 'K' || p.position === 'DEF' || p.position === 'PICK') return false;
+    if (pos !== 'ALL' && p.position !== pos) return false;
+    const val = calcValue(p);
+    return val >= 2500; // only meaningful dynasty assets
+  });
+
+  for (const p of eligible) {
+    const nm    = p.full_name.toLowerCase();
+    const vdb   = VALUE_DB[p.full_name];
+    const trend = vdb?.trend || 'flat';
+    const val   = calcValue(p);
+    const age   = p.age || 0;
+
+    let action;
+    if (buySet.has(nm))  { action = 'BUY'; }
+    else if (sellSet.has(nm)) { action = 'SELL'; }
+    else if (holdSet.has(nm)) { action = 'HOLD'; }
+    else if (trend === 'up' && age <= 26)    { action = 'BUY'; }
+    else if (trend === 'down' && age >= 30)  { action = 'SELL'; }
+    else if (trend === 'down')               { action = 'SELL'; }
+    else if (age >= 32 && val > 3500)        { action = 'SELL'; }
+    else                                     { action = 'HOLD'; }
+
+    const entry = {name:p.full_name, pos:p.position, team:p.team||'—', val, age, action,
+      reason: getBuySellReason(p, action)};
+
+    if (action === 'BUY')  buys.push(entry);
+    else if (action === 'HOLD') holds.push(entry);
+    else sells.push(entry);
+  }
+
+  buys.sort((a,b)=>b.val-a.val);  sells.sort((a,b)=>b.val-a.val);  holds.sort((a,b)=>b.val-a.val);
+
+  const topBuys  = buys.slice(0,20);
+  const topSells = sells.slice(0,20);
+  const topHolds = holds.slice(0,15);
+
+  document.getElementById('bsCountBuy').textContent  = topBuys.length;
+  document.getElementById('bsCountHold').textContent = topHolds.length;
+  document.getElementById('bsCountSell').textContent = topSells.length;
+
+  const renderCard = (p) => `
+    <div class="bs-card">
+      <div class="bs-badge bs-${p.action}">${p.action}</div>
+      <div style="flex:1;min-width:0">
+        <div class="bs-name">${escHtml(p.name)}</div>
+        <div class="bs-reason">${escHtml(p.reason)}</div>
+        <div class="bs-meta">${p.pos} · ${p.team} · Age ${p.age||'?'} · Val ${p.val.toLocaleString()}</div>
+      </div>
+      <div class="pb pb-${escHtml(p.pos)}" style="flex-shrink:0;align-self:flex-start">${escHtml(p.pos)}</div>
+    </div>`;
+
+  const emptyCard = (icon, label) => `<div class="empty-state" style="padding:20px"><span>${icon}</span>${label}</div>`;
+
+  document.getElementById('bsBuyList').innerHTML  = topBuys.length  ? topBuys.map(renderCard).join('')  : emptyCard('📈','No buy targets match your filter');
+  document.getElementById('bsHoldList').innerHTML = topHolds.length ? topHolds.map(renderCard).join('') : emptyCard('⏸','No hold players match your filter');
+  document.getElementById('bsSellList').innerHTML = topSells.length ? topSells.map(renderCard).join('') : emptyCard('📉','No sell targets match your filter');
+}
+
+// ═══════════════════════════════════════════════════════════
+// BREVO EMAIL SUBSCRIPTION
+// ═══════════════════════════════════════════════════════════
+// To activate: create a free account at brevo.com, get your API key,
+// and replace BREVO_API_KEY below. Also create two contact lists in
+// Brevo: one for 'free' users and one for 'premium' users.
+// Get the list IDs from your Brevo Contacts dashboard and set them below.
+//
+// SECURITY NOTE: Brevo API keys exposed client-side can add contacts but
+// CANNOT send emails or access account settings, so this is acceptable
+// for a subscription form. Use a Firebase Function for higher security.
+// ─────────────────────────────────────────────────────────────────────
+
+const BREVO_API_KEY   = '';  // ← Paste your Brevo API key here
+const BREVO_LIST_FREE    = 0;  // ← Replace with your "Free Users" list ID
+const BREVO_LIST_PREMIUM = 0;  // ← Replace with your "Premium Users" list ID
+
+async function subscribeToBrevo(email, name, tier = 'free') {
+  if (!BREVO_API_KEY) return;  // silently skip if not configured
+  const listId = tier === 'premium' ? BREVO_LIST_PREMIUM : BREVO_LIST_FREE;
+  if (!listId) return;
+  try {
+    await fetch('https://api.brevo.com/v3/contacts', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'content-type': 'application/json',
+        'api-key': BREVO_API_KEY
+      },
+      body: JSON.stringify({
+        email,
+        attributes: { FIRSTNAME: name?.split(' ')[0] || '', LASTNAME: name?.split(' ')[1] || '' },
+        listIds: [listId],
+        updateEnabled: true   // updates if contact already exists
+      })
+    });
+    // Save subscription state to Firestore so we don't re-prompt
+    if (fbDb) {
+      const uid = S.auth?.uid;
+      if (uid) fbDb.collection('users').doc(uid).set({ subscribed: true, tier, subscribedAt: Date.now(), email }, {merge:true});
+    }
+  } catch(e) {}
+}
+
+async function checkAndPromptSubscription(user) {
+  if (!fbDb || !user) return;
+  try {
+    const doc = await fbDb.collection('users').doc(user.uid).get();
+    const data = doc.exists ? doc.data() : {};
+    // Show email prompt if user hasn't been asked yet
+    if (!data.emailPromptShown && !data.subscribed) {
+      setTimeout(() => {
+        const addrEl = document.getElementById('emailSubAddr');
+        if (addrEl) addrEl.textContent = user.email || 'your email';
+        openModal('emailSubModal');
+      }, 1800);
+      if (user.uid) fbDb.collection('users').doc(user.uid).set({ emailPromptShown: true }, {merge:true});
+    }
+  } catch(e) {}
+}
+
+function confirmEmailSub() {
+  const user = S.auth;
+  if (!user) return;
+  subscribeToBrevo(user.email, user.displayName, 'free');
+  closeModal('emailSubModal');
+  showToast('✅ Subscribed! Weekly updates will arrive every Wednesday.');
+}
+
+function skipEmailSub() {
+  closeModal('emailSubModal');
+  // Save that they declined so we don't prompt again
+  if (fbDb && S.auth?.uid) {
+    fbDb.collection('users').doc(S.auth.uid).set({ emailOptOut: true }, {merge:true});
+  }
 }
 
 function loadSampleDraft() {
