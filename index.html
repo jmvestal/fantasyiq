@@ -995,17 +995,8 @@
           <!-- Intel panels -->
           <div class="home-intel-grid" id="homeDashIntel"></div>
 
-          <!-- Quick nav -->
-          <div style="margin-bottom:14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)">Quick Access</div>
-          <div class="home-quick-btns">
-            <button class="home-quick-btn" onclick="switchTab('analyzer')">⚖️ Trade IQ</button>
-            <button class="home-quick-btn" onclick="switchTab('values')">📊 Player IQ</button>
-            <button class="home-quick-btn" onclick="switchTab('wire')">📋 Waiver IQ</button>
-            <button class="home-quick-btn" onclick="switchTab('buysell')">📈 Value IQ</button>
-            <button class="home-quick-btn" onclick="switchTab('draft')">🎯 Draft IQ</button>
-            <button class="home-quick-btn" onclick="switchTab('roster')">🏈 Team IQ</button>
-            <button class="home-quick-btn" onclick="switchTab('league')">🏆 League IQ</button>
-          </div>
+          <!-- Bottom panels: Trending + Roster Breakdown + Power Ranking -->
+          <div class="home-intel-grid" id="homeDashExtra"></div>
         </div>
       </div>
     </div>
@@ -3063,14 +3054,34 @@ function calcValue(p) {
   if (pos === 'TE' && te === 'on') v = Math.round(v * 1.28);
 
   // ── SCORING ──
-  if (pos === 'RB') {
-    if (scoring === 'ppr')  v = Math.round(v * 0.97);
-    if (scoring === 'std')  v = Math.round(v * 1.06);
-  } else if (pos === 'WR') {
-    if (scoring === 'ppr')  v = Math.round(v * 1.05);
-    if (scoring === 'std')  v = Math.round(v * 0.95);
-  } else if (pos === 'TE') {
-    if (scoring === 'ppr')  v = Math.round(v * 1.04);
+  // dynasty_val baseline = KTC Half PPR  →  adjustments relative to Half PPR
+  // redraft_val baseline = Full PPR      →  adjustments relative to Full PPR
+  if (mode === 'dynasty') {
+    // Base = Half PPR; apply delta vs. half PPR
+    if (pos === 'RB') {
+      if (scoring === 'ppr')  v = Math.round(v * 0.97);  // PPR marginal vs Half: pure rushers dip slightly
+      if (scoring === 'std')  v = Math.round(v * 1.07);  // STD hugely benefits workhorse RBs
+      // half: baseline, no change
+    } else if (pos === 'WR') {
+      if (scoring === 'ppr')  v = Math.round(v * 1.07);  // Full PPR boosts WRs meaningfully
+      if (scoring === 'std')  v = Math.round(v * 0.91);  // STD hurts route runners
+    } else if (pos === 'TE') {
+      if (scoring === 'ppr')  v = Math.round(v * 1.06);  // TEs benefit from full PPR
+      if (scoring === 'std')  v = Math.round(v * 0.92);
+    }
+  } else {
+    // Redraft — base = Full PPR; adjustments relative to PPR
+    if (pos === 'RB') {
+      if (scoring === 'half') v = Math.round(v * 1.03);  // Half PPR slightly helps pure rushers vs PPR
+      if (scoring === 'std')  v = Math.round(v * 1.08);  // STD: best for bell-cow backs
+      // ppr: baseline, no change
+    } else if (pos === 'WR') {
+      if (scoring === 'half') v = Math.round(v * 0.95);  // Half PPR: fewer WR targets matter less
+      if (scoring === 'std')  v = Math.round(v * 0.88);  // STD: WRs hurt most
+    } else if (pos === 'TE') {
+      if (scoring === 'half') v = Math.round(v * 0.94);
+      if (scoring === 'std')  v = Math.round(v * 0.88);
+    }
   }
 
   // ── LEAGUE SIZE ──
@@ -4446,6 +4457,98 @@ function renderHome() {
     <div class="home-intel-card">
       <div class="home-intel-ttl">📋 Waiver Targets <span style="margin-left:auto;font-weight:400;font-size:10px;cursor:pointer;color:var(--primary-l)" onclick="switchTab('wire')">See all →</span></div>
       ${wireHtml}
+    </div>
+  `;
+
+  // ── Bottom row: Trending + Roster Breakdown + Power Ranking ──
+  // Trending Up: rising players not on your roster worth targeting
+  const trending = [...S.players]
+    .filter(p => p.trend === 'up' && ['QB','RB','WR','TE'].includes(p.position))
+    .filter(p => !roster.find(r => String(r.player_id||r.id) === String(p.player_id||p.id)))
+    .map(p => ({ p, v: calcValue(p) }))
+    .filter(({v}) => v >= 2500)
+    .sort((a,b) => b.v - a.v)
+    .slice(0, 5);
+
+  const trendHtml = trending.length
+    ? trending.map(({p,v}) =>
+        `<div class="home-intel-row" style="cursor:pointer" onclick="switchTab('analyzer')">
+          <span class="pb pb-${p.position}" style="font-size:10px">${p.position}</span>
+          <div class="home-intel-name">${p.full_name}</div>
+          <span style="font-size:10px;color:var(--success);font-weight:700">▲</span>
+          <div class="home-intel-val">${fmtVal(v)}</div>
+        </div>`).join('')
+    : `<div style="padding:12px 0;color:var(--text3);font-size:13px">No trending targets found</div>`;
+
+  // Roster Breakdown: position counts + % of total value
+  const posList = ['QB','RB','WR','TE'];
+  const posBars = posList.map(pos => {
+    const posPlayers = roster.filter(p => p.position === pos);
+    const posVal = posPlayers.reduce((s,p) => s + calcValue(p), 0);
+    const pct = totalVal > 0 ? Math.round((posVal / totalVal) * 100) : 0;
+    const posColors = { QB:'#a78bfa', RB:'#34d399', WR:'#60a5fa', TE:'#fb923c' };
+    return `<div style="margin-bottom:9px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+        <span style="font-weight:600;color:${posColors[pos]}">${pos}</span>
+        <span style="color:var(--text2)">${posPlayers.length} players · ${pct}%</span>
+      </div>
+      <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${posColors[pos]};border-radius:3px;transition:width .4s"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Power Ranking: rank this team among all league teams by value
+  let powerHtml = '';
+  if (allTeams.length > 1) {
+    const teamVals = allTeams
+      .filter(t => t.rosterIds?.length)
+      .map(t => ({
+        name: t.displayName || t.teamName || `Team ${t.rosterId}`,
+        val: t.rosterIds.reduce((s,id) => {
+          const p2 = S.players.find(x => String(x.player_id||x.id) === String(id));
+          return s + (p2 ? calcValue(p2) : 0);
+        }, 0),
+        isMe: t.rosterIds.some(id => roster.find(r => String(r.player_id||r.id) === String(id)))
+      }))
+      .sort((a,b) => b.val - a.val);
+    const myRank = teamVals.findIndex(t => t.isMe) + 1;
+    const total  = teamVals.length;
+    const suffix = myRank === 1 ? 'st' : myRank === 2 ? 'nd' : myRank === 3 ? 'rd' : 'th';
+    const rankColor = myRank <= Math.ceil(total/3) ? 'var(--success)' : myRank <= Math.ceil(total*2/3) ? 'var(--warning)' : 'var(--danger)';
+    powerHtml = `
+      <div style="text-align:center;padding:12px 0 8px">
+        <div style="font-size:36px;font-weight:800;color:${rankColor}">${myRank}<span style="font-size:18px">${suffix}</span></div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">out of ${total} teams</div>
+      </div>
+      <div style="max-height:140px;overflow-y:auto">
+        ${teamVals.slice(0, 6).map((t,i) =>
+          `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px${t.isMe?';background:var(--primary-d);border-radius:4px;padding:4px 6px':''}">
+            <span style="width:18px;text-align:center;font-weight:700;color:var(--text3)">${i+1}</span>
+            <span style="flex:1;font-weight:${t.isMe?'700':'400'};color:${t.isMe?'var(--primary-l)':'var(--text1)'}">${t.isMe?'⭐ '+t.name:t.name}</span>
+            <span style="color:var(--text3)">${fmtVal(t.val)}</span>
+          </div>`
+        ).join('')}
+      </div>`;
+  } else {
+    powerHtml = `<div style="padding:20px 0;text-align:center;color:var(--text3);font-size:13px">Import your full league<br>to see power rankings</div>`;
+  }
+
+  document.getElementById('homeDashExtra').innerHTML = `
+    <div class="home-intel-card">
+      <div class="home-intel-ttl">🔥 Trending Up <span style="margin-left:auto;font-weight:400;font-size:10px;cursor:pointer;color:var(--primary-l)" onclick="switchTab('values')">See all →</span></div>
+      ${trendHtml}
+    </div>
+    <div class="home-intel-card">
+      <div class="home-intel-ttl">🏈 Roster Breakdown</div>
+      <div style="padding-top:10px">${posBars}</div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        <span>Total Value</span><span style="font-weight:700;color:var(--text1)">${fmtVal(totalVal)}</span>
+      </div>
+    </div>
+    <div class="home-intel-card">
+      <div class="home-intel-ttl">🏆 Power Ranking</div>
+      ${powerHtml}
     </div>
   `;
 }
@@ -6753,6 +6856,8 @@ async function switchLeague(leagueId) {
   renderRosterList();
   closeModal('connectModal');
   if (S.roster.length) document.getElementById('bshBtn').disabled = false;
+  // Re-render the home dashboard so stats/intel reflect the newly selected league
+  if (document.getElementById('tab-home')?.classList.contains('active')) renderHome();
   showToast(`Switched to ${lg.leagueName}`);
 }
 
