@@ -830,6 +830,41 @@
     .val-both{display:flex;flex-direction:column;gap:1px}
     .val-dyn{font-weight:700;font-size:13px;color:var(--primary-l)}
     .val-rdr{font-size:11px;color:var(--text3)}
+
+    /* ── PLAYER CARD MODAL ─────────────────────────────── */
+    .pc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:498;backdrop-filter:blur(2px)}
+    .pc-modal{position:fixed;inset:0;z-index:499;display:flex;align-items:center;justify-content:center;padding:16px}
+    .pc-card{position:relative;background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:min(500px,100%);max-height:88vh;overflow-y:auto;animation:pcSlideIn .18s ease}
+    @media(max-width:600px){.pc-card{max-height:92vh;border-radius:14px}}
+    @keyframes pcSlideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .pc-close{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;line-height:1;padding:4px 6px;border-radius:6px;z-index:1}
+    .pc-close:hover{color:var(--text);background:var(--bg3)}
+    .pc-header{display:flex;gap:14px;padding:18px 18px 12px;align-items:flex-start}
+    .pc-headshot-wrap{flex-shrink:0;width:88px;height:88px;border-radius:12px;overflow:hidden;background:var(--bg3);border:1px solid var(--border)}
+    .pc-headshot{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+    .pc-headshot-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:38px}
+    .pc-info{flex:1;min-width:0;padding-top:2px}
+    .pc-name{font-size:18px;font-weight:900;color:var(--text);line-height:1.2;margin-bottom:5px;display:flex;align-items:center;flex-wrap:wrap;gap:5px}
+    .pc-meta-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;font-size:12px;color:var(--text2);margin-bottom:8px}
+    .pc-dot{color:var(--border)}
+    .pc-vals{display:flex;gap:5px;flex-wrap:wrap}
+    .pc-val{font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;background:var(--bg);border:1px solid var(--border);white-space:nowrap}
+    .pc-val.trnd-up{border-color:rgba(52,211,153,.4);color:#34d399}
+    .pc-val.trnd-down{border-color:rgba(248,113,113,.4);color:#f87171}
+    .pc-body{padding:0 18px 18px}
+    .pc-sec{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin:14px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+    .pc-stats-tbl{width:100%;border-collapse:collapse;font-size:12px}
+    .pc-stats-tbl th{text-align:right;color:var(--text3);font-weight:600;padding:4px 5px;border-bottom:1px solid var(--border);font-size:10px;white-space:nowrap}
+    .pc-stats-tbl th:first-child{text-align:left}
+    .pc-stats-tbl td{text-align:right;padding:5px 5px;color:var(--text);white-space:nowrap}
+    .pc-stats-tbl td:first-child{text-align:left;font-weight:700;color:var(--text2)}
+    .pc-stats-tbl tr:nth-child(odd) td{background:rgba(255,255,255,.02)}
+    .pc-signal{padding:9px 12px;border-radius:8px;font-size:12px;margin-bottom:4px}
+    .pc-signal.buy{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);color:#34d399}
+    .pc-signal.sell{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);color:#f87171}
+    .pc-signal.hold{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);color:#fbbf24}
+    .pnr-name{cursor:pointer;border-bottom:1px dashed rgba(157,90,240,.35);transition:color .12s,border-color .12s}
+    .pnr-name:hover{color:var(--primary-l);border-bottom-color:var(--primary-l)}
   </style>
 </head>
 <body>
@@ -2772,13 +2807,15 @@ const RETIRED_PLAYERS = new Set([
   'Ryan Fitzpatrick','Sam Bradford','Blaine Gabbert','Josh McCown',
   'Colin Kaepernick','Tony Romo','Peyton Manning','Drew Brees',
   'Matt Ryan','Carson Wentz','Jameis Winston',
+  'Ryan Tannehill','Jimmy Garoppolo',
   // RBs
   'Frank Gore','Adrian Peterson','Marshawn Lynch','Jamaal Charles',
   'LeSean McCoy','Matt Forte','Arian Foster','Ray Rice',
   'Darren McFadden','Jay Ajayi','Carlos Hyde','Latavius Murray',
   'Devonta Freeman','Jordan Howard','Marlon Mack','Sony Michel',
   'Rex Burkhead','Dion Lewis','Phillip Lindsay','LeGarrette Blount',
-  'Eddie Lacy','Chris Ivory','Dion Lewis','Devontae Booker',
+  'Eddie Lacy','Chris Ivory','Devontae Booker',
+  "Le'Veon Bell",
   'Todd Gurley','Isaiah Crowell','Doug Martin','Jonathan Stewart',
   'DeMarco Murray','Giovani Bernard','James White','Danny Woodhead',
   'Chris Thompson','Tevin Coleman','Bilal Powell','Duke Johnson',
@@ -3269,7 +3306,11 @@ function pnr(p) {
   const rawPos = p.position || '?';
   const pos = rawPos === 'DST' ? 'DEF' : rawPos;
   const rk = p.rookie ? `<span class="badge badge-rook">ROOK</span>` : '';
-  return `${escHtml(p.full_name || p.name || '?')}<span class="pb pb-${pos}" style="font-size:9px;vertical-align:middle;margin-left:4px">${pos}</span>${rk}`;
+  const nm = p.full_name || p.name || '?';
+  const nameHtml = (pos === 'PICK')
+    ? escHtml(nm)
+    : `<span class="pnr-name" data-pcname="${escHtml(nm)}" onclick="event.stopPropagation();window._pc(this)">${escHtml(nm)}</span>`;
+  return `<span style="white-space:nowrap">${nameHtml}<span class="pb pb-${pos}" style="font-size:9px;vertical-align:middle;margin-left:4px">${pos}</span>${rk}</span>`;
 }
 
 function sideTotal(arr) { return arr.reduce((s,p)=>s+calcValue(p),0); }
@@ -3983,7 +4024,7 @@ function renderValuesTable() {
       : `<td style="display:none"></td>`;
     return `<tr>
       <td><span style="color:var(--text3);font-size:12px">${i+1}</span></td>
-      <td><strong>${escHtml(p.full_name)}</strong><span class="pb pb-${p.position==='DST'?'DEF':p.position}" style="font-size:9px;vertical-align:middle;margin-left:4px">${p.position==='DST'?'DEF':p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</td>
+      <td style="white-space:nowrap"><strong class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="event.stopPropagation();window._pc(this)">${escHtml(p.full_name)}</strong><span class="pb pb-${p.position==='DST'?'DEF':p.position}" style="font-size:9px;vertical-align:middle;margin-left:4px">${p.position==='DST'?'DEF':p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</td>
       <td style="display:none"></td>
       <td style="color:var(--text2)">${p.team||'—'}</td>
       <td style="color:var(--text2)">${p.age||'—'}</td>
@@ -4094,7 +4135,7 @@ function renderRosterList() {
     return `<div class="ros-row">
       <span class="ros-slot-lbl ${cls}">${slotLabel}</span>
       <div class="ros-row-info">
-        <div style="font-weight:600;font-size:13px">${escHtml(p.full_name)}<span class="pb pb-${pos}" style="font-size:9px;vertical-align:middle;margin-left:4px">${pos}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
+        <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="event.stopPropagation();window._pc(this)">${escHtml(p.full_name)}</span><span class="pb pb-${pos}" style="font-size:9px;vertical-align:middle;margin-left:4px">${pos}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
         <div style="font-size:11px;color:var(--text3)">${p.team||'FA'}${p.age?' · Age '+p.age:''}</div>
       </div>
       <div style="font-weight:700;font-size:13px;color:var(--primary-l);flex-shrink:0">${fmtVal(v)}</div>
@@ -4232,7 +4273,7 @@ function runBSH() {
     html += `<div class="bsh-card">
       <div class="bsh-grade bsh-${grade}">${grade}</div>
       <div class="bsh-card-info">
-        <div class="bsh-card-name">${escHtml(p.full_name)}<span class="pb pb-${p.position}" style="font-size:9px;vertical-align:middle;margin-left:4px">${p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
+        <div class="bsh-card-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="event.stopPropagation();window._pc(this)">${escHtml(p.full_name)}</span><span class="pb pb-${p.position}" style="font-size:9px;vertical-align:middle;margin-left:4px">${p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
         <div class="bsh-card-reason">${reason}</div>
       </div>
       <div style="font-size:13px;font-weight:700;color:var(--primary-l);flex-shrink:0">${fmtVal(v)}</div>
@@ -6120,7 +6161,9 @@ function applyValueDB(p) {
 // FETCH SLEEPER PLAYERS
 // ═══════════════════════════════════════════════════════════
 async function fetchPlayers() {
-  const CACHE_KEY = 'tradeiq_sleeper_players_v6';
+  const CACHE_KEY = 'tradeiq_sleeper_players_v8';
+  // Clear any stale older cache versions
+  try { ['v1','v2','v3','v4','v5','v6','v7'].forEach(v => localStorage.removeItem('tradeiq_sleeper_players_'+v)); } catch(e) {}
   const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours (was 12 — shorter to catch retirements faster)
   // Try cache first
   try {
@@ -6506,43 +6549,60 @@ function authSwitchTab(tab) {
 }
 
 async function signInWithEmail() {
-  if (!fbAuth) { showToast('Firebase not configured yet', 'err'); return; }
+  if (!fbAuth) { showToast('Firebase not initialized — check your connection and reload', 'err'); return; }
   const email = document.getElementById('authEmailIn').value.trim();
   const pass  = document.getElementById('authPassIn').value;
   const errEl = document.getElementById('authSignInErr');
+  const btn   = document.querySelector('#authSignInForm .btn-p');
   errEl.textContent = '';
   if (!email || !pass) { errEl.textContent = 'Enter your email and password.'; return; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
   try {
     await fbAuth.signInWithEmailAndPassword(email, pass);
     closeModal('authModal');
   } catch(e) {
-    errEl.textContent = e.code === 'auth/user-not-found'  ? 'No account found — create one above.' :
-                        e.code === 'auth/wrong-password'  ? 'Incorrect password.' :
-                        e.code === 'auth/invalid-email'   ? 'Invalid email address.' :
-                        e.code === 'auth/too-many-requests' ? 'Too many attempts — try again later.' :
-                        e.message || 'Sign-in failed.';
+    // Firebase 9.x consolidated user-not-found + wrong-password → invalid-credential
+    errEl.textContent =
+      (e.code === 'auth/invalid-credential' ||
+       e.code === 'auth/user-not-found'     ||
+       e.code === 'auth/wrong-password')      ? 'Incorrect email or password.' :
+      e.code === 'auth/invalid-email'          ? 'Invalid email address.' :
+      e.code === 'auth/too-many-requests'      ? 'Too many attempts — try again later.' :
+      e.code === 'auth/user-disabled'          ? 'This account has been disabled.' :
+      e.code === 'auth/unauthorized-domain'    ? 'Domain not authorized — contact support.' :
+      e.code === 'auth/network-request-failed' ? 'Network error — check your connection.' :
+      e.message || 'Sign-in failed. Please try again.';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Sign In'; }
   }
 }
 
 async function registerWithEmail() {
-  if (!fbAuth) { showToast('Firebase not configured yet', 'err'); return; }
+  if (!fbAuth) { showToast('Firebase not initialized — check your connection and reload', 'err'); return; }
   const email  = document.getElementById('authEmailReg').value.trim();
   const pass   = document.getElementById('authPassReg').value;
   const pass2  = document.getElementById('authPassReg2').value;
   const errEl  = document.getElementById('authRegisterErr');
+  const btn    = document.querySelector('#authRegisterForm .btn-p');
   errEl.textContent = '';
   if (!email || !pass) { errEl.textContent = 'Enter email and password.'; return; }
   if (pass !== pass2)  { errEl.textContent = 'Passwords do not match.'; return; }
   if (pass.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Creating account…'; }
   try {
     await fbAuth.createUserWithEmailAndPassword(email, pass);
     closeModal('authModal');
     showToast('Account created! Welcome to Fantasy IQ 🎉');
   } catch(e) {
-    errEl.textContent = e.code === 'auth/email-already-in-use' ? 'Email already in use — sign in instead.' :
-                        e.code === 'auth/invalid-email'        ? 'Invalid email address.' :
-                        e.code === 'auth/weak-password'        ? 'Password is too weak.' :
-                        e.message || 'Registration failed.';
+    errEl.textContent =
+      e.code === 'auth/email-already-in-use'  ? 'Email already in use — sign in instead.' :
+      e.code === 'auth/invalid-email'         ? 'Invalid email address.' :
+      e.code === 'auth/weak-password'         ? 'Password is too weak (min 6 characters).' :
+      e.code === 'auth/unauthorized-domain'   ? 'Domain not authorized — contact support.' :
+      e.code === 'auth/network-request-failed'? 'Network error — check your connection.' :
+      e.message || 'Registration failed. Please try again.';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Create Account'; }
   }
 }
 
@@ -7825,7 +7885,7 @@ function rosterPickerChip(p, side) {
   const val   = calcValue(p);
   const valFmt = val >= 1000 ? (val/1000).toFixed(1)+'k' : val;
   return `<div class="lrp${isIn?' in-trade':''}" onclick="toggleLeagueTradePlayer('${escHtml(pid)}','${side}')">
-    <span class="lrp-name">${escHtml(p.full_name||'Unknown')}<span class="pb pb-${p.position}" style="font-size:9px;vertical-align:middle;margin-left:4px">${p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</span>
+    <span class="lrp-name"><span class="pnr-name" data-pcname="${escHtml(p.full_name||'Unknown')}" onclick="event.stopPropagation();window._pc(this)">${escHtml(p.full_name||'Unknown')}</span><span class="pb pb-${p.position}" style="font-size:9px;vertical-align:middle;margin-left:4px">${p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</span>
     <span class="lrp-val">${valFmt}</span>
     ${isIn ? '<span style="color:var(--success);font-size:13px;flex-shrink:0">✓</span>' : ''}
   </div>`;
@@ -8288,7 +8348,7 @@ function renderWizAvail() {
       <div class="dav-rank">${rank||'?'}</div>
       <span class="pb pb-${p.position}">${p.position}</span>
       <div class="dav-info">
-        <div class="dav-name">${escHtml(p.full_name)}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
+        <div class="dav-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="event.stopPropagation();window._pc(this)">${escHtml(p.full_name)}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
         <div class="dav-sub">${sub}</div>
       </div>
       ${diffHtml}
@@ -8463,7 +8523,7 @@ function renderWizRoster() {
         <div class="draft-pick-num">${d.round}.${String(d.pickInRound).padStart(2,'0')}</div>
         <span class="pb pb-${d.player.position}">${d.player.position}</span>
         <div class="draft-pick-info">
-          <div class="draft-pick-name">${escHtml(d.player.full_name)}</div>
+          <div class="draft-pick-name"><span class="pnr-name" data-pcname="${escHtml(d.player.full_name)}" onclick="event.stopPropagation();window._pc(this)">${escHtml(d.player.full_name)}</span></div>
           <div class="draft-pick-sub">Rank ${d.adpRank||'?'} · Pick ${d.overall}</div>
         </div>
         <div class="draft-pick-grade ${gradeClass}">${gradeLabel}</div>
@@ -8785,7 +8845,7 @@ function renderWireTab() {
       <div class="wire-rank">${i+1}</div>
       <div class="pb pb-${escHtml(p.pos)}" style="align-self:flex-start;margin-top:2px">${escHtml(p.pos)}</div>
       <div class="wire-info">
-        <div class="wire-name">${escHtml(p.name)}${(S.players||[]).find(x=>x.full_name===p.name)?.rookie?'<span class="badge badge-rook">ROOK</span>':''}<span class="wire-badge ${bc}" style="margin-left:7px">${bl}</span>${availBadge}</div>
+        <div class="wire-name"><span class="pnr-name" data-pcname="${escHtml(p.name)}" onclick="event.stopPropagation();window._pc(this)">${escHtml(p.name)}</span>${(S.players||[]).find(x=>x.full_name===p.name)?.rookie?'<span class="badge badge-rook">ROOK</span>':''}<span class="wire-badge ${bc}" style="margin-left:7px">${bl}</span>${availBadge}</div>
         <div class="wire-sub">${escHtml(p.team)} · ${p.owned||'—'} owned</div>
         <div class="wire-reason">${escHtml(p.reason)}</div>
       </div>
@@ -8918,7 +8978,7 @@ function renderBuySellTab() {
     <div class="bs-card">
       <div class="bs-badge bs-${p.action}">${p.action}</div>
       <div style="flex:1;min-width:0">
-        <div class="bs-name">${escHtml(p.name)}<span class="pb pb-${escHtml(p.pos)}" style="font-size:9px;vertical-align:middle;margin-left:4px">${escHtml(p.pos)}</span>${rookBadge}</div>
+        <div class="bs-name"><span class="pnr-name" data-pcname="${escHtml(p.name)}" onclick="event.stopPropagation();window._pc(this)">${escHtml(p.name)}</span><span class="pb pb-${escHtml(p.pos)}" style="font-size:9px;vertical-align:middle;margin-left:4px">${escHtml(p.pos)}</span>${rookBadge}</div>
         <div class="bs-reason">${escHtml(p.reason)}</div>
         <div class="bs-meta">${p.team} · Age ${p.age||'?'} · Val ${p.val.toLocaleString()}</div>
       </div>
@@ -9865,7 +9925,7 @@ function renderDsimBoard() {
       if (pick) {
         const pos = pick.player.position || '?';
         html += `<td class="${cellClass}">
-          <div class="dsim-pick">${pick.player.full_name || pick.player.name || '?'}</div>
+          <div class="dsim-pick pnr-name" data-pcname="${escHtml(pick.player.full_name||pick.player.name||'')}" onclick="event.stopPropagation();window._pc(this)">${escHtml(pick.player.full_name || pick.player.name || '?')}</div>
           <div class="dsim-pick-pos" style="color:${_posColor(pos)}">${pos}</div>
         </td>`;
       } else {
@@ -9910,7 +9970,7 @@ function renderDsimMyRoster() {
     const pos = p.position || '?';
     return `<div class="dsim-roster-pick">
       <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
-      <span class="dsim-roster-pick-name">${p.full_name || p.name || '?'}</span>
+      <span class="dsim-roster-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="event.stopPropagation();window._pc(this)">${escHtml(p.full_name || p.name || '?')}</span>
       <span class="dsim-roster-round">R${pk.round}</span>
     </div>`;
   }).join('');
@@ -9930,7 +9990,7 @@ function renderDsimPickHistory() {
     return `<div class="dsim-hist-row">
       <span class="dsim-hist-pick">${pk.overall}.</span>
       <span class="pb pb-${pos}" style="font-size:9px;padding:1px 4px">${pos}</span>
-      <span class="dsim-hist-name">${p.full_name || p.name || '?'}</span>
+      <span class="dsim-hist-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="event.stopPropagation();window._pc(this)">${escHtml(p.full_name || p.name || '?')}</span>
       ${isMe ? '<span class="dsim-cpu-badge" style="background:var(--primary-d);color:var(--primary-l)">YOU</span>' : '<span class="dsim-cpu-badge">CPU</span>'}
     </div>`;
   }).join('');
@@ -9982,7 +10042,7 @@ function renderDsimRec() {
       <div class="dsim-rec-rank">#${i+1} Recommendation</div>
       <div class="dsim-rec-name">
         <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px;margin-right:4px">${pos}</span>
-        ${escHtml(p.full_name || p.name || '?')}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}
+        <span class="pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="event.stopPropagation();window._pc(this)">${escHtml(p.full_name || p.name || '?')}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}
         <span style="font-size:11px;font-weight:400;color:var(--text3);margin-left:4px">${fmtVal(item.v)}</span>
       </div>
       <div class="dsim-rec-why">${reason}</div>
@@ -10031,7 +10091,7 @@ function renderDsimAvail() {
     const team = p.team || '';
     return `<div class="dsim-avail-row${isMyTurn ? '' : ' not-my-turn'}" onclick="dsimUserPick('${pid}')">
       <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
-      <span class="dsim-avail-name">${escHtml(p.full_name || p.name || '?')}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</span>
+      <span class="dsim-avail-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="event.stopPropagation();window._pc(this)">${escHtml(p.full_name || p.name || '?')}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</span>
       <span class="dsim-avail-meta">${[team, age].filter(Boolean).join(' · ')}</span>
       <span class="dsim-avail-val">${fmtVal(v)}</span>
     </div>`;
@@ -10152,7 +10212,284 @@ function dsimExportRoster() {
   switchTab('roster');
   showToast('Drafted roster copied to Roster tab');
 }
+
+// ════════════════════════════════════════════════════════════
+// PLAYER CARD MODAL
+// ════════════════════════════════════════════════════════════
+const PC_TEAMS = {
+  ARI:'Arizona Cardinals',ATL:'Atlanta Falcons',BAL:'Baltimore Ravens',
+  BUF:'Buffalo Bills',CAR:'Carolina Panthers',CHI:'Chicago Bears',
+  CIN:'Cincinnati Bengals',CLE:'Cleveland Browns',DAL:'Dallas Cowboys',
+  DEN:'Denver Broncos',DET:'Detroit Lions',GB:'Green Bay Packers',
+  HOU:'Houston Texans',IND:'Indianapolis Colts',JAC:'Jacksonville Jaguars',
+  JAX:'Jacksonville Jaguars',KC:'Kansas City Chiefs',LAC:'Los Angeles Chargers',
+  LAR:'Los Angeles Rams',LV:'Las Vegas Raiders',MIA:'Miami Dolphins',
+  MIN:'Minnesota Vikings',NE:'New England Patriots',NO:'New Orleans Saints',
+  NYG:'New York Giants',NYJ:'New York Jets',PHI:'Philadelphia Eagles',
+  PIT:'Pittsburgh Steelers',SEA:'Seattle Seahawks',SF:'San Francisco 49ers',
+  TB:'Tampa Bay Buccaneers',TEN:'Tennessee Titans',WAS:'Washington Commanders'
+};
+
+// Player card — triggered by document click/touchend listener on elements with data-pcname attribute
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePlayerCard(); });
+
+function showPlayerCard(name) {
+  try {
+    if (!name || name === '?') return;
+
+    // ── Find player across all data sources ──
+    const allPlayers = [
+      ...(S.players || []),
+      ...(FALLBACK_PLAYERS || []),
+      ...(ROOKIES_2026 || []),
+    ];
+    const p = allPlayers.find(x => (x.full_name || x.name || '') === name);
+
+    if (!p) {
+      showToast('Player info not available');
+      return;
+    }
+
+    const pos   = (p.position === 'DST' ? 'DEF' : p.position) || '?';
+    const pname = p.full_name || p.name || '?';
+
+    // ── Headshot (Sleeper CDN — numeric IDs only) ──
+    const slId = p.player_id || p.sleeper_id || (/^\d+$/.test(String(p.id||'')) ? p.id : null);
+    const img  = document.getElementById('pcHeadshot');
+    const ph   = document.getElementById('pcHeadshotPh');
+    img.style.display = 'none';
+    ph.style.display  = 'flex';
+    if (slId) {
+      img.onload  = () => { img.style.display = 'block'; ph.style.display = 'none'; };
+      img.onerror = () => { img.style.display = 'none';  ph.style.display = 'flex'; };
+      img.src = `https://sleepercdn.com/content/nfl/players/thumb/${slId}.jpg`;
+    }
+
+    // ── Name + position + rookie ──
+    document.getElementById('pcName').innerHTML =
+      escHtml(pname)
+      + `<span class="pb pb-${pos}" style="font-size:10px;vertical-align:middle;margin-left:5px">${pos}</span>`
+      + (p.rookie ? `<span class="badge badge-rook" style="margin-left:4px">ROOK</span>` : '');
+
+    // ── Team + age ──
+    const teamFull = PC_TEAMS[p.team] || p.team || '—';
+    document.getElementById('pcMeta').innerHTML =
+      `<span>${escHtml(teamFull)}</span>`
+      + (p.age ? `<span class="pc-dot">·</span><span>Age ${p.age}</span>` : '');
+
+    // ── Values (use calcValue which is the real function name) ──
+    const cv    = calcValue(p);
+    const dv    = p.dynasty_val || 0;
+    const rv    = p.redraft_val || 0;
+    const trend = p.trend || 'flat';
+    const trendIcon = trend==='up'?'↑':trend==='down'?'↓':'→';
+    const trendCls  = trend==='up'?'trnd-up':trend==='down'?'trnd-down':'';
+    document.getElementById('pcVals').innerHTML =
+      `<span class="pc-val">Dynasty: ${fmtVal(dv)}</span>`
+      + `<span class="pc-val">Redraft: ${fmtVal(rv)}</span>`
+      + `<span class="pc-val ${trendCls}">${trendIcon} ${trend}</span>`;
+
+    // ── Buy/Sell signal ──
+    const sigDiv   = document.getElementById('pcSignal');
+    const buySells = (typeof _tiqGetBuySells === 'function') ? _tiqGetBuySells() : [];
+    const sig      = buySells.find(x => x.name === pname);
+    if (sig) {
+      const label = sig.type === 'buy' ? '🟢 BUY' : sig.type === 'sell' ? '🔴 SELL HIGH' : '🟡 HOLD';
+      sigDiv.className   = `pc-signal ${sig.type}`;
+      sigDiv.innerHTML   = `<strong>${label}</strong>${sig.reason ? ` — ${escHtml(sig.reason)}` : ''}`;
+      sigDiv.style.display = 'block';
+    } else {
+      sigDiv.style.display = 'none';
+    }
+
+    // ── Show modal ──
+    document.getElementById('pcStats').innerHTML =
+      '<div style="color:var(--text3);font-size:12px;padding:4px 0">Loading stats…</div>';
+    document.getElementById('pcOverlay').style.display = 'block';
+    document.getElementById('pcModal').style.display   = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    // ── Fetch season stats ──
+    if (slId) {
+      fetchPCStats(String(slId), p.position || '').then(html => {
+        const el = document.getElementById('pcStats');
+        if (el) el.innerHTML = html;
+      });
+    } else if (p.rookie) {
+      document.getElementById('pcStats').innerHTML =
+        '<div style="color:var(--text3);font-size:12px;padding:4px 0">2026 rookie — no NFL stats yet 🌱</div>';
+    } else if (p.position === 'PICK') {
+      document.getElementById('pcStats').innerHTML =
+        '<div style="color:var(--text3);font-size:12px;padding:4px 0">Draft pick — no player stats</div>';
+    } else {
+      document.getElementById('pcStats').innerHTML =
+        '<div style="color:var(--text3);font-size:12px;padding:4px 0">Stats unavailable</div>';
+    }
+
+  } catch(err) {
+    console.error('showPlayerCard error:', err);
+    showToast('Could not load player card');
+  }
+}
+
+async function fetchPCStats(slId, position) {
+  const pos      = (position || '').toUpperCase();
+  const seasons  = [2025, 2024, 2023];
+  const scoring  = (typeof S !== 'undefined' && S.settings) ? S.settings.scoring : 'ppr';
+  const ptsKey   = scoring === 'std' ? 'pts_std' : scoring === 'half' ? 'pts_half_ppr' : 'pts_ppr';
+  const rows     = [];
+
+  await Promise.all(seasons.map(async yr => {
+    try {
+      const r = await fetch(
+        `https://api.sleeper.app/v1/stats/nfl/player/${slId}?season_type=regular&season=${yr}&grouping=season`,
+        { cache: 'force-cache' }
+      );
+      if (!r.ok) return;
+      const d = await r.json();
+      if (!d || typeof d !== 'object' || (!d.pts_ppr && !d.pts_std && !d.pts_half_ppr && !d.gp)) return;
+      rows.push({ yr, d });
+    } catch(e) {}
+  }));
+
+  rows.sort((a, b) => b.yr - a.yr);
+
+  if (!rows.length) return '<div style="color:var(--text3);font-size:12px;padding:4px 0">No stats found — may be a first-year player</div>';
+
+  const n = v => (v || 0);
+  const f = v => parseFloat(v || 0).toFixed(1);
+
+  let tbl = '';
+  if (pos === 'QB') {
+    tbl = `<table class="pc-stats-tbl">
+      <tr><th>Year</th><th>G</th><th>Pts</th><th>Pass Yds</th><th>Pass TDs</th><th>INTs</th><th>Rush Yds</th><th>Rush TDs</th></tr>`;
+    for (const { yr, d } of rows) tbl += `<tr>
+      <td>${yr}</td><td>${n(d.gp)}</td><td>${f(d[ptsKey])}</td>
+      <td>${Math.round(n(d.pass_yd))}</td><td>${n(d.pass_td)}</td>
+      <td>${n(d.pass_int)}</td><td>${Math.round(n(d.rush_yd))}</td><td>${n(d.rush_td)}</td></tr>`;
+  } else if (pos === 'RB') {
+    tbl = `<table class="pc-stats-tbl">
+      <tr><th>Year</th><th>G</th><th>Pts</th><th>Rush Yds</th><th>Rush TDs</th><th>Rec</th><th>Rec Yds</th><th>Rec TDs</th></tr>`;
+    for (const { yr, d } of rows) tbl += `<tr>
+      <td>${yr}</td><td>${n(d.gp)}</td><td>${f(d[ptsKey])}</td>
+      <td>${Math.round(n(d.rush_yd))}</td><td>${n(d.rush_td)}</td>
+      <td>${n(d.rec)}</td><td>${Math.round(n(d.rec_yd))}</td><td>${n(d.rec_td)}</td></tr>`;
+  } else if (pos === 'WR' || pos === 'TE') {
+    tbl = `<table class="pc-stats-tbl">
+      <tr><th>Year</th><th>G</th><th>Pts</th><th>Rec</th><th>Targets</th><th>Rec Yds</th><th>Rec TDs</th><th>Y/R</th></tr>`;
+    for (const { yr, d } of rows) {
+      const ypr = n(d.rec) > 0 ? (n(d.rec_yd) / n(d.rec)).toFixed(1) : '—';
+      tbl += `<tr>
+        <td>${yr}</td><td>${n(d.gp)}</td><td>${f(d[ptsKey])}</td>
+        <td>${n(d.rec)}</td><td>${n(d.rec_tgt)}</td><td>${Math.round(n(d.rec_yd))}</td>
+        <td>${n(d.rec_td)}</td><td>${ypr}</td></tr>`;
+    }
+  } else if (pos === 'K') {
+    tbl = `<table class="pc-stats-tbl">
+      <tr><th>Year</th><th>G</th><th>Pts</th><th>FGM</th><th>FGA</th><th>XPM</th><th>XPA</th></tr>`;
+    for (const { yr, d } of rows) tbl += `<tr>
+      <td>${yr}</td><td>${n(d.gp)}</td><td>${f(d.pts_std || d.pts_ppr)}</td>
+      <td>${n(d.fgm)}</td><td>${n(d.fga)}</td><td>${n(d.xpm)}</td><td>${n(d.xpa)}</td></tr>`;
+  } else {
+    // DEF / IDP / generic
+    tbl = `<table class="pc-stats-tbl">
+      <tr><th>Year</th><th>Games</th><th>Fantasy Pts</th></tr>`;
+    for (const { yr, d } of rows) tbl += `<tr>
+      <td>${yr}</td><td>${n(d.gp)}</td><td>${f(d.pts_std || d.pts_ppr || d.pts_half_ppr)}</td></tr>`;
+  }
+  tbl += '</table>';
+  return tbl;
+}
+
+function closePlayerCard() {
+  document.getElementById('pcOverlay').style.display = 'none';
+  document.getElementById('pcModal').style.display   = 'none';
+  document.body.style.overflow = '';
+}
+
+// ── Player card: unified tap/click handler ──────────────────
+// Uses data-pcname attribute + CAPTURE phase so this fires BEFORE
+// any row-level onclick (draftPlayer, dsimUserPick, etc.)
+window.showPlayerCard = showPlayerCard;
+window.closePlayerCard = closePlayerCard;
+
+// Inline onclick helper — called directly from data-pcname elements
+// as primary handler; document capture listener is the fallback.
+window._pc = function(el) {
+  try {
+    var nm = el && el.getAttribute && el.getAttribute('data-pcname');
+    if (nm && nm !== '?') showPlayerCard(nm);
+  } catch(e) { console.error('_pc error', e); }
+};
+
+(function() {
+  let _lastTouchFired = 0;
+
+  function _handlePnrTap(e) {
+    // Walk up from the actual click target looking for a data-pcname element
+    var target = e.target;
+    var el = null;
+    while (target && target !== document) {
+      if (target.getAttribute && target.getAttribute('data-pcname')) { el = target; break; }
+      target = target.parentNode;
+    }
+    if (!el) return;
+
+    // Stop the event here — prevents parent row onclicks from firing
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+
+    // Deduplicate touchend + subsequent synthetic click
+    if (e.type === 'touchend') {
+      e.preventDefault();
+      _lastTouchFired = Date.now();
+    } else if (e.type === 'click') {
+      if (Date.now() - _lastTouchFired < 600) return;
+    }
+
+    var nm = el.getAttribute('data-pcname');
+    if (nm && nm !== '?') {
+      try { showPlayerCard(nm); } catch(err) { console.error('showPlayerCard err', err); }
+    }
+  }
+
+  // CAPTURE phase (true) = fires BEFORE any element-level onclick handlers
+  document.addEventListener('touchend', _handlePnrTap, true);
+  document.addEventListener('click',    _handlePnrTap, true);
+
+  // Close modal on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      var mo = document.getElementById('pcModal');
+      if (mo && mo.style.display !== 'none') closePlayerCard();
+    }
+  });
+})();
 </script>
+
+<!-- ══ PLAYER CARD MODAL ══ -->
+<div id="pcOverlay" class="pc-overlay" style="display:none" onclick="closePlayerCard()"></div>
+<div id="pcModal" class="pc-modal" style="display:none">
+  <div class="pc-card">
+    <button class="pc-close" onclick="closePlayerCard()">✕</button>
+    <div class="pc-header">
+      <div class="pc-headshot-wrap">
+        <img id="pcHeadshot" class="pc-headshot" style="display:none" alt="">
+        <div id="pcHeadshotPh" class="pc-headshot-ph">🏈</div>
+      </div>
+      <div class="pc-info">
+        <div class="pc-name" id="pcName"></div>
+        <div class="pc-meta-row" id="pcMeta"></div>
+        <div class="pc-vals" id="pcVals"></div>
+      </div>
+    </div>
+    <div class="pc-body">
+      <div id="pcSignal" style="display:none" class="pc-signal"></div>
+      <div class="pc-sec">Fantasy Stats</div>
+      <div id="pcStats"><div style="color:var(--text3);font-size:12px">Loading…</div></div>
+    </div>
+  </div>
+</div>
 
 <!-- ══ FLOATING AI CHAT ══ -->
 <button class="tiq-chat-btn" id="tiqChatBtn" onclick="toggleTiqChat()" title="Ask Scout IQ">💬<span class="tiq-chat-btn-label">Scout IQ</span></button>
