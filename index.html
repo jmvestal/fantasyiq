@@ -1692,6 +1692,7 @@ const S = {
   wireMode: 'dynasty',
   myTeamMode: 'dynasty',
   bshData: [],
+  _pendingLeagueLoad: false,
   ready: false,
   // Auth & league
   auth: null,
@@ -4820,6 +4821,11 @@ async function init() {
   FALLBACK_PLAYERS.forEach(p=>{ p.rookie = false; });
 
   S.ready = true;
+  // Auth fired before players loaded — restore league now that players exist
+  if (S._pendingLeagueLoad) {
+    S._pendingLeagueLoad = false;
+    loadConnectedLeagues();
+  }
   // Handle bookmarklet import from URL hash (e.g. opened by bookmarklet on partner site)
   handleBookmarkletImport();
   // Rebuild player values from all loaded sources (also runs engine scores)
@@ -4898,7 +4904,12 @@ function handleAuthStateChange(user) {
       wrap.innerHTML = `<img class="user-avatar" src="${user.photoURL}" alt="">`;
     }
     closeModal('authModal');
-    loadConnectedLeagues();
+    // If players haven't loaded yet, defer — init() will call loadConnectedLeagues() when ready
+    if (S.ready) {
+      loadConnectedLeagues();
+    } else {
+      S._pendingLeagueLoad = true;
+    }
     showToast(`Welcome back, ${first}! 👋`);
     checkAndPromptSubscription(user);
   } else {
@@ -5224,7 +5235,9 @@ async function importSleeperLeague(leagueId) {
     rosterPositions: leagueInfo.roster_positions || [],
     allTeams,
     totalTeams:      leagueInfo.settings?.num_teams || 12,
-    connectedAt:     Date.now()
+    connectedAt:     Date.now(),
+    sleeperUsername: S._sleeperUser?.username || S._sleeperUser?.display_name || '',
+    sleeperUserId:   S._sleeperUser?.user_id || '',
   };
 
   S.connectedLeague = leagueData;
@@ -5418,13 +5431,49 @@ async function loadConnectedLeagues() {
   if (arr.length) {
     const latest = arr.sort((a,b)=>(b.connectedAt||0)-(a.connectedAt||0))[0];
     S.connectedLeague = latest;
-    // Restore roster
+    // Restore roster from saved IDs
     S.roster = (latest.rosterIds||[]).map(id=>S.players.find(p=>(p.player_id||p.id)===id)).filter(Boolean);
+    applyLeagueSettings(latest.settings);
     updateLeagueBar();
     renderRosterList();
     if (S.roster.length) document.getElementById('bshBtn').disabled = false;
+    // Silently refresh Sleeper roster in background so data stays current
+    if (latest.platform === 'sleeper' && (latest.sleeperUserId || latest.sleeperUsername) && latest.leagueId) {
+      silentSleeperRefresh(latest);
+    }
   }
   refreshConnectedLeaguesList();
+}
+
+async function silentSleeperRefresh(lg) {
+  try {
+    const uid = lg.sleeperUserId;
+    if (!uid && !lg.sleeperUsername) return;
+    const [leagueInfo, rosters] = await Promise.all([
+      fetch(`https://api.sleeper.app/v1/league/${lg.leagueId}`).then(r=>r.json()),
+      fetch(`https://api.sleeper.app/v1/league/${lg.leagueId}/rosters`).then(r=>r.json()),
+    ]);
+    if (!leagueInfo?.league_id) return;
+    // Find this user's roster by owner_id (sleeperUserId)
+    let userRoster = uid ? rosters.find(r => r.owner_id === uid) : null;
+    // Fallback: if only 1 roster or we have allTeams data
+    if (!userRoster && lg.allTeams) {
+      const teamEntry = lg.allTeams.find(t => t.username === lg.sleeperUsername || t.userId === uid);
+      if (teamEntry) userRoster = rosters.find(r => r.owner_id === teamEntry.userId);
+    }
+    if (!userRoster) return;
+    const allIds = [...(userRoster.players||[]), ...(userRoster.reserve||[])].map(String);
+    const rosterPlayers = allIds.map(id => S.players.find(p=>(p.player_id||p.id)===id)).filter(Boolean);
+    const updatedLeague = { ...S.connectedLeague, rosterIds: allIds, connectedAt: Date.now() };
+    S.connectedLeague = updatedLeague;
+    S.roster = rosterPlayers;
+    saveConnectedLeague(updatedLeague);
+    renderRosterList();
+    if (S.roster.length) document.getElementById('bshBtn').disabled = false;
+    showToast('🏈 Roster refreshed from Sleeper');
+  } catch(e) {
+    // Silent — don't show errors for background refresh
+  }
 }
 
 function refreshConnectedLeaguesList() {
