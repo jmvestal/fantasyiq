@@ -4,5 +4,30 @@
     "name": "Peaked",
     "1qb": "peaked-1qb.csv",
     "sf":  "peaked-sf.csv"
+  },
+  {
+    "key": "tradeiq_dyn",
+    "name": "TradeIQ Dynasty",
+    "1qb": "1QB PPR Dynasty rankings.csv",
+    "sf":  "SF PPR Dynasty Rankings.csv"
+  },
+  {
+    "key": "tradeiq_rd",
+    "name": "TradeIQ Redraft",
+    "redraftFiles": [
+      "2026 Redraft 1QB PPR Rankings.csv",
+      "2026 Redraft 1QB Half PPR Rankings.csv",
+      "2026 Redaft 1QB Non PPR rankings.csv",
+      "2026 Redraft SF PPR Rankings.csv",
+      "2026 Redraft SF Half PPR Rankings.csv",
+      "2026 Redraft SF Non PPR Rankings.csv"
+    ]
+  },
+  {
+    "key": "tradeiq_rookies",
+    "name": "TradeIQ 2026 Rookies",
+    "redraftFiles": [
+      "2026 Redraft PPR Rookie Rankings.csv"
+    ]
   }
 ]

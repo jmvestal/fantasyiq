@@ -4605,30 +4605,52 @@ async function fetchCustomRankings() {
 
     const bundle = {}; // all sources to cache together
 
+    const fetchFile = (filename) =>
+      fetch(CUSTOM_BASE + filename.split('/').map(encodeURIComponent).join('/'),
+            { signal: AbortSignal.timeout(8000) })
+        .then(r => r.ok ? r.text() : null).catch(() => null);
+
     // Fetch all sources in parallel
     await Promise.allSettled(manifest.map(async (src) => {
       if (!src.key) return;
+      const label = src.name || src.key;
+
+      // ── REDRAFT source: array of CSV files → sets rv (redraft value) ──
+      if (Array.isArray(src.redraftFiles) && src.redraftFiles.length) {
+        const texts = await Promise.all(src.redraftFiles.map(f => fetchFile(f)));
+        // Parse each file; accumulate rv per player (average across all files)
+        const accum = {}; // normalizedName → { sum, count }
+        for (const text of texts) {
+          const parsed = parseCreatorCSV(text);
+          for (const [k, v] of Object.entries(parsed)) {
+            if (!accum[k]) accum[k] = { sum: 0, count: 0 };
+            accum[k].sum   += v.dv;
+            accum[k].count++;
+          }
+        }
+        const rdSource = {};
+        for (const [k, a] of Object.entries(accum)) {
+          const rv = Math.round(a.sum / a.count);
+          if (rv >= 100) rdSource[k] = { dv: 0, rv };
+        }
+        if (!Object.keys(rdSource).length) return;
+        S.sourceValues[src.key] = rdSource;
+        S.sourceStatus[src.key] = 'ok';
+        S.sourceMeta[src.key]   = { count: Object.keys(rdSource).length, loaded: Date.now(), file: label };
+        bundle[src.key] = rdSource;
+        console.log(`Rankings [${label}]: ${Object.keys(rdSource).length} redraft players loaded`);
+        return;
+      }
+
+      // ── DYNASTY source: 1qb + sf files → sets dv (dynasty value) ──
       const file1qb = src['1qb'] || src['oneqb'] || null;
       const fileSF  = src['sf']  || src['superflex'] || null;
       if (!file1qb && !fileSF) return;
 
-      // Fetch whichever files exist
-      const fetches = [];
-      if (file1qb) fetches.push(
-        fetch(CUSTOM_BASE + file1qb, { signal: AbortSignal.timeout(8000) })
-          .then(r => r.ok ? r.text() : null).then(t => ({ type:'1qb', text:t })).catch(()=>null)
-      );
-      if (fileSF) fetches.push(
-        fetch(CUSTOM_BASE + fileSF, { signal: AbortSignal.timeout(8000) })
-          .then(r => r.ok ? r.text() : null).then(t => ({ type:'sf', text:t })).catch(()=>null)
-      );
-
-      const results = (await Promise.allSettled(fetches)).filter(r => r.status==='fulfilled' && r.value);
-      let text1qb = null, textSF = null;
-      for (const r of results) {
-        if (r.value?.type === '1qb') text1qb = r.value.text;
-        if (r.value?.type === 'sf')  textSF  = r.value.text;
-      }
+      const [text1qb, textSF] = await Promise.all([
+        file1qb ? fetchFile(file1qb) : Promise.resolve(null),
+        fileSF  ? fetchFile(fileSF)  : Promise.resolve(null),
+      ]);
       if (!text1qb && !textSF) return;
 
       const data1qb = parseCreatorCSV(text1qb);
@@ -4637,13 +4659,11 @@ async function fetchCustomRankings() {
 
       if (!Object.keys(merged).length) return;
 
-      const label = src.name || src.key;
       S.sourceValues[src.key] = merged;
       S.sourceStatus[src.key] = 'ok';
       S.sourceMeta[src.key]   = { count: Object.keys(merged).length, loaded: Date.now(), file: label };
       bundle[src.key] = merged;
-
-      console.log(`Rankings [${label}]: ${Object.keys(merged).length} players loaded`);
+      console.log(`Rankings [${label}]: ${Object.keys(merged).length} dynasty players loaded`);
     }));
 
     // Cache the full bundle
