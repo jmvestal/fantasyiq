@@ -10749,16 +10749,49 @@ function pcStatsTab(tab, btn) {
   });
 }
 
-// ── Sleeper bulk weekly stats cache ──────────────────────────
-window._slWkCache = window._slWkCache || {};
+// ── Sleeper stats caches ──────────────────────────────────────
+window._slWkCache     = window._slWkCache     || {};   // weekly:  { year: [{wk, data},...] }
+window._slSeasonCache = window._slSeasonCache || {};   // season:  { year: {playerId: {...}} }
+window._slProjCache   = window._slProjCache   || null; // 2026 projections (all players)
 
+// Season-totals: ONE call per year instead of 18 weekly calls
+async function _loadSleeperSeason(year) {
+  if (window._slSeasonCache[year]) return window._slSeasonCache[year];
+  try {
+    const r = await fetch(
+      `https://api.sleeper.app/v1/stats/nfl/regular/${year}?grouping=season`,
+      { cache: 'force-cache' }
+    );
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (d && typeof d === 'object') { window._slSeasonCache[year] = d; return d; }
+  } catch(e) {}
+  return null;
+}
+
+// 2026 projections: ONE call, all players
+async function _loadSleeperProj2026() {
+  if (window._slProjCache) return window._slProjCache;
+  try {
+    const r = await fetch(
+      'https://api.sleeper.app/v1/projections/nfl/regular/2026?grouping=season',
+      { cache: 'force-cache' }
+    );
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (d && typeof d === 'object') { window._slProjCache = d; return d; }
+  } catch(e) {}
+  return null;
+}
+
+// Weekly game log — correct URL format: season_type in path, not query param
 async function _loadSleeperWeeks(year) {
   if (window._slWkCache[year]) return window._slWkCache[year];
   const results = await Promise.all(
     Array.from({ length: 18 }, (_, i) => i + 1).map(async wk => {
       try {
         const r = await fetch(
-          `https://api.sleeper.app/v1/stats/nfl/${year}/${wk}?season_type=regular`,
+          `https://api.sleeper.app/v1/stats/nfl/regular/${year}/${wk}`,
           { cache: 'force-cache' }
         );
         if (!r.ok) return null;
@@ -10820,17 +10853,19 @@ async function fetchPCStats(slId, position) {
   const pos     = (position || '').toUpperCase();
   const scoring = (S?.settings?.scoring) || 'ppr';
 
-  const [allWks25, allWks24, allWks23] = await Promise.all([
-    _loadSleeperWeeks(2025),
-    _loadSleeperWeeks(2024),
-    _loadSleeperWeeks(2023),
+  // Single season-totals call per year (way faster than 18 weekly calls)
+  const [s25, s24, s23] = await Promise.all([
+    _loadSleeperSeason(2025),
+    _loadSleeperSeason(2024),
+    _loadSleeperSeason(2023),
   ]);
 
   const rows = [];
-  for (const [yr, allWks] of [[2025, allWks25],[2024, allWks24],[2023, allWks23]]) {
-    const wks = _playerWks(allWks, slId);
-    if (!wks.length) continue;
-    rows.push({ yr, d: _aggStats(wks) });
+  for (const [yr, seasonData] of [[2025, s25],[2024, s24],[2023, s23]]) {
+    const d = seasonData?.[slId];
+    // skip if missing or only contains rank data (no actual stats)
+    if (!d || !( d.gp || d.pass_yd || d.rush_yd || d.rec_yd || d.fgm )) continue;
+    rows.push({ yr, d });
   }
 
   if (!rows.length) return '<div style="color:var(--text3);font-size:12px;padding:10px 0">No stats found — player may not have played in 2023–2025</div>';
@@ -10969,20 +11004,18 @@ async function fetchPCProjections(slId, position, player) {
   const pos     = (position || '').toUpperCase();
   const scoring = (S?.settings?.scoring) || 'ppr';
   const ptsKey  = scoring === 'std' ? 'pts_std' : scoring === 'half' ? 'pts_half_ppr' : 'pts_ppr';
-  const n = v => v || 0;
+  const n = v => parseFloat(v) || 0;
   const f = v => parseFloat(v || 0).toFixed(1);
   const r2 = v => v > 0 ? Math.round(v) : '—';
 
-  // Try Sleeper projections first
+  // Use cached season projections endpoint (correct URL format)
   try {
-    const resp = await fetch(
-      `https://api.sleeper.app/v1/projections/nfl/player/${slId}?season_type=regular&season=2026&grouping=season`,
-      { cache: 'force-cache' }
-    );
-    if (resp.ok) {
-      const d = await resp.json();
-      if (d && typeof d === 'object' && Object.keys(d).length > 2) {
-        const pts = n(d[ptsKey] || d.pts_ppr || d.pts_std || d.pts_half_ppr);
+    const projData = await _loadSleeperProj2026();
+    if (projData) {
+      const d = projData[slId];
+      if (d && (d.gp || d.pass_yd || d.rush_yd || d.rec_yd || d.pts_ppr)) {
+        const { ppr, std, half } = _resolvePts(d);
+        const pts = scoring === 'std' ? std : scoring === 'half' ? half : ppr;
         const gp  = n(d.gp) || 17;
         const ppg = pts > 0 ? (pts / gp).toFixed(1) : '—';
         const stats = _projStatsGrid(pos, d, pts, ppg, f, r2, n);
