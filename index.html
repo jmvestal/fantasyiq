@@ -640,7 +640,22 @@
     .bs-name{font-size:12px;font-weight:700;line-height:1.3}
     .bs-reason{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.45}
     .bs-meta{font-size:10px;color:var(--text3);margin-top:3px}
-    @media(max-width:768px){.bs-grid{grid-template-columns:1fr}}
+    /* BSH mobile toggle */
+    .bs-mobile-toggle{display:none;gap:6px;margin-bottom:12px}
+    .bs-tog-btn{flex:1;padding:10px 4px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg3);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;text-align:center}
+    .bs-tog-btn.on[data-bst="BUY"]{border-color:var(--success);background:var(--success-d);color:var(--success)}
+    .bs-tog-btn.on[data-bst="HOLD"]{border-color:var(--warn);background:var(--warn-d);color:var(--warn)}
+    .bs-tog-btn.on[data-bst="SELL"]{border-color:var(--danger);background:var(--danger-d);color:var(--danger)}
+    /* Wire league filter badge */
+    .wire-league-btn{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;white-space:nowrap;transition:all .15s}
+    .wire-league-btn.on{border-color:var(--success);background:var(--success-d);color:var(--success)}
+    .wire-avail-badge{display:inline-block;background:var(--success-d);color:var(--success);font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;margin-left:7px;vertical-align:middle}
+    @media(max-width:768px){
+      .bs-grid{grid-template-columns:1fr}
+      .bs-mobile-toggle{display:flex}
+      .bs-col{display:none}
+      .bs-col.bs-active{display:block}
+    }
 
     /* ── EMAIL SUBSCRIPTION ─────────────── */
     .email-sub-bar{background:linear-gradient(135deg,var(--primary-d),rgba(124,58,237,.08));border:1px solid rgba(124,58,237,.3);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px}
@@ -1245,6 +1260,8 @@
           <div class="sec-sub" id="wireSubHead">Weekly waiver targets — updated every Tuesday</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <!-- League wire filter (only visible when league connected) -->
+          <button class="wire-league-btn" id="wireLeagueBtn" style="display:none" onclick="toggleWireFilter()">🏆 My League Wire</button>
           <!-- Dynasty / Redraft toggle -->
           <div class="tog-row" style="margin-right:4px">
             <button class="tog on" id="wireModeDynasty" onclick="setWireMode('dynasty')" style="min-width:72px">Dynasty</button>
@@ -1308,11 +1325,11 @@
         </div>
       </div>
 
-      <!-- Stats row -->
+      <!-- Stats row (clickable on mobile to jump to that column) -->
       <div class="bsh-stats" id="bsStatsRow">
-        <div class="bsh-stat buy"><div class="bsh-stat-num" id="bsCountBuy">—</div><div class="bsh-stat-lbl">Buy</div></div>
-        <div class="bsh-stat hold"><div class="bsh-stat-num" id="bsCountHold">—</div><div class="bsh-stat-lbl">Hold</div></div>
-        <div class="bsh-stat sell"><div class="bsh-stat-num" id="bsCountSell">—</div><div class="bsh-stat-lbl">Sell</div></div>
+        <div class="bsh-stat buy"  style="cursor:pointer" onclick="setBsView('BUY')"><div class="bsh-stat-num" id="bsCountBuy">—</div><div class="bsh-stat-lbl">Buy</div></div>
+        <div class="bsh-stat hold" style="cursor:pointer" onclick="setBsView('HOLD')"><div class="bsh-stat-num" id="bsCountHold">—</div><div class="bsh-stat-lbl">Hold</div></div>
+        <div class="bsh-stat sell" style="cursor:pointer" onclick="setBsView('SELL')"><div class="bsh-stat-num" id="bsCountSell">—</div><div class="bsh-stat-lbl">Sell</div></div>
       </div>
 
       <div class="bsh-summary" style="margin-bottom:14px">
@@ -1320,17 +1337,24 @@
         <p>Players trending up with age on their side = Buy. Aging veterans or declining usage = Sell. These are <strong>trade recommendations</strong> — not start/sit advice. Use the Trade Analyzer to check specific deals.</p>
       </div>
 
+      <!-- Mobile toggle (visible on mobile only via CSS) -->
+      <div class="bs-mobile-toggle" id="bsMobileToggle">
+        <button class="bs-tog-btn on" data-bst="BUY"  onclick="setBsView('BUY')">📈 Buy<br><span id="bsTBuyCount" style="font-size:18px;font-weight:900">—</span></button>
+        <button class="bs-tog-btn"    data-bst="HOLD" onclick="setBsView('HOLD')">⏸ Hold<br><span id="bsTHoldCount" style="font-size:18px;font-weight:900">—</span></button>
+        <button class="bs-tog-btn"    data-bst="SELL" onclick="setBsView('SELL')">📉 Sell<br><span id="bsTSellCount" style="font-size:18px;font-weight:900">—</span></button>
+      </div>
+
       <!-- Three-column grid -->
       <div class="bs-grid" id="bsGrid">
-        <div class="bs-col">
+        <div class="bs-col bs-active" id="bsColBuy">
           <div class="bs-col-hdr buy-hdr">📈 Buy</div>
           <div class="bs-col-body" id="bsBuyList"><div class="empty-state" style="padding:20px"><span>📈</span>Loading…</div></div>
         </div>
-        <div class="bs-col">
+        <div class="bs-col" id="bsColHold">
           <div class="bs-col-hdr hold-hdr">⏸ Hold</div>
           <div class="bs-col-body" id="bsHoldList"><div class="empty-state" style="padding:20px"><span>⏸</span>Loading…</div></div>
         </div>
-        <div class="bs-col">
+        <div class="bs-col" id="bsColSell">
           <div class="bs-col-hdr sell-hdr">📉 Sell</div>
           <div class="bs-col-body" id="bsSellList"><div class="empty-state" style="padding:20px"><span>📉</span>Loading…</div></div>
         </div>
@@ -1690,7 +1714,9 @@ const S = {
   tablePos: 'ALL',
   tableSort: { col:'value', dir:'desc' },
   wireMode: 'dynasty',
+  wireFilter: 'all',
   myTeamMode: 'dynasty',
+  bsView: 'BUY',
   bshData: [],
   _pendingLeagueLoad: false,
   ready: false,
@@ -7075,10 +7101,24 @@ function setWirePos(pos) {
   renderWireTab();
 }
 
+function toggleWireFilter() {
+  S.wireFilter = S.wireFilter === 'league' ? 'all' : 'league';
+  renderWireTab();
+}
+
 function renderWireTab() {
-  const pos  = S.wirePos  || 'ALL';
-  const mode = S.wireMode || 'dynasty';
+  const pos  = S.wirePos    || 'ALL';
+  const mode = S.wireMode   || 'dynasty';
+  const filterLeague = S.wireFilter === 'league' && !!S.connectedLeague;
   const w = WEEKLY_WIRE;
+
+  // Show/hide league filter button
+  const leagueBtn = document.getElementById('wireLeagueBtn');
+  if (leagueBtn) {
+    leagueBtn.style.display = S.connectedLeague ? 'inline-block' : 'none';
+    leagueBtn.classList.toggle('on', filterLeague);
+    leagueBtn.textContent = filterLeague ? '🏆 My League Wire ✓' : '🏆 My League Wire';
+  }
 
   // Header subtitle
   const subEl = document.getElementById('wireSubHead');
@@ -7105,26 +7145,60 @@ function renderWireTab() {
   // Filter by dynasty / redraft mode (picks with mode:'both' always show)
   picks = picks.filter(p => !p.mode || p.mode === 'both' || p.mode === mode);
   if (pos !== 'ALL') picks = picks.filter(p => p.pos === pos);
+
+  // League wire filter — exclude players already on any roster
+  let claimedCount = 0;
+  if (filterLeague && S.connectedLeague) {
+    // Build a Set of all claimed player IDs across every team
+    const claimed = new Set();
+    (S.connectedLeague.allTeams || []).forEach(t => {
+      (t.playerIds || []).forEach(id => claimed.add(String(id)));
+    });
+    // Also cover rosterIds in case allTeams wasn't populated
+    (S.connectedLeague.rosterIds || []).forEach(id => claimed.add(String(id)));
+    const before = picks.length;
+    picks = picks.filter(pick => {
+      const player = S.players.find(p => p.full_name === pick.name);
+      if (!player) return true; // unknown — show anyway
+      return !claimed.has(String(player.player_id || player.id || ''));
+    });
+    claimedCount = before - picks.length;
+  }
+
   picks.sort((a,b) => (priorityOrder[a.priority]||3) - (priorityOrder[b.priority]||3));
 
   const list = document.getElementById('wireList');
   if (!list) return;
   if (!picks.length) {
-    list.innerHTML = `<div class="empty-state"><span>📋</span>No ${pos} targets this week — check back Tuesday</div>`;
+    const msg = filterLeague
+      ? `All ${pos === 'ALL' ? '' : pos + ' '}targets are already rostered in your league! Check back after transactions clear.`
+      : `No ${pos} targets this week — check back Tuesday`;
+    list.innerHTML = `<div class="empty-state"><span>📋</span>${msg}</div>`;
     return;
   }
 
   const badgeClass = {'must-add':'wire-must','streamer':'wire-stream','stash':'wire-stash','deep':'wire-deep'};
   const badgeLabel = {'must-add':'🔥 Must-Add','streamer':'⚡ Streamer','stash':'📦 Stash','deep':'🔍 Deep Dive'};
 
-  list.innerHTML = picks.map((p, i) => {
+  const filteredNote = filterLeague && claimedCount > 0
+    ? `<div style="font-size:11px;color:var(--success);margin-bottom:10px;padding:8px 12px;background:var(--success-d);border-radius:8px;border:1px solid rgba(34,197,94,.2)">✅ Showing only players available in <strong>${escHtml(S.connectedLeague.leagueName||'your league')}</strong> — ${claimedCount} already-rostered player${claimedCount!==1?'s':''} hidden.</div>`
+    : '';
+
+  list.innerHTML = filteredNote + picks.map((p, i) => {
     const bc = badgeClass[p.priority] || 'wire-deep';
     const bl = badgeLabel[p.priority] || p.priority;
+    // Check if player is on YOUR roster (highlight differently)
+    const myPlayer = S.connectedLeague
+      ? (S.connectedLeague.rosterIds||[]).includes(
+          String((S.players.find(x=>x.full_name===p.name)||{}).player_id||''))
+      : false;
+    const availBadge = (filterLeague || !myPlayer) ? ''
+      : `<span class="wire-avail-badge">On Your Roster</span>`;
     return `<div class="wire-row">
       <div class="wire-rank">${i+1}</div>
       <div class="pb pb-${escHtml(p.pos)}" style="align-self:flex-start;margin-top:2px">${escHtml(p.pos)}</div>
       <div class="wire-info">
-        <div class="wire-name">${escHtml(p.name)}<span class="wire-badge ${bc}" style="margin-left:7px">${bl}</span></div>
+        <div class="wire-name">${escHtml(p.name)}<span class="wire-badge ${bc}" style="margin-left:7px">${bl}</span>${availBadge}</div>
         <div class="wire-sub">${escHtml(p.team)} · ${p.owned||'—'} owned</div>
         <div class="wire-reason">${escHtml(p.reason)}</div>
       </div>
@@ -7153,6 +7227,16 @@ function setBsPos(pos) {
   document.querySelectorAll('#bsPosFilter .pos-btn').forEach(b =>
     b.classList.toggle('on', b.dataset.bs === pos));
   renderBuySellTab();
+}
+
+function setBsView(view) {
+  S.bsView = view;
+  document.querySelectorAll('[data-bst]').forEach(b => b.classList.toggle('on', b.dataset.bst === view));
+  const colMap = { BUY:'bsColBuy', HOLD:'bsColHold', SELL:'bsColSell' };
+  Object.entries(colMap).forEach(([v, id]) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('bs-active', v === view);
+  });
 }
 
 function getBuySellReason(p, action) {
@@ -7233,6 +7317,10 @@ function renderBuySellTab() {
   document.getElementById('bsCountBuy').textContent  = topBuys.length;
   document.getElementById('bsCountHold').textContent = topHolds.length;
   document.getElementById('bsCountSell').textContent = topSells.length;
+  // Sync mobile toggle counts
+  const tbc = document.getElementById('bsTBuyCount');  if (tbc)  tbc.textContent  = topBuys.length;
+  const thc = document.getElementById('bsTHoldCount'); if (thc) thc.textContent = topHolds.length;
+  const tsc = document.getElementById('bsTSellCount'); if (tsc)  tsc.textContent  = topSells.length;
 
   const renderCard = (p) => `
     <div class="bs-card">
@@ -7250,6 +7338,8 @@ function renderBuySellTab() {
   document.getElementById('bsBuyList').innerHTML  = topBuys.length  ? topBuys.map(renderCard).join('')  : emptyCard('📈','No buy targets match your filter');
   document.getElementById('bsHoldList').innerHTML = topHolds.length ? topHolds.map(renderCard).join('') : emptyCard('⏸','No hold players match your filter');
   document.getElementById('bsSellList').innerHTML = topSells.length ? topSells.map(renderCard).join('') : emptyCard('📉','No sell targets match your filter');
+  // Apply current mobile view (respects which column is selected)
+  setBsView(S.bsView || 'BUY');
 }
 
 // ═══════════════════════════════════════════════════════════
