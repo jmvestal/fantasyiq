@@ -345,9 +345,9 @@
     .ros-empty{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);opacity:.45}
     .ros-empty-name{font-size:12px;font-style:italic;color:var(--text3);flex:1}
     /* ── AI CHAT WIDGET ─────────────────────────────── */
-    .tiq-chat-btn{position:fixed;bottom:72px;right:16px;width:50px;height:50px;border-radius:50%;background:var(--primary);border:2px solid rgba(157,90,240,.4);color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(124,58,237,.45);z-index:300;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s;line-height:1;gap:5px}
-    .tiq-chat-btn:hover{transform:scale(1.08);box-shadow:0 6px 24px rgba(124,58,237,.6)}
-    .tiq-chat-btn-label{display:none;font-size:12px;font-weight:800;letter-spacing:-.2px;line-height:1}
+    .tiq-chat-btn{position:fixed;bottom:72px;right:16px;width:auto;height:44px;border-radius:22px;padding:0 18px 0 14px;background:var(--primary);border:2px solid rgba(157,90,240,.4);color:#fff;font-size:18px;cursor:pointer;box-shadow:0 4px 20px rgba(124,58,237,.45);z-index:300;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s;line-height:1;gap:6px}
+    .tiq-chat-btn:hover{transform:scale(1.05);box-shadow:0 6px 24px rgba(124,58,237,.6)}
+    .tiq-chat-btn-label{font-size:12px;font-weight:800;letter-spacing:-.2px;line-height:1}
     .tiq-chat-panel{position:fixed;bottom:134px;right:16px;width:330px;height:430px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.5);z-index:299;display:none;flex-direction:column;overflow:hidden;transition:opacity .2s}
     .tiq-chat-panel.open{display:flex}
     .tiq-chat-hdr{padding:12px 14px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
@@ -374,8 +374,7 @@
     .tiq-context-bar strong{font-weight:700}
     @media(max-width:640px){
       .tiq-chat-panel{position:fixed;left:0;right:0;bottom:0;width:100%;border-radius:20px 20px 0 0;height:72vh;max-height:72vh}
-      .tiq-chat-btn{bottom:72px;right:12px;width:auto;height:44px;border-radius:22px;padding:0 18px 0 14px;font-size:18px}
-      .tiq-chat-btn-label{display:inline}
+      .tiq-chat-btn{bottom:72px;right:12px}
       .tiq-chat-hdr{padding:14px 16px}
       .tiq-chat-hdr-title{font-size:15px}
     }
