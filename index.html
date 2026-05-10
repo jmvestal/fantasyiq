@@ -113,6 +113,13 @@
     .dd-item:last-child{border-bottom:none}
     .dd-item:hover{background:var(--bg3)}
     .dd-none{padding:12px;font-size:13px;color:var(--text3);text-align:center}
+    /* Mobile inline suggestions — flow with page instead of floating */
+    @media(max-width:768px){
+      .dd{position:static;box-shadow:none;border-radius:0 0 9px 9px;border-top:none;max-height:none;margin-top:-1px}
+      .srch.has-results{border-radius:8px 8px 0 0;border-bottom-color:transparent}
+      .dd-item{padding:11px 12px}
+      .dd-item:active{background:var(--bg3)}
+    }
 
     /* ── POSITION BADGES ────────────────── */
     .pb{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;flex-shrink:0;text-align:center;min-width:28px}
@@ -2887,19 +2894,23 @@ function buildSearch(inputId, ddId, onSelect, excludeFn) {
   const dd = document.getElementById(ddId);
   if (!input || !dd) return;
 
+  const isMobile = () => window.innerWidth <= 768;
+
+  const closeDd = () => {
+    dd.classList.remove('open');
+    input.classList.remove('has-results');
+  };
+
   input.addEventListener('input', () => {
     const q = input.value.trim().toLowerCase();
-    if (q.length < 1) { dd.classList.remove('open'); return; }
+    if (q.length < 1) { closeDd(); return; }
 
+    const limit = isMobile() ? 10 : 16;
     const results = S.players
       .filter(p => !excludeFn || !excludeFn(p))
       .filter(p => p.full_name.toLowerCase().includes(q) || (p.team||'').toLowerCase().includes(q))
-      .sort((a,b) => {
-        const ra = a.search_rank||9999, rb = b.search_rank||9999;
-        const av = calcValue(a), bv = calcValue(b);
-        return bv - av;
-      })
-      .slice(0, 16);
+      .sort((a,b) => calcValue(b) - calcValue(a))
+      .slice(0, limit);
 
     if (!results.length) {
       dd.innerHTML = '<div class="dd-none">No players found</div>';
@@ -2917,16 +2928,20 @@ function buildSearch(inputId, ddId, onSelect, excludeFn) {
       }).join('');
     }
     dd.classList.add('open');
+    if (isMobile()) input.classList.add('has-results');
   });
 
-  input.addEventListener('blur', () => setTimeout(()=>dd.classList.remove('open'), 200));
-  input.addEventListener('keydown', e => { if (e.key === 'Escape') dd.classList.remove('open'); });
+  input.addEventListener('blur', () => setTimeout(() => {
+    if (!isMobile()) closeDd();
+  }, 200));
+  input.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDd(); input.blur(); } });
 }
 
 function selectPlayer(id, inputId, ddId) {
   const p = S.players.find(x=>x.id===id);
   if (!p) return;
-  document.getElementById(inputId).value = '';
+  const inp = document.getElementById(inputId);
+  if (inp) { inp.value = ''; inp.classList.remove('has-results'); }
   document.getElementById(ddId).classList.remove('open');
 
   if (inputId === 'srchA') {
@@ -5827,6 +5842,19 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[data-tab]').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
+
+  // Mobile: tap outside open inline suggestion list to close it
+  document.addEventListener('touchstart', e => {
+    if (window.innerWidth > 768) return;
+    document.querySelectorAll('.dd.open').forEach(dd => {
+      const wrap = dd.closest('.srch-wrap');
+      if (wrap && !wrap.contains(e.target)) {
+        dd.classList.remove('open');
+        const inp = wrap.querySelector('.srch');
+        if (inp) inp.classList.remove('has-results');
+      }
+    });
+  }, { passive: true });
 
   // Settings toggles
   document.querySelectorAll('[data-s]').forEach(btn => {
