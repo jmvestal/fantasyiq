@@ -10441,14 +10441,24 @@ function showPlayerCard(name) {
       + `<span class="pc-val ${trendCls}">${trendIcon} ${trend}</span>`;
 
     // ── Buy/Sell signal ──
-    const sigDiv   = document.getElementById('pcSignal');
-    const buySells = (typeof _tiqGetBuySells === 'function') ? _tiqGetBuySells() : [];
-    const sig      = buySells.find(x => x.name === pname);
+    // _tiqGetBuySells() returns {buys:[...], sells:[...]} — combine into flat array
+    const sigDiv = document.getElementById('pcSignal');
+    let sig = null;
+    try {
+      if (typeof _tiqGetBuySells === 'function') {
+        const { buys, sells } = _tiqGetBuySells();
+        const allBS = [...(buys || []), ...(sells || [])];
+        sig = allBS.find(x => (x.full_name || x.name || '') === pname) || null;
+      }
+    } catch(bsErr) { /* buy/sell not critical */ }
     if (sigDiv) {
       if (sig) {
-        const label = sig.type === 'buy' ? '🟢 BUY' : sig.type === 'sell' ? '🔴 SELL HIGH' : '🟡 HOLD';
-        sigDiv.className   = `pc-signal ${sig.type}`;
-        sigDiv.innerHTML   = `<strong>${label}</strong>${sig.reason ? ` — ${escHtml(sig.reason)}` : ''}`;
+        // items have .action ('BUY'/'SELL'/'HOLD'), not .type
+        const act = (sig.action || '').toUpperCase();
+        const label = act === 'BUY' ? '🟢 BUY' : act === 'SELL' ? '🔴 SELL HIGH' : '🟡 HOLD';
+        const cls   = act === 'BUY' ? 'buy' : act === 'SELL' ? 'sell' : 'hold';
+        sigDiv.className     = `pc-signal ${cls}`;
+        sigDiv.innerHTML     = `<strong>${label}</strong>`;
         sigDiv.style.display = 'block';
       } else {
         sigDiv.style.display = 'none';
