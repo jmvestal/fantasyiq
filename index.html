@@ -3103,13 +3103,19 @@ function calcValue(p) {
       const opt = rookieOpt / 50; // 0–2
       v = Math.round(v * (0.85 + opt * 0.15));
     }
-    // IDP: significantly discounted in dynasty — elite DEs/LBs rank around TE1/WR2,
-    // not elite QB level. They're valuable in IDP leagues but don't anchor teams.
-    if (IDP_POS.has(pos)) v = Math.round(v * 0.48);
+    // IDP: discounted heavily — even elite defenders score far fewer pts than skill players.
+    // 0.30× means Micah Parsons at dv:6000 → 1800 (low-end starter), not WR2 territory.
+    if (IDP_POS.has(pos)) v = Math.round(v * 0.30);
     // DST & K: minimal dynasty value
     if (DST_POS.has(pos)) v = Math.min(v, 200);
   } else {
     v = (p.redraft_val > 0 ? p.redraft_val : p.dynasty_val) || 500;
+    // IDP: in standard redraft formats defenders score a fraction of skill player points.
+    // Cap them well below the skill-position floor so they never surface near the top.
+    if (IDP_POS.has(pos)) v = Math.round(v * 0.18);
+    // DST & K: reasonable redraft caps — top DST ≈ WR4, top K ≈ low flex
+    if (DST_POS.has(pos)) v = Math.min(v, 2800);
+    if (pos === 'K')       v = Math.min(v, 1600);
   }
 
   // ── QB FORMAT ──
@@ -3865,7 +3871,9 @@ function renderValuesTable() {
   let rows = S.players
     .filter(p => {
       if (pos === 'ALL') {
-        // In dynasty: hide DST/K (no dynasty value) unless explicitly filtering
+        // Always hide IDP from ALL view — use the IDP tab to browse defenders
+        if (IDP_POSITIONS.has(p.position)) return false;
+        // In dynasty: also hide DST/K (no meaningful dynasty value)
         if (isDynasty && DST_POSITIONS.has(p.position)) return false;
         if (isDynasty && p.position === 'K') return false;
         return true;
@@ -8775,8 +8783,10 @@ function renderBuySellTab() {
 
   const buys = [], holds = [], sells = [];
 
+  const IDP_POS_BS = new Set(['DE','DT','LB','CB','S','FS','SS','DB','OLB','ILB','MLB','DL','IDP']);
   const eligible = S.players.filter(p => {
-    if (p.position === 'K' || p.position === 'DEF' || p.position === 'PICK') return false;
+    if (p.position === 'K' || p.position === 'DEF' || p.position === 'DST' || p.position === 'PICK') return false;
+    if (IDP_POS_BS.has(p.position)) return false; // defenders never surface as buy/sell targets
     if (pos !== 'ALL' && p.position !== pos) return false;
     const val = calcValue(p);
     return val >= 2500; // only meaningful dynasty assets
