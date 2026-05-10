@@ -429,18 +429,19 @@
     .wiz-slot-empty{font-size:11px;color:var(--text3);font-style:italic}
     .wiz-slot.filled{border-color:var(--primary-d)}
     /* ── DRAFT SIMULATOR ──────────────────────── */
-    .dsim-layout{display:grid;grid-template-columns:260px 1fr 280px;gap:14px;align-items:start}
-    @media(max-width:900px){.dsim-layout{grid-template-columns:1fr}}
+    .dsim-board-section{margin-bottom:18px}
+    .dsim-bottom-layout{display:grid;grid-template-columns:240px 1fr;gap:14px;align-items:start}
+    @media(max-width:760px){.dsim-bottom-layout{grid-template-columns:1fr}}
     .dsim-board-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px}
     .dsim-board{border-collapse:collapse;font-size:11px;min-width:100%}
     .dsim-board th{padding:5px 7px;background:var(--bg3);border:1px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text3);white-space:nowrap;position:sticky;top:0;z-index:2}
-    .dsim-board td{padding:4px 6px;border:1px solid var(--border);vertical-align:top;min-width:68px;max-width:90px;background:var(--bg2)}
+    .dsim-board td{padding:4px 6px;border:1px solid var(--border);vertical-align:top;min-width:72px;max-width:100px;background:var(--bg2)}
     .dsim-board td.my-col{background:rgba(124,58,237,.07);border-color:rgba(124,58,237,.25)}
     .dsim-board th.my-col{background:rgba(124,58,237,.18);color:var(--primary-l)}
     .dsim-board td.dsim-cur-cell{background:rgba(124,58,237,.22);outline:2px solid var(--primary);outline-offset:-2px}
     .dsim-board td.round-num-cell{background:var(--bg3);font-weight:800;color:var(--text3);font-size:10px;text-align:center;min-width:28px;max-width:28px;position:sticky;left:0;z-index:1}
     .dsim-board th.round-num-cell{position:sticky;left:0;z-index:3;background:var(--bg3)}
-    .dsim-pick{font-size:11px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px}
+    .dsim-pick{font-size:11px;font-weight:600;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:92px}
     .dsim-pick-pos{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:1px;opacity:.7}
     .dsim-rec-bar{background:var(--primary-d);border:1px solid rgba(124,58,237,.3);border-radius:10px;padding:12px 14px;margin-bottom:10px}
     .dsim-rec-ttl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--primary-l);margin-bottom:8px}
@@ -450,12 +451,12 @@
     .dsim-rec-rank{font-size:10px;font-weight:800;color:var(--text3);margin-bottom:3px}
     .dsim-rec-name{font-size:13px;font-weight:700;margin-bottom:2px}
     .dsim-rec-why{font-size:11px;color:var(--text2)}
-    .dsim-avail-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;margin-bottom:4px;cursor:pointer;transition:all .12s;user-select:none}
+    .dsim-avail-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;margin-bottom:4px;cursor:pointer;transition:all .12s;user-select:none}
     .dsim-avail-row:hover{border-color:var(--primary);background:rgba(124,58,237,.08)}
     .dsim-avail-row.not-my-turn{opacity:.45;cursor:default;pointer-events:none}
-    .dsim-avail-name{flex:1;font-size:12px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .dsim-avail-val{font-size:11px;font-weight:700;color:var(--primary-l);flex-shrink:0}
-    .dsim-avail-meta{font-size:10px;color:var(--text3);flex-shrink:0}
+    .dsim-avail-name{flex:1;font-size:13px;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .dsim-avail-val{font-size:12px;font-weight:700;color:var(--primary-l);flex-shrink:0;min-width:38px;text-align:right}
+    .dsim-avail-meta{font-size:11px;color:var(--text3);flex-shrink:0;min-width:60px}
     .dsim-roster-pick{display:flex;align-items:center;gap:7px;padding:6px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;margin-bottom:4px;font-size:12px}
     .dsim-roster-pick-name{flex:1;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .dsim-roster-round{font-size:10px;font-weight:800;color:var(--text3);flex-shrink:0}
@@ -1522,35 +1523,37 @@
 
         <!-- Active draft -->
         <div id="dsimActive" style="display:none">
-          <div class="dsim-layout">
 
-            <!-- Left: Your Roster + Pick History -->
+          <!-- TOP: Full-width draft board -->
+          <div class="dsim-board-section">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <div class="draft-board-ttl">Draft Board <span id="dsimBoardStatus" style="font-weight:400;font-size:11px;color:var(--text3);text-transform:none;letter-spacing:0"></span></div>
+            </div>
+            <div class="dsim-board-wrap" id="dsimBoardWrap">
+              <table class="dsim-board" id="dsimBoardTable"></table>
+            </div>
+          </div>
+
+          <!-- BOTTOM: Left = Roster/History | Right = Picks + Available -->
+          <div class="dsim-bottom-layout">
+
+            <!-- Left col: Your Roster + Pick History -->
             <div>
               <div class="draft-board-ttl">Your Roster</div>
               <div id="dsimMyRoster"></div>
-              <div class="draft-board-ttl" style="margin-top:14px">Pick History</div>
-              <div id="dsimPickHistory" style="max-height:220px;overflow-y:auto;font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:8px"></div>
+              <div class="draft-board-ttl" style="margin-top:14px">Recent Picks</div>
+              <div id="dsimPickHistory" style="max-height:260px;overflow-y:auto;font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:8px"></div>
             </div>
 
-            <!-- Center: Draft Board -->
-            <div>
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-                <div class="draft-board-ttl">Draft Board <span id="dsimBoardStatus" style="font-weight:400;font-size:11px;color:var(--text3);text-transform:none;letter-spacing:0"></span></div>
-              </div>
-              <div class="dsim-board-wrap" id="dsimBoardWrap">
-                <table class="dsim-board" id="dsimBoardTable"></table>
-              </div>
-            </div>
-
-            <!-- Right: Recommendations + Available -->
+            <!-- Right col: Recommendations + Available Players -->
             <div>
               <div id="dsimRecArea" style="margin-bottom:12px"></div>
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-                <div class="draft-board-ttl">Available <span id="dsimAvailCount" style="font-weight:400;text-transform:none;letter-spacing:0;font-size:11px"></span></div>
-                <div class="pos-btns" id="dsimPosBtns" style="gap:3px"></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">
+                <div class="draft-board-ttl">Available Players <span id="dsimAvailCount" style="font-weight:400;text-transform:none;letter-spacing:0;font-size:11px"></span></div>
+                <div class="pos-btns" id="dsimPosBtns" style="gap:3px;flex-wrap:wrap"></div>
               </div>
               <input class="srch" id="dsimSearch" placeholder="Search players…" oninput="renderDsimAvail()" style="width:100%;box-sizing:border-box;margin-bottom:8px">
-              <div id="dsimAvailList" style="max-height:420px;overflow-y:auto"></div>
+              <div id="dsimAvailList" style="max-height:480px;overflow-y:auto"></div>
             </div>
 
           </div>
@@ -8651,7 +8654,7 @@ function dsimUpdateSetup() {
     const prev = parseInt(roundsSel.value) || 0;
     roundsSel.innerHTML = '';
     const isRookie = type === 'rookie';
-    const opts = isRookie ? [3,4,5,6] : [10,12,14,15,16];
+    const opts = isRookie ? [3,4,5,6] : [10,12,14,15,16,17,18,20];
     const def = isRookie ? 4 : 15;
     opts.forEach(r => {
       const o = document.createElement('option');
@@ -8720,8 +8723,10 @@ function startDraftSim() {
       .filter(p => p.rookie && p.position !== 'PICK')
       .sort((a, b) => (b.dynasty_val || 0) - (a.dynasty_val || 0));
   } else {
+    // Redraft: standard fantasy positions only — no IDP (DE/DT/LB/CB/S/DB/IDP)
+    const REDRAFT_POS = new Set(['QB','RB','WR','TE','K','DEF','DST']);
     DSIM.available = (S.players || [])
-      .filter(p => !['PICK'].includes(p.position) && calcValue(p) > 200)
+      .filter(p => REDRAFT_POS.has(p.position) && calcValue(p) > 200)
       .sort((a, b) => calcValue(b) - calcValue(a));
   }
 
