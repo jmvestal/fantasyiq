@@ -389,6 +389,12 @@
     .scout-league-row label{white-space:nowrap;font-weight:600;color:var(--text3);flex-shrink:0}
     .scout-league-sel{flex:1;min-width:0;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;padding:4px 8px;font-family:inherit;cursor:pointer;outline:none;transition:border-color .15s}
     .scout-league-sel:focus,.scout-league-sel:hover{border-color:var(--primary)}
+    /* Sidebar + tab league selectors */
+    .sidebar-lg-sel{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:11px;padding:6px 8px;font-family:inherit;cursor:pointer;outline:none;transition:border-color .15s}
+    .sidebar-lg-sel:focus,.sidebar-lg-sel:hover{border-color:var(--primary)}
+    /* Quick-start trade chips */
+    .qs-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:14px;font-size:11px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .13s;white-space:nowrap}
+    .qs-chip:hover{border-color:var(--primary);color:var(--primary-l);background:var(--primary-d)}
     .scout-hdr-actions button:hover{color:var(--text)}
     @media(max-width:640px){
       .tiq-chat-panel{position:fixed;left:0;right:0;bottom:0;width:100%;border-radius:20px 20px 0 0;height:72vh;max-height:72vh}
@@ -989,6 +995,12 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
+    <!-- League switcher — shown when 2+ leagues connected -->
+    <div class="s-section" id="sbLgSection" style="display:none">
+      <div class="s-label">🏈 League</div>
+      <select id="sbLgSel" class="sidebar-lg-sel" onchange="switchLeagueGlobal(this.value)"></select>
+    </div>
+    <div class="s-divider" id="sbLgDiv" style="display:none"></div>
     <div class="s-section">
       <div class="s-label">Mode</div>
       <div class="tog-row">
@@ -1153,6 +1165,10 @@
         <div class="league-view-toggle">
           <button class="lvt-btn on" data-tm="general" onclick="setTradeMode('general')">🔍 General</button>
           <button class="lvt-btn" data-tm="league" onclick="setTradeMode('league')">🏈 My League</button>
+        </div>
+        <!-- League switcher — visible in My League mode when 2+ leagues connected -->
+        <div id="tradeLgWrap" style="display:none;flex-shrink:0">
+          <select id="tradeLgSel" class="trade-partner-sel" style="font-size:12px;padding:6px 10px" onchange="switchTradeLeague(this.value)"></select>
         </div>
         <div id="tradePartnerWrap" style="display:none;flex:1;min-width:160px">
           <select id="tradePartnerSel" class="trade-partner-sel" onchange="setTradingPartner(this.value)">
@@ -1780,6 +1796,8 @@
           <div class="sec-sub" id="wireSubHead">Weekly waiver targets — updated every Tuesday</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <!-- League switcher (visible when 2+ leagues connected) -->
+          <select id="wireTabLgSel" class="trade-partner-sel" style="display:none;font-size:12px;padding:6px 10px" onchange="switchLeagueGlobal(this.value)"></select>
           <!-- League wire filter (only visible when league connected) -->
           <button class="wire-league-btn" id="wireLeagueBtn" style="display:none" onclick="toggleWireFilter()">🏆 My League Wire</button>
           <!-- Dynasty / Redraft toggle -->
@@ -3748,9 +3766,9 @@ function renderTrade() {
     document.getElementById('vbarLblB').textContent = 'Receive';
   }
 
-  // Chips
-  document.getElementById('chipsA').innerHTML = renderChips(S.tradeA, 'A') || '<div class="chip-empty">Search and add players above</div>';
-  document.getElementById('chipsB').innerHTML = renderChips(S.tradeB, 'B') || '<div class="chip-empty">Search and add players above</div>';
+  // Chips — fall back to quick-start popular players when empty
+  document.getElementById('chipsA').innerHTML = renderChips(S.tradeA, 'A') || _renderQuickStart('A');
+  document.getElementById('chipsB').innerHTML = renderChips(S.tradeB, 'B') || _renderQuickStart('B');
 
   // Hide analysis when trade changes
   document.getElementById('analysisCard').style.display = 'none';
@@ -7249,7 +7267,7 @@ function updateLeagueBar() {
     if (mtmBar) mtmBar.style.display = 'none';
   }
   updateTradeModeBar();
-  _refreshScoutLeagueDropdown();
+  _refreshLeagueSels();
 }
 
 function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
@@ -7888,6 +7906,7 @@ function setTradeMode(mode) {
     populatePartnerDropdown();
     renderLeagueRosters();
   }
+  _refreshLeagueSels();
 }
 
 function populatePartnerDropdown() {
@@ -9343,6 +9362,108 @@ function onScoutLeagueChange(leagueId) {
     _tiqChatLeague = found;
     _tiqSetContextBar(found.leagueName || 'Your League');
   }
+}
+
+// ═══════════════════════════════════════════════════════════
+// GLOBAL LEAGUE SWITCHER — shared across all tabs
+// ═══════════════════════════════════════════════════════════
+function switchLeagueGlobal(leagueId) {
+  const found = (S.connectedLeagues || []).find(l => l.leagueId === leagueId);
+  if (!found) return;
+  S.connectedLeague = found;
+  applyLeagueSettings(found.settings);
+  S.roster = (found.rosterIds || [])
+    .map(id => S.players.find(p => String(p.player_id || p.id) === String(id)))
+    .filter(Boolean);
+  updateLeagueBar();
+  updateModeChip();
+  renderTrade();
+  renderRosterList();
+  if (document.getElementById('tab-wire')?.classList.contains('active')) renderWireTab();
+  if (document.getElementById('tab-league')?.classList.contains('active')) renderLeagueAnalyzer();
+  _refreshLeagueSels();
+  showToast(`🏈 Switched to ${found.leagueName || 'league'}`);
+}
+
+function switchTradeLeague(leagueId) {
+  const found = (S.connectedLeagues || []).find(l => l.leagueId === leagueId);
+  if (!found) return;
+  S.connectedLeague = found;
+  applyLeagueSettings(found.settings);
+  S.roster = (found.rosterIds || [])
+    .map(id => S.players.find(p => String(p.player_id || p.id) === String(id)))
+    .filter(Boolean);
+  clearTrade();
+  populatePartnerDropdown();
+  renderLeagueRosters();
+  updateModeChip();
+  _refreshLeagueSels();
+  showToast(`🏈 Switched to ${found.leagueName || 'league'}`);
+}
+
+function _refreshLeagueSels() {
+  const leagues = S.connectedLeagues || [];
+  const cur = S.connectedLeague?.leagueId;
+  const opts = leagues.map(l =>
+    `<option value="${escHtml(l.leagueId || '')}"${l.leagueId === cur ? ' selected' : ''}>${escHtml(l.leagueName || 'League')}</option>`
+  ).join('');
+
+  // Sidebar selector
+  const sbSec = document.getElementById('sbLgSection');
+  const sbDiv = document.getElementById('sbLgDiv');
+  const sbSel = document.getElementById('sbLgSel');
+  if (sbSec && sbSel) {
+    const show = leagues.length > 1;
+    sbSec.style.display = show ? '' : 'none';
+    if (sbDiv) sbDiv.style.display = show ? '' : 'none';
+    if (show) sbSel.innerHTML = opts;
+  }
+
+  // Trade IQ My League mode selector
+  const tgWrap = document.getElementById('tradeLgWrap');
+  const tgSel = document.getElementById('tradeLgSel');
+  if (tgWrap && tgSel) {
+    const show = leagues.length > 1 && S_tradeMode === 'league';
+    tgWrap.style.display = show ? 'flex' : 'none';
+    if (show) tgSel.innerHTML = opts;
+  }
+
+  // Waiver IQ tab selector
+  const wSel = document.getElementById('wireTabLgSel');
+  if (wSel) {
+    wSel.style.display = leagues.length > 1 ? '' : 'none';
+    if (leagues.length > 1) wSel.innerHTML = opts;
+  }
+
+  // Scout IQ chat dropdown
+  _refreshScoutLeagueDropdown();
+}
+
+// ── Quick-start player chips in Trade IQ ──────────────────
+function _renderQuickStart(side) {
+  if (S_tradeMode === 'league') return '<div class="chip-empty">Select players from the roster above</div>';
+  if (!S.ready || !S.players?.length) return '<div class="chip-empty">Search and add players above</div>';
+  const top = S.players
+    .filter(p => !['K','DEF','DST','PICK','IDP','DE','DT','LB','CB','S','FS','SS','DB','OLB','ILB','MLB','DL'].includes(p.position))
+    .map(p => ({ p, v: calcValue(p) }))
+    .filter(({ v }) => v >= 3000)
+    .sort((a, b) => b.v - a.v)
+    .slice(0, 12);
+  if (!top.length) return '<div class="chip-empty">Search and add players above</div>';
+  return `<div class="chip-empty" style="text-align:left;padding:10px 4px">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:8px">⚡ Popular — tap to add</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px">${top.map(({ p }) =>
+      `<button class="qs-chip" onclick="addQuickPlayer('${p.id}','${side}')"><span class="pb pb-${p.position}" style="font-size:8px;padding:1px 4px">${p.position}</span>${escHtml(p.full_name)}</button>`
+    ).join('')}</div>
+  </div>`;
+}
+
+function addQuickPlayer(id, side) {
+  const p = S.players.find(x => x.id === id);
+  if (!p) return;
+  const arr = side === 'A' ? S.tradeA : S.tradeB;
+  if (!arr.find(x => x.id === id)) arr.push(p);
+  renderTrade();
 }
 
 function showChatChips(chips) {
