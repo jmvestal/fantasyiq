@@ -6120,7 +6120,7 @@ function applyValueDB(p) {
 // FETCH SLEEPER PLAYERS
 // ═══════════════════════════════════════════════════════════
 async function fetchPlayers() {
-  const CACHE_KEY = 'tradeiq_sleeper_players_v5';
+  const CACHE_KEY = 'tradeiq_sleeper_players_v6';
   const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours (was 12 — shorter to catch retirements faster)
   // Try cache first
   try {
@@ -6144,9 +6144,12 @@ async function fetchPlayers() {
         VALID_POS.has(p.position) &&
         p.active === true &&
         p.team &&
+        p.team !== 'FA' &&
+        p.team !== 'Free Agent' &&
         p.status !== 'Inactive' &&
         p.status !== 'Retired' &&
         p.status !== 'Reserve/Retired' &&
+        p.status !== 'Reserve/PUP' &&
         !RETIRED_PLAYERS.has(p.full_name) &&
         (p.search_rank || 0) < 2500
       )
@@ -6155,7 +6158,7 @@ async function fetchPlayers() {
         player_id: p.player_id,
         full_name: p.full_name,
         position: p.position,
-        team: p.team || 'FA',
+        team: p.team,
         age: p.age,
         height: p.height,
         weight: p.weight,
@@ -6179,7 +6182,11 @@ async function fetchPlayers() {
         return data.map(p => applyValueDB(p));
       }
     } catch(e2) {}
-    return FALLBACK_PLAYERS;
+    const FA_SET = new Set(['FA','Free Agent','','N/A']);
+    return FALLBACK_PLAYERS.filter(p =>
+      !RETIRED_PLAYERS.has(p.full_name) &&
+      p.team && !FA_SET.has(p.team)
+    );
   }
 }
 
@@ -6369,9 +6376,13 @@ async function init() {
   // not yet in Sleeper (unannounced signings, rookies pre-loaded, etc.)
   const sleeperNorms = new Set(sleeperPlayers.map(p => normName(p.full_name || '')));
   const freshRookies = ROOKIES_2026.filter(p => !sleeperNorms.has(normName(p.full_name || '')));
-  // Final assembly — strip any retired player that slipped through any source
+  // Final assembly — only rostered players make it through, regardless of source
+  const FA_VALS = new Set(['FA','Free Agent','','N/A']);
   S.players = [...sleeperPlayers, ...freshRookies, ...PICKS]
-    .filter(p => !RETIRED_PLAYERS.has(p.full_name));
+    .filter(p =>
+      !RETIRED_PLAYERS.has(p.full_name) &&
+      (p.position === 'PICK' || (p.team && !FA_VALS.has(p.team)))
+    );
 
   // Mark fallback rookies
   FALLBACK_PLAYERS.forEach(p=>{ p.rookie = false; });
