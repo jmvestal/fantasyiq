@@ -2117,53 +2117,82 @@ const S = {
 // ═══════════════════════════════════════════════════════════
 const VALUE_DB = {
   // ── QBs ──────────────────────────────────────
-  // dv = 1QB dynasty baseline (May 2026 consensus: DLF/FantasyCalc/KTC composite)
+  // dv = KTC Superflex value ÷ 1.38 = 1QB dynasty baseline (May 10 2026, live KTC)
   // rv = 1QB PPR redraft 2026 value
-  'Josh Allen':             {dv:6900,rv:8500,trend:'flat'},
-  'Drake Maye':             {dv:6400,rv:7000,trend:'up'},
-  'Lamar Jackson':          {dv:5600,rv:8200,trend:'flat'},
-  'Jayden Daniels':         {dv:5500,rv:7200,trend:'up'},
-  'Caleb Williams':         {dv:5500,rv:6200,trend:'up'},
-  'Joe Burrow':             {dv:5400,rv:7500,trend:'up'},
-  'Justin Herbert':         {dv:5000,rv:6800,trend:'up'},
-  'Patrick Mahomes':        {dv:4900,rv:7800,trend:'flat'},
-  'Jalen Hurts':            {dv:4600,rv:7000,trend:'flat'},
-  'Jaxson Dart':            {dv:4600,rv:6500,trend:'up'},
-  // ── 2026 QB Rookies — calibrated to draft capital + landing spot ──
-  'Fernando Mendoza':       {dv:4200,rv:4000,trend:'up'},   // #1 overall, LV starter
-  'Ty Simpson':             {dv:3400,rv:1800,trend:'up'},   // #13 overall, LAR — 1-2yr window
-  'Drew Allar':             {dv:2000,rv:1000,trend:'flat'}, // Round 2, PIT
-  'Carson Beck':            {dv:1500,rv:800, trend:'flat'}, // Round 2, CIN — backing Burrow
-  'Garrett Nussmeier':      {dv:1200,rv:700, trend:'flat'}, // KC — backing Mahomes
-  // ── Established starters (May 2026 calibrated) ───────────────
-  'Trevor Lawrence':        {dv:4200,rv:5500,trend:'up'},
-  'Bo Nix':                 {dv:4200,rv:5200,trend:'up'},
-  'Brock Purdy':            {dv:4000,rv:7000,trend:'flat'},
-  'Jordan Love':            {dv:3500,rv:6200,trend:'flat'},
-  'Cam Ward':               {dv:3000,rv:5000,trend:'up'},   // 2nd year TEN
-  'Dak Prescott':           {dv:3400,rv:5500,trend:'down'},
-  'Tyler Shough':           {dv:3200,rv:5000,trend:'up'},
-  'C.J. Stroud':            {dv:2800,rv:6500,trend:'up'},
-  'CJ Stroud':              {dv:2800,rv:6500,trend:'up'},
-  'Sam Darnold':            {dv:2700,rv:4500,trend:'flat'},
-  'Baker Mayfield':         {dv:2700,rv:5500,trend:'flat'},
-  'Jared Goff':             {dv:2700,rv:5500,trend:'down'},
-  'Bryce Young':            {dv:2500,rv:4200,trend:'up'},
-  'Kyler Murray':           {dv:2600,rv:5000,trend:'flat'},
-  'Matthew Stafford':       {dv:1900,rv:4500,trend:'down'},
-  'Malik Willis':           {dv:2200,rv:4500,trend:'up'},   // MIA starter
-  'Daniel Jones':           {dv:2200,rv:4000,trend:'flat'},
-  'Michael Penix Jr.':      {dv:1700,rv:4800,trend:'up'},
-  'J.J. McCarthy':          {dv:1500,rv:3500,trend:'up'},
-  'JJ McCarthy':            {dv:1500,rv:3500,trend:'up'},
-  'Shedeur Sanders':        {dv:1500,rv:4500,trend:'up'},   // CLE — starter path
-  'Tua Tagovailoa':         {dv:1400,rv:3500,trend:'flat'},
-  'Jalen Milroe':           {dv:1200,rv:2200,trend:'up'},
-  'Anthony Richardson':     {dv:1300,rv:3000,trend:'up'},
-  'Geno Smith':             {dv:1100,rv:3500,trend:'flat'},
-  'Justin Fields':          {dv:1000,rv:2500,trend:'flat'},
-  'Kirk Cousins':           {dv:1000,rv:2500,trend:'down'},
-  'Derek Carr':             {dv:500, rv:1500,trend:'down'},
+  'Josh Allen':             {dv:7200,rv:8500,trend:'flat'},  // KTC SF: 9990
+  'Drake Maye':             {dv:6800,rv:7000,trend:'up'},    // KTC SF: 9412
+  'Caleb Williams':         {dv:5750,rv:6200,trend:'up'},    // KTC SF: 7939
+  'Jayden Daniels':         {dv:5650,rv:7200,trend:'up'},    // KTC SF: 7825
+  'Lamar Jackson':          {dv:5550,rv:8200,trend:'flat'},  // KTC SF: 7673
+  'Joe Burrow':             {dv:5400,rv:7500,trend:'up'},    // KTC SF: 7489
+  'Justin Herbert':         {dv:4950,rv:6800,trend:'up'},    // KTC SF: 6817
+  'Patrick Mahomes':        {dv:4950,rv:7800,trend:'flat'},  // KTC SF: 6809
+  'Jaxson Dart':            {dv:4850,rv:6500,trend:'up'},    // KTC SF: 6667
+  'Trevor Lawrence':        {dv:4500,rv:5500,trend:'up'},    // KTC SF: 6219
+  'Jalen Hurts':            {dv:4500,rv:7000,trend:'flat'},  // KTC SF: 6185
+  'Bo Nix':                 {dv:4450,rv:5200,trend:'up'},    // KTC SF: 6137
+  'Brock Purdy':            {dv:4200,rv:7000,trend:'flat'},  // KTC SF: 5818
+  // ── 2026 QB Rookies (KTC live values, May 10 2026) ──
+  'Fernando Mendoza':       {dv:4100,rv:4200,trend:'up'},    // KTC SF: 5671 — #1 pick, LV starter
+  'Ty Simpson':             {dv:2650,rv:2000,trend:'up'},    // KTC SF: 3685 — #13 pick, LAR
+  'Garrett Nussmeier':      {dv:1250,rv:700, trend:'up'},    // KTC SF: 1710 — KC backup, rising
+  'Carson Beck':            {dv:900, rv:800, trend:'up'},    // KTC SF: 1242 — CIN backup
+  'Drew Allar':             {dv:850, rv:800, trend:'up'},    // KTC SF: 1181 — PIT backup
+  'Cade Klubnik':           {dv:1200,rv:1000,trend:'up'},    // KTC SF: 1674
+  'Cole Payton':            {dv:500, rv:400, trend:'up'},    // KTC SF: 706
+  // ── Established starters ────────────────────────────
+  'Jordan Love':            {dv:4100,rv:6200,trend:'up'},    // KTC SF: 5636
+  'Cam Ward':               {dv:3800,rv:5000,trend:'up'},    // KTC SF: 5249
+  'Dak Prescott':           {dv:3600,rv:5500,trend:'flat'},  // KTC SF: 4966
+  'Tyler Shough':           {dv:3550,rv:5000,trend:'up'},    // KTC SF: 4899
+  'C.J. Stroud':            {dv:3500,rv:6500,trend:'up'},    // KTC SF: 4845
+  'CJ Stroud':              {dv:3500,rv:6500,trend:'up'},
+  'Baker Mayfield':         {dv:3450,rv:5500,trend:'up'},    // KTC SF: 4772
+  'Sam Darnold':            {dv:3450,rv:4500,trend:'up'},    // KTC SF: 4756
+  'Jared Goff':             {dv:3350,rv:5500,trend:'up'},    // KTC SF: 4623
+  'Bryce Young':            {dv:3250,rv:4200,trend:'up'},    // KTC SF: 4502
+  'Kyler Murray':           {dv:3000,rv:5000,trend:'flat'},  // KTC SF: 4120
+  'Malik Willis':           {dv:2950,rv:4500,trend:'up'},    // KTC SF: 4039
+  'Daniel Jones':           {dv:2850,rv:4000,trend:'up'},    // KTC SF: 3951
+  'Matthew Stafford':       {dv:2650,rv:4500,trend:'down'},  // KTC SF: 3679
+  'Michael Penix Jr.':      {dv:2300,rv:4800,trend:'up'},    // KTC SF: 3162
+  'J.J. McCarthy':          {dv:2100,rv:3500,trend:'up'},    // KTC SF: 2916
+  'JJ McCarthy':            {dv:2100,rv:3500,trend:'up'},
+  'Shedeur Sanders':        {dv:2050,rv:4500,trend:'up'},    // KTC SF: 2829
+  'Tua Tagovailoa':         {dv:1950,rv:3500,trend:'flat'},  // KTC SF: 2711
+  'Jacoby Brissett':        {dv:1950,rv:2500,trend:'flat'},  // KTC SF: 2709
+  'Mac Jones':              {dv:1950,rv:2000,trend:'up'},    // KTC SF: 2693
+  'Jalen Milroe':           {dv:1700,rv:2200,trend:'up'},    // KTC SF: 2338
+  'Anthony Richardson':     {dv:1650,rv:3000,trend:'up'},    // KTC SF: 2299
+  'Geno Smith':             {dv:1550,rv:3500,trend:'flat'},  // KTC SF: 2165
+  'Justin Fields':          {dv:1550,rv:2500,trend:'flat'},  // KTC SF: 2119
+  'Deshaun Watson':         {dv:1500,rv:1000,trend:'down'},  // KTC SF: 2051
+  'Will Howard':            {dv:1450,rv:1500,trend:'up'},    // KTC SF: 2015
+  'Kirk Cousins':           {dv:1450,rv:2500,trend:'down'},  // KTC SF: 2001
+  'Quinn Ewers':            {dv:1300,rv:1200,trend:'up'},    // KTC SF: 1807
+  'Aaron Rodgers':          {dv:1300,rv:1000,trend:'down'},  // KTC SF: 1777
+  'Riley Leonard':          {dv:1300,rv:1200,trend:'up'},    // KTC SF: 1774
+  'Joe Milton':             {dv:1250,rv:1200,trend:'up'},    // KTC SF: 1709
+  'Spencer Rattler':        {dv:1250,rv:1200,trend:'flat'},  // KTC SF: 1704
+  'Will Levis':             {dv:1050,rv:2000,trend:'up'},    // KTC SF: 1483
+  'Tyson Bagent':           {dv:1050,rv:1500,trend:'flat'},  // KTC SF: 1473
+  'Dillon Gabriel':         {dv:1050,rv:1200,trend:'up'},    // KTC SF: 1459
+  'Jameis Winston':         {dv:1000,rv:1500,trend:'flat'},  // KTC SF: 1404
+  'Marcus Mariota':         {dv:1000,rv:1000,trend:'flat'},  // KTC SF: 1395
+  'Davis Mills':            {dv:1000,rv:1000,trend:'flat'},  // KTC SF: 1392
+  'Tanner McKee':           {dv:900, rv:1000,trend:'flat'},  // KTC SF: 1239
+  'Tyler Huntley':          {dv:875, rv:1200,trend:'flat'},  // KTC SF: 1210
+  'Gardner Minshew':        {dv:850, rv:1500,trend:'flat'},  // KTC SF: 1171
+  'Joe Flacco':             {dv:850, rv:1200,trend:'flat'},  // KTC SF: 1166
+  'Trey Lance':             {dv:825, rv:500, trend:'down'},  // KTC SF: 1142
+  'Kenny Pickett':          {dv:800, rv:1000,trend:'flat'},  // KTC SF: 1082
+  'Sam Howell':             {dv:750, rv:1000,trend:'flat'},  // KTC SF: 1051
+  'Zach Wilson':            {dv:750, rv:800, trend:'flat'},  // KTC SF: 1028
+  'Drew Lock':              {dv:700, rv:800, trend:'flat'},  // KTC SF: 955
+  'Aidan O\'Connell':       {dv:600, rv:1000,trend:'flat'},  // KTC SF: 816
+  'Mason Rudolph':          {dv:500, rv:800, trend:'flat'},  // KTC SF: 673
+  'Tyrod Taylor':           {dv:375, rv:500, trend:'flat'},  // KTC SF: 521
+  'Derek Carr':             {dv:300, rv:500, trend:'down'},
   // ── RBs ──────────────────────────────────────
   // dv = dynasty (KTC SF baseline) | rv = redraft PPR
   // Updated from April 2026 consensus rankings (DLF/FantasyCalc/KTC composite)
@@ -2611,12 +2640,12 @@ const VALUE_DB = {
 // Values based on Justin Boone/Yahoo post-draft charts + consensus
 // ═══════════════════════════════════════════════════════════
 const ROOKIES_2026 = [
-  // QBs — calibrated post-2026 draft (May 2026)
-  {id:'r26-1',  full_name:'Fernando Mendoza',     position:'QB', team:'LV',  age:22, dynasty_val:4200, redraft_val:4000, rookie:true, trend:'up'},   // #1 overall
-  {id:'r26-2',  full_name:'Ty Simpson',            position:'QB', team:'LAR', age:22, dynasty_val:3400, redraft_val:1800, rookie:true, trend:'up'},   // #13 overall
-  {id:'r26-3',  full_name:'Carson Beck',           position:'QB', team:'CIN', age:23, dynasty_val:1500, redraft_val:800,  rookie:true, trend:'flat'}, // Round 2, backing Burrow
-  {id:'r26-4',  full_name:'Garrett Nussmeier',     position:'QB', team:'KC',  age:22, dynasty_val:1200, redraft_val:700,  rookie:true, trend:'flat'}, // KC backup
-  {id:'r26-5',  full_name:'Drew Allar',            position:'QB', team:'PIT', age:22, dynasty_val:2000, redraft_val:1000, rookie:true, trend:'flat'}, // Round 2 PIT
+  // QBs — KTC live values May 10 2026 (SF÷1.38 = 1QB baseline)
+  {id:'r26-1',  full_name:'Fernando Mendoza',     position:'QB', team:'LV',  age:22, dynasty_val:4100, redraft_val:4200, rookie:true, trend:'up'},   // KTC SF:5671 — #1 pick
+  {id:'r26-2',  full_name:'Ty Simpson',            position:'QB', team:'LAR', age:22, dynasty_val:2650, redraft_val:2000, rookie:true, trend:'up'},   // KTC SF:3685 — #13
+  {id:'r26-3',  full_name:'Carson Beck',           position:'QB', team:'CIN', age:23, dynasty_val:900,  redraft_val:800,  rookie:true, trend:'up'},   // KTC SF:1242
+  {id:'r26-4',  full_name:'Garrett Nussmeier',     position:'QB', team:'KC',  age:22, dynasty_val:1250, redraft_val:700,  rookie:true, trend:'up'},   // KTC SF:1710
+  {id:'r26-5',  full_name:'Drew Allar',            position:'QB', team:'PIT', age:22, dynasty_val:850,  redraft_val:800,  rookie:true, trend:'up'},   // KTC SF:1181
   // RBs
   {id:'r26-6',  full_name:'Jeremiyah Love',        position:'RB', team:'ARI', age:21, dynasty_val:7670, redraft_val:6000, rookie:true, trend:'up'},
   {id:'r26-7',  full_name:'Nicholas Singleton',    position:'RB', team:'TEN', age:22, dynasty_val:3200, redraft_val:3000, rookie:true, trend:'up'},
