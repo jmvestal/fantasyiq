@@ -382,6 +382,47 @@
     .wiz-slot-name{font-size:12px;font-weight:600;line-height:1.3}
     .wiz-slot-empty{font-size:11px;color:var(--text3);font-style:italic}
     .wiz-slot.filled{border-color:var(--primary-d)}
+    /* ── DRAFT SIMULATOR ──────────────────────── */
+    .dsim-layout{display:grid;grid-template-columns:260px 1fr 280px;gap:14px;align-items:start}
+    @media(max-width:900px){.dsim-layout{grid-template-columns:1fr}}
+    .dsim-board-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px}
+    .dsim-board{border-collapse:collapse;font-size:11px;min-width:100%}
+    .dsim-board th{padding:5px 7px;background:var(--bg3);border:1px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text3);white-space:nowrap;position:sticky;top:0;z-index:2}
+    .dsim-board td{padding:4px 6px;border:1px solid var(--border);vertical-align:top;min-width:68px;max-width:90px;background:var(--bg2)}
+    .dsim-board td.my-col{background:rgba(124,58,237,.07);border-color:rgba(124,58,237,.25)}
+    .dsim-board th.my-col{background:rgba(124,58,237,.18);color:var(--primary-l)}
+    .dsim-board td.dsim-cur-cell{background:rgba(124,58,237,.22);outline:2px solid var(--primary);outline-offset:-2px}
+    .dsim-board td.round-num-cell{background:var(--bg3);font-weight:800;color:var(--text3);font-size:10px;text-align:center;min-width:28px;max-width:28px;position:sticky;left:0;z-index:1}
+    .dsim-board th.round-num-cell{position:sticky;left:0;z-index:3;background:var(--bg3)}
+    .dsim-pick{font-size:11px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px}
+    .dsim-pick-pos{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:1px;opacity:.7}
+    .dsim-rec-bar{background:var(--primary-d);border:1px solid rgba(124,58,237,.3);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+    .dsim-rec-ttl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--primary-l);margin-bottom:8px}
+    .dsim-rec-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;margin-bottom:6px;cursor:pointer;transition:all .12s}
+    .dsim-rec-card:hover{border-color:var(--primary);background:var(--bg3)}
+    .dsim-rec-card.top-rec{border-color:rgba(124,58,237,.5);background:rgba(124,58,237,.08)}
+    .dsim-rec-rank{font-size:10px;font-weight:800;color:var(--text3);margin-bottom:3px}
+    .dsim-rec-name{font-size:13px;font-weight:700;margin-bottom:2px}
+    .dsim-rec-why{font-size:11px;color:var(--text2)}
+    .dsim-avail-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;margin-bottom:4px;cursor:pointer;transition:all .12s;user-select:none}
+    .dsim-avail-row:hover{border-color:var(--primary);background:rgba(124,58,237,.08)}
+    .dsim-avail-row.not-my-turn{opacity:.45;cursor:default;pointer-events:none}
+    .dsim-avail-name{flex:1;font-size:12px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .dsim-avail-val{font-size:11px;font-weight:700;color:var(--primary-l);flex-shrink:0}
+    .dsim-avail-meta{font-size:10px;color:var(--text3);flex-shrink:0}
+    .dsim-roster-pick{display:flex;align-items:center;gap:7px;padding:6px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;margin-bottom:4px;font-size:12px}
+    .dsim-roster-pick-name{flex:1;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .dsim-roster-round{font-size:10px;font-weight:800;color:var(--text3);flex-shrink:0}
+    .dsim-hist-row{padding:4px 6px;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center}
+    .dsim-hist-row:last-child{border-bottom:none}
+    .dsim-hist-pick{font-size:10px;font-weight:800;color:var(--text3);min-width:30px}
+    .dsim-hist-name{flex:1;font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .dsim-cpu-badge{font-size:9px;background:var(--bg2);color:var(--text3);padding:1px 5px;border-radius:4px;flex-shrink:0}
+    .dsim-grade-big{font-size:56px;font-weight:900;line-height:1;color:var(--primary-l);margin-bottom:8px}
+    .dsim-done-stats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:16px 0}
+    .dsim-done-stat{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 18px;min-width:90px}
+    .dsim-done-stat-val{font-size:20px;font-weight:800;color:var(--primary-l)}
+    .dsim-done-stat-lbl{font-size:11px;color:var(--text3);margin-top:2px}
     .wizard-rec-bar{background:var(--primary-d);border:1px solid rgba(124,58,237,.3);border-radius:10px;padding:12px 14px;margin-bottom:12px}
     .wizard-rec-ttl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--primary-l);margin-bottom:6px}
     .wizard-rec-name{font-size:15px;font-weight:800;letter-spacing:-.3px}
@@ -1159,6 +1200,7 @@
           <div class="draft-mode-toggle">
             <button class="dmt-btn on" data-dm="wizard" onclick="setDraftMode('wizard')">🧙 Draft Wizard</button>
             <button class="dmt-btn" data-dm="analyzer" onclick="setDraftMode('analyzer')">📋 Draft Analyzer</button>
+            <button class="dmt-btn" data-dm="simulator" onclick="setDraftMode('simulator')">🎮 Draft Sim</button>
           </div>
         </div>
       </div>
@@ -1299,6 +1341,103 @@
           Import a completed draft to see pick grades, value analysis, and team breakdowns.
         </div>
       </div>
+
+
+      <!-- ─── DRAFT SIMULATOR ─── -->
+      <div id="draftSimPane" style="display:none">
+
+        <!-- Setup bar -->
+        <div id="dsimSetupBar" class="draft-import-bar">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;margin-bottom:3px">🎮 Draft Simulator</div>
+            <div style="font-size:11px;color:var(--text2)">Simulate a full snake draft against CPU teams. Practice rookie drafts or full redrafts with needs-based AI opponents.</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0;align-items:center">
+            <select id="dsimType" class="trade-partner-sel" style="max-width:130px" onchange="dsimUpdateSetup()">
+              <option value="rookie">Rookie Draft</option>
+              <option value="redraft">Full Redraft</option>
+            </select>
+            <select id="dsimTeams" class="trade-partner-sel" style="max-width:110px" onchange="dsimUpdateSetup()">
+              <option value="8">8 Teams</option>
+              <option value="10">10 Teams</option>
+              <option value="12" selected>12 Teams</option>
+              <option value="14">14 Teams</option>
+              <option value="16">16 Teams</option>
+            </select>
+            <select id="dsimSlot" class="trade-partner-sel" style="max-width:120px"></select>
+            <select id="dsimRounds" class="trade-partner-sel" style="max-width:110px"></select>
+            <select id="dsimSpeed" class="trade-partner-sel" style="max-width:110px">
+              <option value="fast">Fast CPU</option>
+              <option value="normal" selected>Normal CPU</option>
+              <option value="slow">Slow CPU</option>
+            </select>
+            <button class="btn btn-p btn-sm" onclick="startDraftSim()">▶ Start Draft</button>
+            <button class="btn btn-s btn-sm" id="dsimResetBtn" style="display:none" onclick="resetDraftSim()">↺ Reset</button>
+            <button class="btn btn-s btn-sm" id="dsimUseLeagueBtn" style="display:none" onclick="dsimUseLeague()">🔗 Use My League</button>
+          </div>
+        </div>
+
+        <!-- Idle state -->
+        <div id="dsimIdle" class="empty-state" style="padding:60px 20px">
+          <span>🎮</span>
+          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px">Draft Simulator</div>
+          Configure your draft settings above and press <strong>Start Draft</strong> to begin. You'll pick against CPU teams with needs-based logic.
+        </div>
+
+        <!-- Active draft -->
+        <div id="dsimActive" style="display:none">
+          <div class="dsim-layout">
+
+            <!-- Left: Your Roster + Pick History -->
+            <div>
+              <div class="draft-board-ttl">Your Roster</div>
+              <div id="dsimMyRoster"></div>
+              <div class="draft-board-ttl" style="margin-top:14px">Pick History</div>
+              <div id="dsimPickHistory" style="max-height:220px;overflow-y:auto;font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:8px"></div>
+            </div>
+
+            <!-- Center: Draft Board -->
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <div class="draft-board-ttl">Draft Board <span id="dsimBoardStatus" style="font-weight:400;font-size:11px;color:var(--text3);text-transform:none;letter-spacing:0"></span></div>
+              </div>
+              <div class="dsim-board-wrap" id="dsimBoardWrap">
+                <table class="dsim-board" id="dsimBoardTable"></table>
+              </div>
+            </div>
+
+            <!-- Right: Recommendations + Available -->
+            <div>
+              <div id="dsimRecArea" style="margin-bottom:12px"></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <div class="draft-board-ttl">Available <span id="dsimAvailCount" style="font-weight:400;text-transform:none;letter-spacing:0;font-size:11px"></span></div>
+                <div class="pos-btns" id="dsimPosBtns" style="gap:3px"></div>
+              </div>
+              <input class="srch" id="dsimSearch" placeholder="Search players…" oninput="renderDsimAvail()" style="width:100%;box-sizing:border-box;margin-bottom:8px">
+              <div id="dsimAvailList" style="max-height:420px;overflow-y:auto"></div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Done state -->
+        <div id="dsimDone" style="display:none;text-align:center;padding:40px 20px">
+          <div style="font-size:28px;margin-bottom:8px">🏆</div>
+          <div style="font-size:20px;font-weight:800;margin-bottom:4px">Draft Complete!</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Here's how your draft stacked up</div>
+          <div class="dsim-grade-big" id="dsimFinalGrade">B</div>
+          <div id="dsimDoneStats" class="dsim-done-stats"></div>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:28px">
+            <button class="btn btn-p btn-sm" onclick="resetDraftSim()">↺ Draft Again</button>
+            <button class="btn btn-s btn-sm" onclick="dsimExportRoster()">📋 View Roster Analysis</button>
+          </div>
+          <div style="text-align:left;max-width:700px;margin:0 auto">
+            <div class="draft-board-ttl">Your Draft Summary</div>
+            <div id="dsimDonePicks"></div>
+          </div>
+        </div>
+
+      </div><!-- /draftSimPane -->
 
     </div><!-- /tab-draft -->
 
@@ -7288,6 +7427,8 @@ function setDraftMode(mode) {
   document.querySelectorAll('[data-dm]').forEach(b => b.classList.toggle('on', b.dataset.dm===mode));
   document.getElementById('draftWizardPane').style.display = mode==='wizard' ? 'block' : 'none';
   document.getElementById('draftAnalyzerPane').style.display = mode==='analyzer' ? 'block' : 'none';
+  document.getElementById('draftSimPane').style.display = mode==='simulator' ? 'block' : 'none';
+  if (mode === 'simulator') dsimUpdateSetup();
 }
 
 function setAnlFilter(f) {
@@ -8146,6 +8287,598 @@ function tiqChatReply(msg) {
   // ── HELP / CATCH-ALL ─────────────────────────────────
   const leagueLine = _tiqChatLeague ? `\n\nI'm analyzing your **${_tiqChatLeague.leagueName}** league settings.` : '';
   return `I can help with:\n\n• **Trade eval** — "Should I trade Puka Nacua for Bijan Robinson?"\n• **Player value** — "What is Brock Bowers worth?"\n• **Position rankings** — "Top WRs" or "Best TEs"\n• **Buy/sell targets** — "Who should I buy?" or "Who should I sell?"\n• **Roster grade** — "Rate my team"\n• **Comparisons** — "Compare JSN and Malik Nabers"${leagueLine}`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// DRAFT SIMULATOR
+// ═══════════════════════════════════════════════════════════
+
+const DSIM = {
+  active: false,
+  done: false,
+  type: 'rookie',
+  numTeams: 12,
+  mySlot: 0,
+  rounds: 4,
+  snake: true,
+  speed: 'normal',
+  available: [],
+  drafted: new Set(),
+  rosters: [],
+  picks: [],
+  pickOrder: [],
+  currentOverall: 0,
+  posFilter: 'ALL',
+  _cpuTimer: null,
+};
+
+// ── Setup helpers ─────────────────────────────────────────
+
+function dsimUpdateSetup() {
+  const type = document.getElementById('dsimType')?.value || 'rookie';
+  const numTeams = parseInt(document.getElementById('dsimTeams')?.value || 12);
+
+  // Rebuild slot select
+  const slotSel = document.getElementById('dsimSlot');
+  if (slotSel) {
+    const prev = parseInt(slotSel.value) || 1;
+    slotSel.innerHTML = '';
+    for (let i = 1; i <= numTeams; i++) {
+      const o = document.createElement('option');
+      o.value = i;
+      o.text = i === 1 ? '1st Pick' : i === 2 ? '2nd Pick' : i === 3 ? '3rd Pick' : `${i}th Pick`;
+      if (i === prev) o.selected = true;
+      slotSel.appendChild(o);
+    }
+  }
+
+  // Rebuild rounds select
+  const roundsSel = document.getElementById('dsimRounds');
+  if (roundsSel) {
+    const prev = parseInt(roundsSel.value) || 0;
+    roundsSel.innerHTML = '';
+    const isRookie = type === 'rookie';
+    const opts = isRookie ? [3,4,5,6] : [10,12,14,15,16];
+    const def = isRookie ? 4 : 15;
+    opts.forEach(r => {
+      const o = document.createElement('option');
+      o.value = r;
+      o.text = `${r} Rounds`;
+      if (r === (prev || def)) o.selected = true;
+      roundsSel.appendChild(o);
+    });
+  }
+
+  // Show Use My League button if league connected
+  const leagueBtn = document.getElementById('dsimUseLeagueBtn');
+  if (leagueBtn) leagueBtn.style.display = S.connectedLeague ? 'inline-flex' : 'none';
+}
+
+function dsimUseLeague() {
+  const lg = S.connectedLeague;
+  if (!lg) return;
+  const teamsSel = document.getElementById('dsimTeams');
+  if (teamsSel && lg.totalTeams) {
+    const v = String(lg.totalTeams);
+    const opt = Array.from(teamsSel.options).find(o => o.value === v);
+    if (opt) teamsSel.value = v;
+  }
+  dsimUpdateSetup();
+  showToast('League settings applied');
+}
+
+// ── Start / Reset ─────────────────────────────────────────
+
+function startDraftSim() {
+  if (!S.players || !S.players.length) {
+    showToast('Player data not loaded yet — try again in a moment', 'err');
+    return;
+  }
+
+  DSIM.type      = document.getElementById('dsimType')?.value || 'rookie';
+  DSIM.numTeams  = parseInt(document.getElementById('dsimTeams')?.value || 12);
+  DSIM.mySlot    = parseInt(document.getElementById('dsimSlot')?.value || 1) - 1;
+  DSIM.rounds    = parseInt(document.getElementById('dsimRounds')?.value || 4);
+  DSIM.speed     = document.getElementById('dsimSpeed')?.value || 'normal';
+  DSIM.active    = true;
+  DSIM.done      = false;
+  DSIM.drafted   = new Set();
+  DSIM.picks     = [];
+  DSIM.posFilter = 'ALL';
+  DSIM.currentOverall = 0;
+  DSIM._cpuTimer = null;
+
+  // Build rosters array
+  DSIM.rosters = [];
+  for (let i = 0; i < DSIM.numTeams; i++) DSIM.rosters.push([]);
+
+  // Build pick order (snake)
+  DSIM.pickOrder = [];
+  for (let r = 0; r < DSIM.rounds; r++) {
+    for (let t = 0; t < DSIM.numTeams; t++) {
+      const ti = DSIM.snake && r % 2 === 1 ? DSIM.numTeams - 1 - t : t;
+      DSIM.pickOrder.push(ti);
+    }
+  }
+
+  // Build available player pool
+  if (DSIM.type === 'rookie') {
+    DSIM.available = (S.players || [])
+      .filter(p => p.rookie && p.position !== 'PICK')
+      .sort((a, b) => (b.dynasty_val || 0) - (a.dynasty_val || 0));
+  } else {
+    DSIM.available = (S.players || [])
+      .filter(p => !['PICK'].includes(p.position) && calcValue(p) > 200)
+      .sort((a, b) => calcValue(b) - calcValue(a));
+  }
+
+  // Show UI
+  document.getElementById('dsimIdle').style.display = 'none';
+  document.getElementById('dsimActive').style.display = 'block';
+  document.getElementById('dsimDone').style.display = 'none';
+  document.getElementById('dsimResetBtn').style.display = 'inline-flex';
+  document.getElementById('dsimSetupBar').querySelectorAll('select, .btn-p').forEach(el => el.disabled = true);
+
+  // Build position filter buttons
+  _dsimBuildPosBtns();
+
+  renderDsimBoard();
+  renderDsimMyRoster();
+  renderDsimAvail();
+  dsimAdvance();
+}
+
+function resetDraftSim() {
+  if (DSIM._cpuTimer) { clearTimeout(DSIM._cpuTimer); DSIM._cpuTimer = null; }
+  DSIM.active = false;
+  DSIM.done   = false;
+  DSIM.drafted = new Set();
+  DSIM.picks   = [];
+  DSIM.rosters = [];
+  DSIM.pickOrder = [];
+  DSIM.available = [];
+  DSIM.currentOverall = 0;
+
+  document.getElementById('dsimIdle').style.display = '';
+  document.getElementById('dsimActive').style.display = 'none';
+  document.getElementById('dsimDone').style.display = 'none';
+  document.getElementById('dsimResetBtn').style.display = 'none';
+  document.getElementById('dsimSetupBar').querySelectorAll('select, .btn-p').forEach(el => el.disabled = false);
+  document.getElementById('dsimRecArea').innerHTML = '';
+}
+
+function _dsimBuildPosBtns() {
+  const container = document.getElementById('dsimPosBtns');
+  if (!container) return;
+  const positions = DSIM.type === 'redraft'
+    ? ['ALL','QB','RB','WR','TE','K','DEF']
+    : ['ALL','QB','RB','WR','TE'];
+  container.innerHTML = positions.map(p =>
+    `<button class="pos-btn${p === DSIM.posFilter ? ' on' : ''}" onclick="setDsimFilter('${p}')">${p}</button>`
+  ).join('');
+}
+
+// ── Advance / CPU pick loop ───────────────────────────────
+
+function dsimAdvance() {
+  if (DSIM.currentOverall >= DSIM.pickOrder.length) {
+    dsimFinish();
+    return;
+  }
+
+  const teamIdx = DSIM.pickOrder[DSIM.currentOverall];
+  const round   = Math.floor(DSIM.currentOverall / DSIM.numTeams) + 1;
+  const pickInRound = (DSIM.currentOverall % DSIM.numTeams) + 1;
+
+  document.getElementById('dsimBoardStatus').textContent =
+    `— Round ${round}, Pick ${pickInRound} (Overall #${DSIM.currentOverall + 1})`;
+
+  renderDsimBoard();
+
+  if (teamIdx === DSIM.mySlot) {
+    // User's turn
+    renderDsimRec();
+    renderDsimAvail();
+  } else {
+    // CPU turn
+    renderDsimAvail();
+    const delay = DSIM.speed === 'fast' ? 30 : DSIM.speed === 'slow' ? 600 : 200;
+    DSIM._cpuTimer = setTimeout(dsimCpuPick, delay);
+  }
+}
+
+// ── Need multipliers ──────────────────────────────────────
+
+function dsimNeedMult(pos, count, round, totalRounds, type) {
+  if (type === 'rookie') return 1.0;
+  const frac = round / totalRounds;
+  switch (pos) {
+    case 'QB': { const t=[2.5,1.1,0.3,0.1]; return t[Math.min(count, t.length-1)]; }
+    case 'RB': { const t=[2.2,1.8,1.3,0.9,0.5,0.2]; return t[Math.min(count, t.length-1)]; }
+    case 'WR': { const t=[2.0,1.7,1.4,1.0,0.7,0.4,0.2]; return t[Math.min(count, t.length-1)]; }
+    case 'TE': { const t=[2.2,0.5,0.1]; return t[Math.min(count, t.length-1)]; }
+    case 'K':
+    case 'DEF': return frac > 0.85 ? 3.0 : 0.05;
+    default: return 0.3;
+  }
+}
+
+// ── CPU pick ──────────────────────────────────────────────
+
+function dsimCpuPick() {
+  const teamIdx = DSIM.pickOrder[DSIM.currentOverall];
+  const round   = Math.floor(DSIM.currentOverall / DSIM.numTeams) + 1;
+  const roster  = DSIM.rosters[teamIdx] || [];
+
+  // Count positions on this CPU's roster
+  const posCounts = {};
+  roster.forEach(p => { posCounts[p.position] = (posCounts[p.position] || 0) + 1; });
+
+  let bestPlayer = null;
+  let bestScore  = -1;
+
+  const pool = DSIM.available.filter(p => !DSIM.drafted.has(p.id || p.player_id)).slice(0, 80);
+
+  pool.forEach(p => {
+    const pos   = p.position;
+    const cnt   = posCounts[pos] || 0;
+    let v       = calcValue(p);
+    if (v <= 0) v = (p.dynasty_val || p.redraft_val || 1);
+    const need  = dsimNeedMult(pos, cnt, round, DSIM.rounds, DSIM.type);
+    const score = v * need * (0.93 + Math.random() * 0.14);
+    if (score > bestScore) { bestScore = score; bestPlayer = p; }
+  });
+
+  if (bestPlayer) dsimRecordPick(teamIdx, bestPlayer);
+  else dsimAdvance(); // no available player (shouldn't happen)
+}
+
+// ── User pick ─────────────────────────────────────────────
+
+function dsimUserPick(playerId) {
+  const teamIdx = DSIM.pickOrder[DSIM.currentOverall];
+  if (teamIdx !== DSIM.mySlot) return; // not user's turn
+  const player = DSIM.available.find(p => (p.id || p.player_id) === playerId);
+  if (!player || DSIM.drafted.has(playerId)) return;
+  document.getElementById('dsimRecArea').innerHTML = '';
+  dsimRecordPick(teamIdx, player);
+}
+
+// ── Record pick ───────────────────────────────────────────
+
+function dsimRecordPick(teamIdx, player) {
+  const overall    = DSIM.currentOverall + 1;
+  const round      = Math.floor(DSIM.currentOverall / DSIM.numTeams) + 1;
+  const pickInRound = (DSIM.currentOverall % DSIM.numTeams) + 1;
+  const pid        = player.id || player.player_id;
+
+  DSIM.drafted.add(pid);
+  DSIM.rosters[teamIdx].push(player);
+  DSIM.picks.push({ round, pickInRound, overall, teamIdx, player });
+  DSIM.currentOverall++;
+
+  renderDsimPickHistory();
+  renderDsimMyRoster();
+
+  dsimAdvance();
+}
+
+// ── Render: draft board ───────────────────────────────────
+
+function renderDsimBoard() {
+  const tbl = document.getElementById('dsimBoardTable');
+  if (!tbl) return;
+
+  const currentRound = Math.floor(DSIM.currentOverall / DSIM.numTeams) + 1;
+  const visRounds    = Math.min(currentRound + 1, DSIM.rounds);
+
+  let html = '<thead><tr><th class="round-num-cell">#</th>';
+  for (let t = 0; t < DSIM.numTeams; t++) {
+    const isMine = t === DSIM.mySlot;
+    html += `<th class="${isMine ? 'my-col' : ''}">${isMine ? '★ You' : `T${t+1}`}</th>`;
+  }
+  html += '</tr></thead><tbody>';
+
+  for (let r = 0; r < visRounds; r++) {
+    html += '<tr>';
+    html += `<td class="round-num-cell">R${r+1}</td>`;
+    for (let t = 0; t < DSIM.numTeams; t++) {
+      const isMine   = t === DSIM.mySlot;
+      const ti       = DSIM.snake && r % 2 === 1 ? DSIM.numTeams - 1 - t : t;
+      const overall  = r * DSIM.numTeams + t;
+      const pick     = DSIM.picks.find(pk => pk.overall === overall + 1);
+      const isCurrent = overall === DSIM.currentOverall && !DSIM.done;
+      const cellClass = [isMine ? 'my-col' : '', isCurrent ? 'dsim-cur-cell' : ''].filter(Boolean).join(' ');
+
+      if (pick) {
+        const pos = pick.player.position || '?';
+        html += `<td class="${cellClass}">
+          <div class="dsim-pick">${pick.player.full_name || pick.player.name || '?'}</div>
+          <div class="dsim-pick-pos" style="color:${_posColor(pos)}">${pos}</div>
+        </td>`;
+      } else {
+        html += `<td class="${cellClass}"></td>`;
+      }
+    }
+    html += '</tr>';
+  }
+
+  html += '</tbody>';
+  tbl.innerHTML = html;
+
+  // Scroll current cell into view
+  const cur = tbl.querySelector('.dsim-cur-cell');
+  if (cur) cur.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+}
+
+function _posColor(pos) {
+  switch (pos) {
+    case 'QB':  return 'var(--warn)';
+    case 'RB':  return 'var(--success)';
+    case 'WR':  return 'var(--primary-l)';
+    case 'TE':  return '#f97316';
+    case 'K':   return 'var(--text3)';
+    case 'DEF': return 'var(--text3)';
+    default:    return 'var(--text3)';
+  }
+}
+
+// ── Render: my roster ─────────────────────────────────────
+
+function renderDsimMyRoster() {
+  const el = document.getElementById('dsimMyRoster');
+  if (!el) return;
+  const myPicks = DSIM.picks.filter(pk => pk.teamIdx === DSIM.mySlot);
+  if (!myPicks.length) {
+    el.innerHTML = '<div style="font-size:11px;color:var(--text3);padding:6px 0">No picks yet</div>';
+    return;
+  }
+  el.innerHTML = myPicks.map(pk => {
+    const p   = pk.player;
+    const pos = p.position || '?';
+    return `<div class="dsim-roster-pick">
+      <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
+      <span class="dsim-roster-pick-name">${p.full_name || p.name || '?'}</span>
+      <span class="dsim-roster-round">R${pk.round}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Render: pick history ──────────────────────────────────
+
+function renderDsimPickHistory() {
+  const el = document.getElementById('dsimPickHistory');
+  if (!el) return;
+  const recent = [...DSIM.picks].reverse().slice(0, 40);
+  if (!recent.length) { el.innerHTML = ''; return; }
+  el.innerHTML = recent.map(pk => {
+    const isMe = pk.teamIdx === DSIM.mySlot;
+    const p    = pk.player;
+    const pos  = p.position || '?';
+    return `<div class="dsim-hist-row">
+      <span class="dsim-hist-pick">${pk.overall}.</span>
+      <span class="pb pb-${pos}" style="font-size:9px;padding:1px 4px">${pos}</span>
+      <span class="dsim-hist-name">${p.full_name || p.name || '?'}</span>
+      ${isMe ? '<span class="dsim-cpu-badge" style="background:var(--primary-d);color:var(--primary-l)">YOU</span>' : '<span class="dsim-cpu-badge">CPU</span>'}
+    </div>`;
+  }).join('');
+}
+
+// ── Render: recommendations ───────────────────────────────
+
+function renderDsimRec() {
+  const el = document.getElementById('dsimRecArea');
+  if (!el) return;
+
+  const teamIdx = DSIM.pickOrder[DSIM.currentOverall];
+  if (teamIdx !== DSIM.mySlot) { el.innerHTML = ''; return; }
+
+  const round   = Math.floor(DSIM.currentOverall / DSIM.numTeams) + 1;
+  const roster  = DSIM.rosters[DSIM.mySlot] || [];
+  const posCounts = {};
+  roster.forEach(p => { posCounts[p.position] = (posCounts[p.position] || 0) + 1; });
+
+  const pool = DSIM.available.filter(p => !DSIM.drafted.has(p.id || p.player_id));
+  if (!pool.length) { el.innerHTML = ''; return; }
+
+  // Score each available player
+  const scored = pool.slice(0, 60).map((p, rank) => {
+    const pos  = p.position;
+    const cnt  = posCounts[pos] || 0;
+    const v    = calcValue(p);
+    const need = dsimNeedMult(pos, cnt, round, DSIM.rounds, DSIM.type);
+    return { p, rank, v, need, score: v * need };
+  }).sort((a, b) => b.score - a.score);
+
+  const top3 = scored.slice(0, 3);
+
+  let html = `<div class="dsim-rec-bar">
+    <div class="dsim-rec-ttl">Your Turn — Pick #${DSIM.currentOverall + 1} (Round ${round})</div>`;
+
+  top3.forEach((item, i) => {
+    const p   = item.p;
+    const pos = p.position || '?';
+    const pid = p.id || p.player_id;
+    let reason;
+    if (i === 0 && item.rank === 0) reason = 'Best Available';
+    else if (item.need > 1.5) reason = `Fill Need at ${pos}`;
+    else {
+      const vRank = item.rank + 1;
+      reason = `Value Pick — ranked #${vRank} overall`;
+    }
+    html += `<div class="dsim-rec-card${i === 0 ? ' top-rec' : ''}" onclick="dsimUserPick('${pid}')">
+      <div class="dsim-rec-rank">#${i+1} Recommendation</div>
+      <div class="dsim-rec-name">
+        <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px;margin-right:4px">${pos}</span>
+        ${p.full_name || p.name || '?'}
+        <span style="font-size:11px;font-weight:400;color:var(--text3);margin-left:4px">${fmtVal(item.v)}</span>
+      </div>
+      <div class="dsim-rec-why">${reason}</div>
+    </div>`;
+  });
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ── Render: available list ────────────────────────────────
+
+function renderDsimAvail() {
+  const el = document.getElementById('dsimAvailList');
+  const cntEl = document.getElementById('dsimAvailCount');
+  if (!el) return;
+
+  const isMyTurn = DSIM.active && !DSIM.done &&
+    DSIM.pickOrder[DSIM.currentOverall] === DSIM.mySlot;
+
+  const search = (document.getElementById('dsimSearch')?.value || '').toLowerCase().trim();
+  const filter = DSIM.posFilter || 'ALL';
+
+  const pool = DSIM.available.filter(p => {
+    if (DSIM.drafted.has(p.id || p.player_id)) return false;
+    if (filter !== 'ALL' && p.position !== filter) return false;
+    if (search) {
+      const name = (p.full_name || p.name || '').toLowerCase();
+      if (!name.includes(search)) return false;
+    }
+    return true;
+  });
+
+  if (cntEl) cntEl.textContent = `(${pool.length})`;
+
+  if (!pool.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:12px 0;text-align:center">No players found</div>';
+    return;
+  }
+
+  el.innerHTML = pool.slice(0, 80).map(p => {
+    const pid  = p.id || p.player_id;
+    const pos  = p.position || '?';
+    const v    = calcValue(p);
+    const age  = p.age ? `${p.age}yo` : '';
+    const team = p.team || '';
+    return `<div class="dsim-avail-row${isMyTurn ? '' : ' not-my-turn'}" onclick="dsimUserPick('${pid}')">
+      <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
+      <span class="dsim-avail-name">${p.full_name || p.name || '?'}</span>
+      <span class="dsim-avail-meta">${[team, age].filter(Boolean).join(' · ')}</span>
+      <span class="dsim-avail-val">${fmtVal(v)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Position filter ───────────────────────────────────────
+
+function setDsimFilter(pos) {
+  DSIM.posFilter = pos;
+  document.querySelectorAll('#dsimPosBtns .pos-btn').forEach(b =>
+    b.classList.toggle('on', b.textContent === pos));
+  renderDsimAvail();
+}
+
+// ── Finish / Grade ────────────────────────────────────────
+
+function dsimFinish() {
+  DSIM.active = false;
+  DSIM.done   = true;
+
+  document.getElementById('dsimActive').style.display = 'none';
+  document.getElementById('dsimDone').style.display = 'block';
+
+  const grade = dsimFinalGrade();
+  document.getElementById('dsimFinalGrade').textContent = grade;
+
+  // Stats
+  const myPicks = DSIM.picks.filter(pk => pk.teamIdx === DSIM.mySlot);
+  const totalVal = myPicks.reduce((s, pk) => s + calcValue(pk.player), 0);
+  const avgVal   = myPicks.length ? Math.round(totalVal / myPicks.length) : 0;
+  const steals   = _dsimCountSteals();
+
+  const statsEl = document.getElementById('dsimDoneStats');
+  if (statsEl) {
+    statsEl.innerHTML = [
+      { val: myPicks.length, lbl: 'Picks Made' },
+      { val: fmtVal(totalVal), lbl: 'Total Value' },
+      { val: fmtVal(avgVal), lbl: 'Avg Pick Value' },
+      { val: steals, lbl: 'Steals' },
+    ].map(s => `<div class="dsim-done-stat">
+      <div class="dsim-done-stat-val">${s.val}</div>
+      <div class="dsim-done-stat-lbl">${s.lbl}</div>
+    </div>`).join('');
+  }
+
+  // Summary picks
+  const picksEl = document.getElementById('dsimDonePicks');
+  if (picksEl) {
+    picksEl.innerHTML = myPicks.map(pk => {
+      const p   = pk.player;
+      const pos = p.position || '?';
+      const v   = calcValue(p);
+      const adpRank = DSIM.available.indexOf(p) + 1;
+      const pickNum = pk.overall;
+      const diff    = adpRank - pickNum;
+      let gradeClass = 'grade-fair', gradeLabel = 'Fair';
+      if (diff >= 8) { gradeClass = 'grade-steal'; gradeLabel = 'Steal'; }
+      else if (diff >= 3) { gradeClass = 'grade-value'; gradeLabel = 'Value'; }
+      else if (diff <= -8) { gradeClass = 'grade-bust'; gradeLabel = 'Reach'; }
+      else if (diff <= -3) { gradeClass = 'grade-reach'; gradeLabel = 'Slight Reach'; }
+      return `<div class="draft-pick-row">
+        <span class="draft-pick-num">${pk.overall}</span>
+        <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
+        <div class="draft-pick-info">
+          <div class="draft-pick-name">${p.full_name || p.name || '?'}</div>
+          <div class="draft-pick-sub">${p.team || ''} · ${fmtVal(v)}</div>
+        </div>
+        <span class="draft-pick-grade ${gradeClass}">${gradeLabel}</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+function _dsimCountSteals() {
+  const myPicks = DSIM.picks.filter(pk => pk.teamIdx === DSIM.mySlot);
+  return myPicks.filter(pk => {
+    const adpRank = DSIM.available.indexOf(pk.player) + 1;
+    return adpRank > 0 && (adpRank - pk.overall) >= 8;
+  }).length;
+}
+
+function dsimFinalGrade() {
+  const myPicks = DSIM.picks.filter(pk => pk.teamIdx === DSIM.mySlot);
+  if (!myPicks.length) return 'N/A';
+
+  let totalDiff = 0;
+  let count = 0;
+  myPicks.forEach(pk => {
+    const adpRank = DSIM.available.indexOf(pk.player) + 1;
+    if (adpRank > 0) {
+      totalDiff += (adpRank - pk.overall);
+      count++;
+    }
+  });
+
+  if (!count) return 'B';
+  const avg = totalDiff / count;
+
+  if (avg >= 6)  return 'A+';
+  if (avg >= 4)  return 'A';
+  if (avg >= 2)  return 'A-';
+  if (avg >= 1)  return 'B+';
+  if (avg >= 0)  return 'B';
+  if (avg >= -1) return 'B-';
+  if (avg >= -2) return 'C+';
+  if (avg >= -3) return 'C';
+  if (avg >= -4) return 'C-';
+  if (avg >= -6) return 'D';
+  return 'F';
+}
+
+function dsimExportRoster() {
+  const myPicks = DSIM.picks.filter(pk => pk.teamIdx === DSIM.mySlot);
+  if (!myPicks.length) return;
+  S.roster = myPicks.map(pk => pk.player);
+  renderRosterList();
+  switchTab('roster');
+  showToast('Drafted roster copied to Roster tab');
 }
 </script>
 
