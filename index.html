@@ -97,6 +97,8 @@
     /* ── TRADE LAYOUT ───────────────────── */
     .trade-cols{display:grid;grid-template-columns:1fr 120px 1fr;gap:14px;align-items:start}
     .trade-cols.two-col{grid-template-columns:1fr 1fr}
+    /* You Give on left, You Receive on right */
+    #tradeCardA{order:3} #tradeMid{order:2} #tradeCardB{order:1}
     .trade-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
     .trade-card-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
     .trade-card-ttl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
@@ -668,7 +670,6 @@
     <div class="logo"><em>Trade</em><span>IQ</span></div>
     <nav class="nav">
       <button class="nav-btn active" data-tab="analyzer">⚖️ Trade Analyzer</button>
-      <button class="nav-btn" data-tab="suggest">💡 Suggest Targets</button>
       <button class="nav-btn" data-tab="values">📊 Player Values</button>
       <button class="nav-btn" data-tab="wire">📋 Waiver Wire</button>
       <button class="nav-btn" data-tab="buysell">📈 Buy/Sell</button>
@@ -801,8 +802,8 @@
       </div>
 
       <div class="trade-cols">
-        <!-- SIDE A -->
-        <div class="trade-card">
+        <!-- SIDE A — You Receive (visually right via CSS order) -->
+        <div class="trade-card" id="tradeCardA">
           <div class="trade-card-hdr">
             <div class="trade-card-ttl" id="ttlA">You Receive</div>
             <div class="trade-card-val" id="valA">—</div>
@@ -820,7 +821,7 @@
         </div>
 
         <!-- MIDDLE -->
-        <div class="trade-mid">
+        <div class="trade-mid" id="tradeMid">
           <div class="vs">VS</div>
           <div class="grade-ring gc-N" id="gradeRing">
             <div class="gr" id="gradeLetterBig">—</div>
@@ -836,8 +837,8 @@
           <button class="btn btn-p btn-sm" id="analyzeBtn" onclick="runAnalysis()">Analyze</button>
         </div>
 
-        <!-- SIDE B -->
-        <div class="trade-card">
+        <!-- SIDE B — You Give (visually left via CSS order) -->
+        <div class="trade-card" id="tradeCardB">
           <div class="trade-card-hdr">
             <div class="trade-card-ttl" id="ttlB">You Give</div>
             <div class="trade-card-val" id="valB">—</div>
@@ -853,6 +854,15 @@
           </div>
           <div id="chipsB"><div class="chip-empty">Search and add players above</div></div>
         </div>
+      </div>
+
+      <!-- Auto trade targets — appear when "You Give" side has players -->
+      <div id="tradeTargetsSection" style="display:none;margin-top:18px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div style="font-size:15px;font-weight:800">💡 Fair Trade Targets</div>
+          <div style="font-size:12px;color:var(--text3)">Players you could reasonably ask for in return</div>
+        </div>
+        <div id="tradeTargetsResults"></div>
       </div>
 
       <!-- share url -->
@@ -1220,6 +1230,11 @@
           <div class="sec-sub" id="wireSubHead">Weekly waiver targets — updated every Tuesday</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <!-- Dynasty / Redraft toggle -->
+          <div class="tog-row" style="margin-right:4px">
+            <button class="tog on" id="wireModeDynasty" onclick="setWireMode('dynasty')" style="min-width:72px">Dynasty</button>
+            <button class="tog"    id="wireModeRedraft" onclick="setWireMode('redraft')" style="min-width:72px">Redraft</button>
+          </div>
           <div class="pos-btns" id="wirePosFilter">
             <button class="pos-btn on" data-wp="ALL" onclick="setWirePos('ALL')">All</button>
             <button class="pos-btn" data-wp="QB" onclick="setWirePos('QB')">QB</button>
@@ -1260,7 +1275,10 @@
     <div id="tab-buysell" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl">📈 Dynasty Buy/Sell</div>
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px">
+            <div class="sec-ttl">📈 Buy / Sell</div>
+            <span style="background:var(--primary);color:#fff;font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;letter-spacing:.04em;text-transform:uppercase">Dynasty</span>
+          </div>
           <div class="sec-sub">Trade targets based on current market values, age curves &amp; trend data</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1649,6 +1667,7 @@ const S = {
   roster: [],
   tablePos: 'ALL',
   tableSort: { col:'value', dir:'desc' },
+  wireMode: 'dynasty',
   bshData: [],
   ready: false,
   // Auth & league
@@ -2030,26 +2049,26 @@ const WEEKLY_WIRE = {
   offseason: true,  // flip to false Week 1 of season
   picks: [
     // ── Preseason camp watchlist ──────────────────────────
-    {name:'Cam Skattebo',       pos:'RB', team:'NYG', owned:'52%', priority:'must-add',
-     reason:'Likely NYG RB1 out of the gate — best handcuff situation in the class. Grab him now before redraft ADP adjusts.'},
-    {name:'Tyler Warren',       pos:'TE', team:'IND', owned:'61%', priority:'must-add',
-     reason:'Top-5 TE talent at a major value gap. If you\'re in a 12-team league and he\'s available, he shouldn\'t be.'},
-    {name:'Colston Loveland',   pos:'TE', team:'CHI', owned:'44%', priority:'must-add',
+    {name:'Cam Skattebo',       pos:'RB', team:'NYG', owned:'52%', priority:'must-add', mode:'redraft',
+     reason:'Likely NYG RB1 out of the gate — best add in redraft leagues before ADP adjusts.'},
+    {name:'Tyler Warren',       pos:'TE', team:'IND', owned:'61%', priority:'must-add', mode:'both',
+     reason:'Top-5 TE talent at a major value gap. Dynasty and redraft value — if he\'s available, he shouldn\'t be.'},
+    {name:'Colston Loveland',   pos:'TE', team:'CHI', owned:'44%', priority:'must-add', mode:'both',
      reason:'Caleb Williams\' safety valve with TE1 upside. Dynasty must-add; redraft leagues should be adding now.'},
-    {name:'Harold Fannin Jr.',  pos:'TE', team:'CLE', owned:'38%', priority:'must-add',
-     reason:'Volume monster at a position with no established starter above him. Camp reports say he\'s the starter from Day 1.'},
-    {name:'Jayden Daniels',     pos:'QB', team:'WAS', owned:'72%', priority:'streamer',
-     reason:'Year 2 leap candidate with elite legs and a solid WR room. Top-5 QB in dynasty; streaming value in redraft too.'},
-    {name:'Demario Douglas',    pos:'WR', team:'NE',  owned:'29%', priority:'streamer',
+    {name:'Harold Fannin Jr.',  pos:'TE', team:'CLE', owned:'38%', priority:'must-add', mode:'both',
+     reason:'Volume monster at a position with no established starter above him. Starter from Day 1 in camp.'},
+    {name:'Jayden Daniels',     pos:'QB', team:'WAS', owned:'72%', priority:'streamer', mode:'both',
+     reason:'Year 2 leap candidate with elite legs. Top-5 QB in dynasty; strong streaming value in redraft too.'},
+    {name:'Demario Douglas',    pos:'WR', team:'NE',  owned:'29%', priority:'streamer', mode:'redraft',
      reason:'Target hog in NE\'s slot — quietly led the team in targets last season. Cheap in redraft leagues.'},
-    {name:'Nathaniel Dell',     pos:'WR', team:'HOU', owned:'33%', priority:'stash',
-     reason:'Post-ACL recovery — if he\'s healthy in camp, grab him before the news breaks. High ceiling with CJ Stroud.'},
-    {name:'Darius Taylor',      pos:'RB', team:'MIN', owned:'18%', priority:'stash',
+    {name:'Nathaniel Dell',     pos:'WR', team:'HOU', owned:'33%', priority:'stash', mode:'both',
+     reason:'Post-ACL recovery — if healthy in camp, grab him before the news breaks. High ceiling with CJ Stroud.'},
+    {name:'Darius Taylor',      pos:'RB', team:'MIN', owned:'18%', priority:'stash', mode:'dynasty',
      reason:'2026 rookie RB with a path to early-down carries in MIN. Stash in dynasty leagues before he pops.'},
-    {name:'Max Klare',          pos:'TE', team:'LAR', owned:'12%', priority:'stash',
-     reason:'2026 rookie TE in a pass-heavy offense with a hole at TE2. Speculative but high upside.'},
-    {name:'Rashid Shaheed',     pos:'WR', team:'NO',  owned:'22%', priority:'deep',
-     reason:'Explosive playmaker when healthy — only worth adding in deep leagues but keeps the upside in camp.'},
+    {name:'Max Klare',          pos:'TE', team:'LAR', owned:'12%', priority:'stash', mode:'dynasty',
+     reason:'2026 rookie TE in a pass-heavy offense with a hole at TE2. High-upside dynasty stash.'},
+    {name:'Rashid Shaheed',     pos:'WR', team:'NO',  owned:'22%', priority:'deep', mode:'both',
+     reason:'Explosive playmaker when healthy — worth monitoring in both formats heading into camp.'},
   ]
 };
 
@@ -2456,13 +2475,13 @@ function renderTrade() {
     const pB = 100 - pA;
     document.getElementById('vbarL').style.width = pA + '%';
     document.getElementById('vbarR').style.width = pB + '%';
-    document.getElementById('vbarLblA').textContent = `You Receive (${pA}%)`;
-    document.getElementById('vbarLblB').textContent = `(${pB}%) You Give`;
+    document.getElementById('vbarLblA').textContent = `(${pB}%) Give`;
+    document.getElementById('vbarLblB').textContent = `Receive (${pA}%)`;
   } else {
     document.getElementById('vbarL').style.width = '50%';
     document.getElementById('vbarR').style.width = '50%';
-    document.getElementById('vbarLblA').textContent = 'You Receive';
-    document.getElementById('vbarLblB').textContent = 'You Give';
+    document.getElementById('vbarLblA').textContent = 'Give';
+    document.getElementById('vbarLblB').textContent = 'Receive';
   }
 
   // Chips
@@ -2471,6 +2490,98 @@ function renderTrade() {
 
   // Hide analysis when trade changes
   document.getElementById('analysisCard').style.display = 'none';
+
+  // Auto-compute trade targets when "You Give" side has players
+  computeTradeTargets();
+}
+
+function computeTradeTargets() {
+  const section = document.getElementById('tradeTargetsSection');
+  const results = document.getElementById('tradeTargetsResults');
+  if (!section || !results) return;
+  const give = S.tradeB; // tradeB = You Give (left card)
+  if (!give || !give.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  const giveVal = adjustedTotal(give);
+  const lo = giveVal * 0.82, hi = giveVal * 1.22;
+
+  // Single-player fair returns
+  const singles = (S.players || [])
+    .filter(p => !give.find(g => g.id === p.id) && !S.tradeA.find(g => g.id === p.id))
+    .map(p => ({ p, v: calcValue(p) }))
+    .filter(({ v }) => v >= lo && v <= hi)
+    .sort((a, b) => Math.abs(a.v - giveVal) - Math.abs(b.v - giveVal))
+    .slice(0, 8);
+
+  // Two-player packages
+  const candidates = (S.players || [])
+    .filter(p => !give.find(g => g.id === p.id) && !S.tradeA.find(g => g.id === p.id))
+    .map(p => ({ p, v: calcValue(p) }))
+    .filter(({ v }) => v > 500)
+    .sort((a, b) => b.v - a.v)
+    .slice(0, 60);
+
+  const twos = [];
+  outer: for (let i = 0; i < candidates.length; i++) {
+    for (let j = i + 1; j < candidates.length; j++) {
+      const cv = candidates[i].v + candidates[j].v;
+      if (cv >= lo && cv <= hi) {
+        twos.push({ a: candidates[i], b: candidates[j], cv });
+        if (twos.length >= 5) break outer;
+      }
+    }
+  }
+
+  const fmtRow = ({ p, v }) => `
+    <div class="sug-row">
+      <span class="pb pb-${p.position}">${p.position}</span>
+      <div class="sug-info">
+        <div class="sug-name">${escHtml(p.full_name)}${p.rookie ? '<span class="badge badge-rook">ROOK</span>' : ''}</div>
+        <div class="sug-sub">${escHtml(p.team || '')}${p.age ? ' · Age ' + p.age : ''}</div>
+      </div>
+      <div class="sug-val">${fmtVal(v)}</div>
+      <button class="sug-add" onclick="addTargetToReceive('${p.id}')">+ Add</button>
+    </div>`;
+
+  let html = '<div class="sug-card">';
+  if (singles.length) {
+    html += `<div class="sug-section-ttl">1-for-1 targets (fair range: ${fmtVal(Math.round(lo))} – ${fmtVal(Math.round(hi))})</div>`;
+    html += singles.map(fmtRow).join('');
+  } else {
+    html += `<div style="padding:10px 14px;color:var(--text3);font-size:13px">No single-player fair targets found at ${fmtVal(giveVal)}.</div>`;
+  }
+  if (twos.length) {
+    html += `<div class="sug-section-ttl" style="margin-top:14px">Two-player packages</div>`;
+    twos.forEach(({ a, b, cv }) => {
+      html += `<div class="sug-row">
+        <span class="pb pb-${a.p.position}">${a.p.position}</span>
+        <div class="sug-info">
+          <div class="sug-name">${escHtml(a.p.full_name)} + ${escHtml(b.p.full_name)}</div>
+          <div class="sug-sub">Combined: ${fmtVal(cv)}</div>
+        </div>
+        <button class="sug-add" onclick="addTargetPairToReceive('${a.p.id}','${b.p.id}')">+ Add both</button>
+      </div>`;
+    });
+  }
+  html += '</div>';
+  results.innerHTML = html;
+}
+
+function addTargetToReceive(id) {
+  const p = S.players.find(x => x.id === id);
+  if (!p) return;
+  if (!S.tradeA.find(x => x.id === id)) S.tradeA.push(p);
+  renderTrade();
+  showToast(`${p.full_name} added to You Receive`, 'ok');
+}
+function addTargetPairToReceive(id1, id2) {
+  [id1, id2].forEach(id => {
+    const p = S.players.find(x => x.id === id);
+    if (p && !S.tradeA.find(x => x.id === id)) S.tradeA.push(p);
+  });
+  renderTrade();
+  showToast('Players added to You Receive', 'ok');
 }
 
 function renderChips(arr, side) {
@@ -6639,6 +6750,13 @@ function renderTeamGrades(teams) {
 // ═══════════════════════════════════════════════════════════
 // WAIVER WIRE TAB
 // ═══════════════════════════════════════════════════════════
+function setWireMode(mode) {
+  S.wireMode = mode;
+  document.getElementById('wireModeDynasty').classList.toggle('on', mode === 'dynasty');
+  document.getElementById('wireModeRedraft').classList.toggle('on', mode === 'redraft');
+  renderWireTab();
+}
+
 function setWirePos(pos) {
   S.wirePos = pos;
   document.querySelectorAll('#wirePosFilter .pos-btn').forEach(b =>
@@ -6647,7 +6765,8 @@ function setWirePos(pos) {
 }
 
 function renderWireTab() {
-  const pos = S.wirePos || 'ALL';
+  const pos  = S.wirePos  || 'ALL';
+  const mode = S.wireMode || 'dynasty';
   const w = WEEKLY_WIRE;
 
   // Header subtitle
@@ -6672,6 +6791,8 @@ function renderWireTab() {
 
   const priorityOrder = {'must-add':0,'streamer':1,'stash':2,'deep':3};
   let picks = [...w.picks];
+  // Filter by dynasty / redraft mode (picks with mode:'both' always show)
+  picks = picks.filter(p => !p.mode || p.mode === 'both' || p.mode === mode);
   if (pos !== 'ALL') picks = picks.filter(p => p.pos === pos);
   picks.sort((a,b) => (priorityOrder[a.priority]||3) - (priorityOrder[b.priority]||3));
 
