@@ -1415,6 +1415,13 @@
           <button class="mob-tog" data-s="scoring" data-v="std" onclick="setSetting('scoring','std');syncMobToggles()">Std</button>
         </div>
       </div>
+      <div class="mob-s-section">
+        <div class="mob-s-label">TE Premium</div>
+        <div class="mob-tog-row">
+          <button class="mob-tog on" data-s="te" data-v="off" onclick="setSetting('te','off');syncMobToggles()">Off</button>
+          <button class="mob-tog" data-s="te" data-v="on" onclick="setSetting('te','on');syncMobToggles()">On</button>
+        </div>
+      </div>
     </div>
     <div style="display:flex;gap:8px;margin-top:14px">
       <button class="btn btn-s" style="width:100%" onclick="closeMobSettings()">Done</button>
@@ -1960,6 +1967,43 @@ const VALUE_DB = {
   'Juwan Johnson':          {dv:1400,rv:1800,trend:'flat'},
   'Travis Kelce':           {dv:800, rv:2000,trend:'down'},
   'Zach Ertz':              {dv:600, rv:1200,trend:'down'},
+  // ── Near-zero / washed / cut players — set explicitly so they don't get 500 default ──
+  'Trey Lance':             {dv:100, rv:50,  trend:'down'},
+  'Carson Wentz':           {dv:100, rv:50,  trend:'down'},
+  'Ryan Tannehill':         {dv:100, rv:50,  trend:'down'},
+  'Jacoby Brissett':        {dv:100, rv:50,  trend:'down'},
+  'Jimmy Garoppolo':        {dv:50,  rv:50,  trend:'down'},
+  'Tyrod Taylor':           {dv:50,  rv:50,  trend:'down'},
+  'Andy Dalton':            {dv:50,  rv:50,  trend:'down'},
+  'Colt McCoy':             {dv:50,  rv:50,  trend:'down'},
+  'Nick Mullens':           {dv:50,  rv:50,  trend:'down'},
+  'Trevor Siemian':         {dv:50,  rv:50,  trend:'down'},
+  'Mike White':             {dv:50,  rv:50,  trend:'down'},
+  'Taylor Heinicke':        {dv:200, rv:200, trend:'down'},
+  'Nathan Peterman':        {dv:50,  rv:50,  trend:'down'},
+  'Devonta Freeman':        {dv:50,  rv:50,  trend:'down'},
+  'Melvin Gordon':          {dv:50,  rv:50,  trend:'down'},
+  'Adrian Peterson':        {dv:50,  rv:50,  trend:'down'},
+  'Jordan Howard':          {dv:50,  rv:50,  trend:'down'},
+  'Latavius Murray':        {dv:50,  rv:50,  trend:'down'},
+  'Le\'Veon Bell':          {dv:50,  rv:50,  trend:'down'},
+  'Darren McFadden':        {dv:50,  rv:50,  trend:'down'},
+  'Emmanuel Sanders':       {dv:50,  rv:50,  trend:'down'},
+  'Golden Tate':            {dv:50,  rv:50,  trend:'down'},
+  'Randall Cobb':           {dv:50,  rv:50,  trend:'down'},
+  'Jarvis Landry':          {dv:50,  rv:50,  trend:'down'},
+  'Adam Thielen':           {dv:200, rv:200, trend:'down'},
+  'Tyler Boyd':             {dv:800, rv:1200,trend:'down'},
+  'Odell Beckham Jr.':      {dv:200, rv:400, trend:'down'},
+  'Julio Jones':            {dv:50,  rv:50,  trend:'down'},
+  'A.J. Green':             {dv:50,  rv:50,  trend:'down'},
+  'Davante Adams':          {dv:600, rv:1500,trend:'down'},
+  'Keenan Allen':           {dv:200, rv:800, trend:'down'},
+  'Tyler Lockett':          {dv:500, rv:800, trend:'down'},
+  'DeAndre Hopkins':        {dv:200, rv:400, trend:'down'},
+  'Stefon Diggs':           {dv:300, rv:500, trend:'down'},
+  'JuJu Smith-Schuster':    {dv:50,  rv:50,  trend:'down'},
+  'Christian McCaffrey':    {dv:2500,rv:3500,trend:'down'},
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -2513,11 +2557,13 @@ function computeTradeTargets() {
   const giveVal = adjustedTotal(give);
   const lo = giveVal * 0.82, hi = giveVal * 1.22;
 
+  const TARGET_FLOOR = 1200; // never suggest players below this value as trade targets
+
   // Single-player fair returns
   const singles = (S.players || [])
     .filter(p => !give.find(g => g.id === p.id) && !S.tradeA.find(g => g.id === p.id))
     .map(p => ({ p, v: calcValue(p) }))
-    .filter(({ v }) => v >= lo && v <= hi)
+    .filter(({ v }) => v >= Math.max(lo, TARGET_FLOOR) && v <= hi)
     .sort((a, b) => Math.abs(a.v - giveVal) - Math.abs(b.v - giveVal))
     .slice(0, 8);
 
@@ -2525,7 +2571,7 @@ function computeTradeTargets() {
   const candidates = (S.players || [])
     .filter(p => !give.find(g => g.id === p.id) && !S.tradeA.find(g => g.id === p.id))
     .map(p => ({ p, v: calcValue(p) }))
-    .filter(({ v }) => v > 500)
+    .filter(({ v }) => v >= TARGET_FLOOR)
     .sort((a, b) => b.v - a.v)
     .slice(0, 60);
 
@@ -3031,6 +3077,7 @@ function buildSearch(inputId, ddId, onSelect, excludeFn) {
     const results = S.players
       .filter(p => !excludeFn || !excludeFn(p))
       .filter(p => p.full_name.toLowerCase().includes(q) || (p.team||'').toLowerCase().includes(q))
+      .filter(p => calcValue(p) >= 300) // hide cut/washed players with no real fantasy value
       .sort((a,b) => calcValue(b) - calcValue(a))
       .slice(0, limit);
 
