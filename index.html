@@ -203,6 +203,11 @@
     .pb-K{background:#282814;color:#facc15}
     .pb-DEF{background:#101e2a;color:#67e8f9}
     .pb-PICK{background:#1e1040;color:#a78bfa}
+    /* IDP defensive position badges */
+    .pb-DE,.pb-DT,.pb-DL{background:#2a1010;color:#f87171}
+    .pb-LB,.pb-OLB,.pb-ILB,.pb-MLB{background:#1e1a08;color:#fbbf24}
+    .pb-CB,.pb-S,.pb-FS,.pb-SS,.pb-DB{background:#081e1a;color:#34d399}
+    .pb-IDP{background:#1a1a2a;color:#a78bfa}
 
     /* ── PLAYER CHIP ────────────────────── */
     .chip{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:6px}
@@ -3208,6 +3213,15 @@ function trendHtml(p) {
 
 function fmtVal(v) { return v > 0 ? v.toLocaleString() : '—'; }
 
+// Consistent player name + position badge + rookie badge helper
+// Output: "Name [POS] [ROOK?]" — use wherever player identity is rendered
+function pnr(p) {
+  const rawPos = p.position || '?';
+  const pos = rawPos === 'DST' ? 'DEF' : rawPos;
+  const rk = p.rookie ? `<span class="badge badge-rook">ROOK</span>` : '';
+  return `${escHtml(p.full_name || p.name || '?')}<span class="pb pb-${pos}" style="font-size:9px;vertical-align:middle;margin-left:4px">${pos}</span>${rk}`;
+}
+
 function sideTotal(arr) { return arr.reduce((s,p)=>s+calcValue(p),0); }
 
 function packageMultiplier(arr) {
@@ -3708,7 +3722,7 @@ function renderChips(arr, side) {
     })() : '';
     return `<div class="chip">
       <div class="chip-info">
-        <div class="chip-name">${p.full_name}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''} <span class="pb pb-${p.position}" style="font-size:9px;vertical-align:middle">${p.position}</span>${tierBadge}</div>
+        <div class="chip-name">${pnr(p)}${tierBadge}</div>
         <div class="chip-sub">${p.team||''}${p.age?' · Age '+p.age:''}</div>
         ${bdHtml}
       </div>
@@ -3919,7 +3933,7 @@ function renderValuesTable() {
       : `<td style="display:none"></td>`;
     return `<tr>
       <td><span style="color:var(--text3);font-size:12px">${i+1}</span></td>
-      <td><strong>${p.full_name}</strong>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''} <span class="pb pb-${p.position}" style="font-size:9px;vertical-align:middle">${p.position}</span></td>
+      <td><strong>${escHtml(p.full_name)}</strong><span class="pb pb-${p.position==='DST'?'DEF':p.position}" style="font-size:9px;vertical-align:middle;margin-left:4px">${p.position==='DST'?'DEF':p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</td>
       <td style="display:none"></td>
       <td style="color:var(--text2)">${p.team||'—'}</td>
       <td style="color:var(--text2)">${p.age||'—'}</td>
@@ -4030,7 +4044,7 @@ function renderRosterList() {
     return `<div class="ros-row">
       <span class="ros-slot-lbl ${cls}">${slotLabel}</span>
       <div class="ros-row-info">
-        <div style="font-weight:600;font-size:13px">${p.full_name}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''} <span class="pb pb-${pos}" style="font-size:9px;vertical-align:middle">${pos}</span></div>
+        <div style="font-weight:600;font-size:13px">${escHtml(p.full_name)}<span class="pb pb-${pos}" style="font-size:9px;vertical-align:middle;margin-left:4px">${pos}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
         <div style="font-size:11px;color:var(--text3)">${p.team||'FA'}${p.age?' · Age '+p.age:''}</div>
       </div>
       <div style="font-weight:700;font-size:13px;color:var(--primary-l);flex-shrink:0">${fmtVal(v)}</div>
@@ -4168,7 +4182,7 @@ function runBSH() {
     html += `<div class="bsh-card">
       <div class="bsh-grade bsh-${grade}">${grade}</div>
       <div class="bsh-card-info">
-        <div class="bsh-card-name">${p.full_name} <span class="pb pb-${p.position}" style="font-size:9px">${p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
+        <div class="bsh-card-name">${escHtml(p.full_name)}<span class="pb pb-${p.position}" style="font-size:9px;vertical-align:middle;margin-left:4px">${p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
         <div class="bsh-card-reason">${reason}</div>
       </div>
       <div style="font-size:13px;font-weight:700;color:var(--primary-l);flex-shrink:0">${fmtVal(v)}</div>
@@ -7171,7 +7185,7 @@ function runTeamAnalysis() {
         <div class="bsh-card">
           <div class="bsh-grade bsh-${p.action}">${p.action}</div>
           <div class="bsh-card-info">
-            <div class="bsh-card-name">${escHtml(p.full_name||'')} <span class="pb pb-${p.position}">${p.position}</span></div>
+            <div class="bsh-card-name">${escHtml(p.full_name||'')}<span class="pb pb-${p.position}" style="font-size:9px;vertical-align:middle;margin-left:4px">${p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
             <div class="bsh-card-reason">${p.reason} · Value: ${p.val.toLocaleString()}</div>
           </div>
         </div>`).join('')}
@@ -7745,7 +7759,7 @@ function rosterPickerChip(p, side) {
   const val   = calcValue(p);
   const valFmt = val >= 1000 ? (val/1000).toFixed(1)+'k' : val;
   return `<div class="lrp${isIn?' in-trade':''}" onclick="toggleLeagueTradePlayer('${escHtml(pid)}','${side}')">
-    <span class="lrp-name">${escHtml(p.full_name||'Unknown')} <span class="pb pb-${p.position}" style="font-size:9px;vertical-align:middle">${p.position}</span></span>
+    <span class="lrp-name">${escHtml(p.full_name||'Unknown')}<span class="pb pb-${p.position}" style="font-size:9px;vertical-align:middle;margin-left:4px">${p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</span>
     <span class="lrp-val">${valFmt}</span>
     ${isIn ? '<span style="color:var(--success);font-size:13px;flex-shrink:0">✓</span>' : ''}
   </div>`;
@@ -8208,7 +8222,7 @@ function renderWizAvail() {
       <div class="dav-rank">${rank||'?'}</div>
       <span class="pb pb-${p.position}">${p.position}</span>
       <div class="dav-info">
-        <div class="dav-name">${escHtml(p.full_name)}</div>
+        <div class="dav-name">${escHtml(p.full_name)}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
         <div class="dav-sub">${sub}</div>
       </div>
       ${diffHtml}
@@ -8705,7 +8719,7 @@ function renderWireTab() {
       <div class="wire-rank">${i+1}</div>
       <div class="pb pb-${escHtml(p.pos)}" style="align-self:flex-start;margin-top:2px">${escHtml(p.pos)}</div>
       <div class="wire-info">
-        <div class="wire-name">${escHtml(p.name)}<span class="wire-badge ${bc}" style="margin-left:7px">${bl}</span>${availBadge}</div>
+        <div class="wire-name">${escHtml(p.name)}${(S.players||[]).find(x=>x.full_name===p.name)?.rookie?'<span class="badge badge-rook">ROOK</span>':''}<span class="wire-badge ${bc}" style="margin-left:7px">${bl}</span>${availBadge}</div>
         <div class="wire-sub">${escHtml(p.team)} · ${p.owned||'—'} owned</div>
         <div class="wire-reason">${escHtml(p.reason)}</div>
       </div>
@@ -8831,16 +8845,19 @@ function renderBuySellTab() {
   const thc = document.getElementById('bsTHoldCount'); if (thc) thc.textContent = topHolds.length;
   const tsc = document.getElementById('bsTSellCount'); if (tsc)  tsc.textContent  = topSells.length;
 
-  const renderCard = (p) => `
+  const renderCard = (p) => {
+    const player = (S.players||[]).find(x => x.full_name === p.name);
+    const rookBadge = player?.rookie ? '<span class="badge badge-rook">ROOK</span>' : '';
+    return `
     <div class="bs-card">
       <div class="bs-badge bs-${p.action}">${p.action}</div>
       <div style="flex:1;min-width:0">
-        <div class="bs-name">${escHtml(p.name)}</div>
+        <div class="bs-name">${escHtml(p.name)}<span class="pb pb-${escHtml(p.pos)}" style="font-size:9px;vertical-align:middle;margin-left:4px">${escHtml(p.pos)}</span>${rookBadge}</div>
         <div class="bs-reason">${escHtml(p.reason)}</div>
-        <div class="bs-meta">${p.pos} · ${p.team} · Age ${p.age||'?'} · Val ${p.val.toLocaleString()}</div>
+        <div class="bs-meta">${p.team} · Age ${p.age||'?'} · Val ${p.val.toLocaleString()}</div>
       </div>
-      <div class="pb pb-${escHtml(p.pos)}" style="flex-shrink:0;align-self:flex-start">${escHtml(p.pos)}</div>
     </div>`;
+  };
 
   const emptyCard = (icon, label) => `<div class="empty-state" style="padding:20px"><span>${icon}</span>${label}</div>`;
 
@@ -9717,7 +9734,7 @@ function renderDsimRec() {
       <div class="dsim-rec-rank">#${i+1} Recommendation</div>
       <div class="dsim-rec-name">
         <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px;margin-right:4px">${pos}</span>
-        ${p.full_name || p.name || '?'}
+        ${escHtml(p.full_name || p.name || '?')}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}
         <span style="font-size:11px;font-weight:400;color:var(--text3);margin-left:4px">${fmtVal(item.v)}</span>
       </div>
       <div class="dsim-rec-why">${reason}</div>
@@ -9766,7 +9783,7 @@ function renderDsimAvail() {
     const team = p.team || '';
     return `<div class="dsim-avail-row${isMyTurn ? '' : ' not-my-turn'}" onclick="dsimUserPick('${pid}')">
       <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
-      <span class="dsim-avail-name">${p.full_name || p.name || '?'}</span>
+      <span class="dsim-avail-name">${escHtml(p.full_name || p.name || '?')}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</span>
       <span class="dsim-avail-meta">${[team, age].filter(Boolean).join(' · ')}</span>
       <span class="dsim-avail-val">${fmtVal(v)}</span>
     </div>`;
