@@ -2738,13 +2738,32 @@ function loadFromUrl() {
 // ═══════════════════════════════════════════════════════════
 function renderValuesTable() {
   const q = document.getElementById('tblSearch').value.toLowerCase();
-  const pos = S.tablePos;
   const { col, dir } = S.tableSort;
+  const { mode, size, qb, scoring } = S.settings;
+  const isDynasty = mode === 'dynasty';
+
+  // ── Picks button: dynasty-only concept ──
+  const picksBtn = document.querySelector('.pos-btn[data-pos="PICK"]');
+  if (picksBtn) {
+    picksBtn.style.display = isDynasty ? '' : 'none';
+    // If Picks was selected and we just switched to redraft, reset to ALL
+    if (!isDynasty && S.tablePos === 'PICK') {
+      S.tablePos = 'ALL';
+      document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('on', b.dataset.pos === 'ALL'));
+    }
+  }
+
+  // ── Column headers: swap Dynasty ↔ Redraft label & show/hide cross-column ──
+  const ths = document.querySelectorAll('#valTable thead th');
+  if (ths[5]) ths[5].textContent = isDynasty ? 'Dynasty' : 'Redraft';
+  if (ths[6]) ths[6].style.display = isDynasty ? '' : 'none';
+
+  const pos = S.tablePos;
 
   let rows = S.players
     .filter(p => pos === 'ALL' || p.position === pos)
     .filter(p => !q || p.full_name.toLowerCase().includes(q) || (p.team||'').toLowerCase().includes(q))
-    .map(p => ({ ...p, _val: p.dynasty_val || 0 }))
+    .map(p => ({ ...p, _val: calcValue(p) }))   // ← mode + QB/scoring/TE/size all applied
     .sort((a,b) => {
       let av, bv;
       if (col === 'value') { av = a._val; bv = b._val; }
@@ -2764,21 +2783,22 @@ function renderValuesTable() {
   const maxV = Math.max(...rows.map(r=>r._val), 1);
   const tbody = document.getElementById('valTbody');
   tbody.innerHTML = rows.slice(0,300).map((p,i) => {
-    const v    = p._val;
-    const tier = getTier(v);
-    const barW = Math.round(v / maxV * 100);
-    const engT = p._engineTier;
+    const v      = p._val;                          // adjusted for mode + all settings
+    const tier   = getTier(v);
+    const engT   = p._engineTier;
     const engScore = p._engineScore;
-    const bdTip = p._breakdown ? (() => {
+    const bdTip  = p._breakdown ? (() => {
       const b = p._breakdown;
       return `P:${Math.round(b.production)} A:${Math.round(b.age)} O:${Math.round(b.opportunity)} Ph:${Math.round(b.physical)} E:${Math.round(b.efficiency)}`;
     })() : '';
-    const dvRaw = p.dynasty_val || 0;
+    const dvBar = Math.round(v / maxV * 100);
+    // Cross-column: show raw redraft baseline in dynasty view for reference
     const rvRaw = p.redraft_val || 0;
-    const dvBar = Math.round(dvRaw / maxV * 100);
-    // Redraft display: apply same QB/TE/scoring mods but in redraft mode
-    const rvDisplay = fmtVal(rvRaw);
-    const dvDiff = dvRaw && rvRaw ? dvRaw - rvRaw : 0;
+    const crossTd = isDynasty
+      ? `<td><span style="font-size:12px;color:var(--text2)">${fmtVal(rvRaw)}</span></td>`
+      : `<td style="display:none"></td>`;
+    // Diff badge (dynasty vs redraft baseline) only in dynasty view
+    const dvDiff = isDynasty && p.dynasty_val && rvRaw ? p.dynasty_val - rvRaw : 0;
     const diffLabel = dvDiff > 500 ? `<span style="font-size:10px;color:var(--success);margin-left:3px">+DYN</span>`
                     : dvDiff < -500 ? `<span style="font-size:10px;color:var(--warn);margin-left:3px">+RDR</span>` : '';
     return `<tr>
@@ -2789,12 +2809,12 @@ function renderValuesTable() {
       <td style="color:var(--text2)">${p.age||'—'}</td>
       <td>
         <div class="mini-bar">
-          <span style="font-weight:700;font-size:13px;min-width:42px;color:var(--primary-l)">${fmtVal(dvRaw)}</span>
+          <span style="font-weight:700;font-size:13px;min-width:42px;color:var(--primary-l)">${fmtVal(v)}</span>
           <div class="mini-track"><div class="mini-fill" style="width:${dvBar}%"></div></div>
           ${diffLabel}
         </div>
       </td>
-      <td><span style="font-size:12px;color:var(--text2)">${rvDisplay}</span></td>
+      ${crossTd}
       <td><span class="tier-badge ${tier.cls}">${tier.label}</span></td>
       <td title="${bdTip}">
         ${engScore != null ? `<span class="eng-score-cell ${engT?.cls||''}">${engScore}<span style="font-size:9px;opacity:.6;margin-left:2px">/100</span></span>` : '—'}
@@ -2804,7 +2824,9 @@ function renderValuesTable() {
   }).join('') || `<tr><td colspan="9" style="padding:24px;text-align:center;color:var(--text3)">No players found</td></tr>`;
 
   // update sub
-  document.getElementById('valTableSub').textContent = `${rows.length} players · Dynasty & Redraft values shown · ${S.settings.size}-Team · ${S.settings.qb.toUpperCase()} · ${S.settings.scoring.toUpperCase()}`;
+  const modeStr = isDynasty ? 'Dynasty' : 'Redraft';
+  const qbStr   = qb === 'sf' ? 'SF' : qb === '2qb' ? '2-QB' : '1-QB';
+  document.getElementById('valTableSub').textContent = `${rows.length} players · ${modeStr} · ${size}-Team · ${qbStr} · ${scoring.toUpperCase()} — rankings adjust to your settings`;
 
   // sort indicators
   document.querySelectorAll('#valTable th').forEach(th => { th.classList.remove('sort-asc','sort-desc'); });
