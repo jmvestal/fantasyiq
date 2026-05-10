@@ -5,30 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="TradeIQ">
+  <meta name="apple-mobile-web-app-title" content="Fantasy IQ">
   <meta name="theme-color" content="#0e0e14">
-  <meta name="description" content="TradeIQ — Free NFL Dynasty & Redraft Trade Analyzer. Proprietary consensus rankings, live Draft Wizard, waiver wire, and dynasty buy/sell advice. Built for serious fantasy players.">
+  <meta name="description" content="Fantasy IQ — Free NFL Fantasy Analyzer. Trade IQ, Player IQ, Waiver IQ, Team IQ, League IQ, and Draft IQ — all-in-one tools built for serious fantasy players.">
   <!-- Open Graph / Social sharing -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://jmvestal.github.io/tradeiq/">
-  <meta property="og:title" content="TradeIQ — NFL Fantasy Trade Analyzer">
-  <meta property="og:description" content="Free NFL Dynasty & Redraft Trade Analyzer. Multi-source consensus rankings, live Draft Wizard, and team analysis. Built for serious fantasy players.">
+  <meta property="og:title" content="Fantasy IQ — NFL Fantasy Analyzer">
+  <meta property="og:description" content="Free NFL fantasy tools: Trade IQ, Player IQ, Waiver IQ, Team IQ, League IQ, and Draft IQ. Multi-source consensus rankings built for serious players.">
   <meta property="og:image" content="https://jmvestal.github.io/tradeiq/og-image.svg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <!-- Twitter / X -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="TradeIQ — NFL Fantasy Trade Analyzer">
-  <meta name="twitter:description" content="Free NFL Dynasty & Redraft trade analyzer with proprietary consensus rankings, waiver wire, buy/sell advice, and live Draft Wizard.">
+  <meta name="twitter:title" content="Fantasy IQ — NFL Fantasy Analyzer">
+  <meta name="twitter:description" content="Free NFL fantasy tools: Trade IQ, Player IQ, Waiver IQ, Team IQ, League IQ, and Draft IQ — all in one place.">
   <meta name="twitter:image" content="https://jmvestal.github.io/tradeiq/og-image.svg">
   <!-- PWA / icons -->
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="icon" type="image/png" href="favicon-32.png" sizes="32x32">
-  <title>TradeIQ — NFL Dynasty & Redraft Trade Analyzer</title>
+  <title>Fantasy IQ — NFL Fantasy Analyzer</title>
   <!-- Structured data for Google -->
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"TradeIQ","url":"https://jmvestal.github.io/tradeiq/","description":"Free NFL Dynasty & Redraft Trade Analyzer with proprietary consensus rankings, weekly waiver wire, dynasty buy/sell advice, and live Draft Wizard.","applicationCategory":"SportsApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"keywords":"fantasy football trade analyzer, dynasty trade calculator, NFL dynasty rankings, dynasty buy sell, waiver wire, fantasy football draft tool"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Fantasy IQ","url":"https://jmvestal.github.io/tradeiq/","description":"Free NFL fantasy tools: Trade IQ, Player IQ, Waiver IQ, Team IQ, League IQ, and Draft IQ — all-in-one analyzer built for serious fantasy players.","applicationCategory":"SportsApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"keywords":"fantasy football trade analyzer, dynasty trade calculator, NFL dynasty rankings, dynasty buy sell, waiver wire, fantasy football draft tool, fantasy IQ"}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <!-- Firebase SDK (compat v9) -->
@@ -812,21 +812,21 @@
   </style>
 </head>
 <body>
-<noscript><p style="padding:20px;color:#e2e8f0;background:#0e0e14;font-family:sans-serif">TradeIQ — Free NFL Dynasty &amp; Redraft Trade Analyzer with proprietary consensus rankings, waiver wire, and dynasty buy/sell advice. <a href="https://jmvestal.github.io/tradeiq/" style="color:#9d5af0">Open TradeIQ</a></p></noscript>
+<noscript><p style="padding:20px;color:#e2e8f0;background:#0e0e14;font-family:sans-serif">Fantasy IQ — Free NFL Fantasy Analyzer with Trade IQ, Player IQ, Waiver IQ, Team IQ, League IQ, and Draft IQ. <a href="https://jmvestal.github.io/tradeiq/" style="color:#9d5af0">Open Fantasy IQ</a></p></noscript>
 
 <!-- ═══ HEADER ═══ -->
 <header class="hdr">
   <div class="hdr-inner">
-    <div class="logo" onclick="switchTab('home')" style="cursor:pointer" title="Home"><em>Trade</em><span>IQ</span></div>
+    <div class="logo" onclick="switchTab('home')" style="cursor:pointer" title="Home"><em>Fantasy</em><span>IQ</span></div>
     <nav class="nav">
       <button class="nav-btn active" data-tab="home" onclick="switchTab('home')">🏠 Home</button>
-      <button class="nav-btn" data-tab="analyzer">⚖️ Trade Analyzer</button>
-      <button class="nav-btn" data-tab="values">📊 Player Values</button>
-      <button class="nav-btn" data-tab="wire">📋 Waiver Wire</button>
-      <button class="nav-btn" data-tab="buysell">📈 Buy/Sell</button>
-      <button class="nav-btn" data-tab="roster">🏈 My Team <span class="pro-badge">PRO</span></button>
-      <button class="nav-btn" data-tab="league">🏆 League <span class="pro-badge">PRO</span></button>
-      <button class="nav-btn" data-tab="draft">🎯 Draft <span class="pro-badge">PRO</span></button>
+      <button class="nav-btn" data-tab="analyzer">⚖️ Trade IQ</button>
+      <button class="nav-btn" data-tab="values">📊 Player IQ</button>
+      <button class="nav-btn" data-tab="wire">📋 Waiver IQ</button>
+      <button class="nav-btn" data-tab="buysell">📈 Value IQ</button>
+      <button class="nav-btn" data-tab="roster">🏈 Team IQ <span class="pro-badge">PRO</span></button>
+      <button class="nav-btn" data-tab="league">🏆 League IQ <span class="pro-badge">PRO</span></button>
+      <button class="nav-btn" data-tab="draft">🎯 Draft IQ <span class="pro-badge">PRO</span></button>
     </nav>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
       <div class="pc-badge" id="pcBadge">Loading players…</div>
@@ -930,37 +930,37 @@
       <!-- Option A: not logged in — full-screen landing -->
       <div id="homeOptionA">
         <div class="home-landing">
-          <div class="home-landing-logo"><em>Trade</em>IQ</div>
-          <div class="home-landing-tag">The free NFL fantasy trade analyzer built for serious players.</div>
+          <div class="home-landing-logo"><em>Fantasy</em>IQ</div>
+          <div class="home-landing-tag">The free NFL fantasy analyzer built for serious players.</div>
           <div class="home-feat-grid">
             <div class="home-feat-card" onclick="switchTab('analyzer')">
               <div class="home-feat-icon">⚖️</div>
-              <div class="home-feat-name">Trade Analyzer</div>
+              <div class="home-feat-name">Trade IQ</div>
               <div class="home-feat-desc">Evaluate any trade with multi-source consensus values.</div>
             </div>
             <div class="home-feat-card" onclick="switchTab('values')">
               <div class="home-feat-icon">📊</div>
-              <div class="home-feat-name">Player Values</div>
+              <div class="home-feat-name">Player IQ</div>
               <div class="home-feat-desc">Full rankings for dynasty, redraft, IDP, K, and DST.</div>
             </div>
             <div class="home-feat-card" onclick="switchTab('wire')">
               <div class="home-feat-icon">📋</div>
-              <div class="home-feat-name">Waiver Wire</div>
+              <div class="home-feat-name">Waiver IQ</div>
               <div class="home-feat-desc">Weekly waiver targets ranked by upside and opportunity.</div>
             </div>
             <div class="home-feat-card" onclick="switchTab('buysell')">
               <div class="home-feat-icon">📈</div>
-              <div class="home-feat-name">Buy / Sell</div>
+              <div class="home-feat-name">Value IQ</div>
               <div class="home-feat-desc">Buy low, sell high alerts based on current value curves.</div>
             </div>
             <div class="home-feat-card" onclick="switchTab('draft')">
               <div class="home-feat-icon">🎯</div>
-              <div class="home-feat-name">Draft Tools</div>
+              <div class="home-feat-name">Draft IQ</div>
               <div class="home-feat-desc">Big board, draft assistant, and a full draft simulator.</div>
             </div>
             <div class="home-feat-card" onclick="switchTab('roster')">
               <div class="home-feat-icon">🏈</div>
-              <div class="home-feat-name">My Team</div>
+              <div class="home-feat-name">Team IQ</div>
               <div class="home-feat-desc">Roster valuation and personalized team analysis.</div>
             </div>
           </div>
@@ -999,23 +999,23 @@
           <!-- Quick nav -->
           <div style="margin-bottom:14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)">Quick Access</div>
           <div class="home-quick-btns">
-            <button class="home-quick-btn" onclick="switchTab('analyzer')">⚖️ Trade Analyzer</button>
-            <button class="home-quick-btn" onclick="switchTab('values')">📊 Player Values</button>
-            <button class="home-quick-btn" onclick="switchTab('wire')">📋 Waiver Wire</button>
-            <button class="home-quick-btn" onclick="switchTab('buysell')">📈 Buy / Sell</button>
-            <button class="home-quick-btn" onclick="switchTab('draft')">🎯 Draft</button>
-            <button class="home-quick-btn" onclick="switchTab('roster')">🏈 My Team</button>
-            <button class="home-quick-btn" onclick="switchTab('league')">🏆 League</button>
+            <button class="home-quick-btn" onclick="switchTab('analyzer')">⚖️ Trade IQ</button>
+            <button class="home-quick-btn" onclick="switchTab('values')">📊 Player IQ</button>
+            <button class="home-quick-btn" onclick="switchTab('wire')">📋 Waiver IQ</button>
+            <button class="home-quick-btn" onclick="switchTab('buysell')">📈 Value IQ</button>
+            <button class="home-quick-btn" onclick="switchTab('draft')">🎯 Draft IQ</button>
+            <button class="home-quick-btn" onclick="switchTab('roster')">🏈 Team IQ</button>
+            <button class="home-quick-btn" onclick="switchTab('league')">🏆 League IQ</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ══ TAB: TRADE ANALYZER ══ -->
+    <!-- ══ TAB: TRADE IQ ══ -->
     <div id="tab-analyzer" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl">Trade Analyzer</div>
+          <div class="sec-ttl">Trade IQ</div>
           <div class="sec-sub">Add players to each side — values auto-adjust to your league settings</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1182,11 +1182,11 @@
       </div>
     </div>
 
-    <!-- ══ TAB: PLAYER VALUES ══ -->
+    <!-- ══ TAB: PLAYER IQ ══ -->
     <div id="tab-values" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl">Player Values</div>
+          <div class="sec-ttl">Player IQ</div>
           <div class="sec-sub" id="valTableSub">Adjusted for your league settings</div>
         </div>
       </div>
@@ -1230,7 +1230,7 @@
               <th onclick="sortTable('value')">Dynasty</th>
               <th>Redraft</th>
               <th>Tier</th>
-              <th onclick="sortTable('engine')" title="TradeIQ composite score (0–100): Production · Age · Opportunity · Physical · Efficiency. Hover a row to see breakdown.">TIQ Score ▸</th>
+              <th onclick="sortTable('engine')" title="Fantasy IQ composite score (0–100): Production · Age · Opportunity · Physical · Efficiency. Hover a row to see breakdown.">FIQ Score ▸</th>
               <th onclick="sortTable('trend')">Trend</th>
             </tr>
           </thead>
@@ -1241,11 +1241,11 @@
       </div>
     </div>
 
-    <!-- ══ TAB: MY TEAM ══ -->
+    <!-- ══ TAB: TEAM IQ ══ -->
     <div id="tab-roster" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl">My Team</div>
+          <div class="sec-ttl">Team IQ</div>
           <div class="sec-sub">Connect your league for roster grades, trade targets &amp; buy/sell advice</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1279,7 +1279,7 @@
       <div class="connect-prompt" id="connectPrompt">
         <div style="font-size:40px;margin-bottom:10px">🏈</div>
         <h3>Connect Your Fantasy League</h3>
-        <p>Import your roster from Sleeper and unlock everything TradeIQ can do for your team:</p>
+        <p>Import your roster from Sleeper and unlock everything Fantasy IQ can do for your team:</p>
         <div style="display:inline-block;text-align:left;margin:0 auto 16px;font-size:13px;color:var(--text2);line-height:1.9">
           <div>✅ <strong>Roster grades</strong> by position — QB, RB, WR, TE</div>
           <div>✅ <strong>Buy / Sell / Hold</strong> advice for every player</div>
@@ -1316,11 +1316,11 @@
       </div>
     </div>
 
-    <!-- ══ TAB: LEAGUE ══ -->
+    <!-- ══ TAB: LEAGUE IQ ══ -->
     <div id="tab-league" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl">League Analyzer</div>
+          <div class="sec-ttl">League IQ</div>
           <div class="sec-sub" id="leagueAnalyzerSub">Connect a league to rank all teams</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1354,33 +1354,33 @@
       </div>
     </div>
 
-    <!-- ══ TAB: DRAFT ══ -->
+    <!-- ══ TAB: DRAFT IQ ══ -->
     <div id="tab-draft" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl">Draft Tools</div>
+          <div class="sec-ttl">Draft IQ</div>
           <div class="sec-sub">Analyze a completed draft or get live pick-by-pick guidance</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <div class="draft-mode-toggle">
-            <button class="dmt-btn on" data-dm="wizard" onclick="setDraftMode('wizard')">🧙 Draft Wizard</button>
+            <button class="dmt-btn on" data-dm="wizard" onclick="setDraftMode('wizard')">🧙 Draft IQ Assistant</button>
             <button class="dmt-btn" data-dm="analyzer" onclick="setDraftMode('analyzer')">📋 Draft Analyzer</button>
             <button class="dmt-btn" data-dm="simulator" onclick="setDraftMode('simulator')">🎮 Draft Sim</button>
           </div>
         </div>
       </div>
 
-      <!-- ─── DRAFT WIZARD ─── -->
+      <!-- ─── DRAFT IQ ASSISTANT ─── -->
       <div id="draftWizardPane">
 
         <!-- Setup bar -->
         <div class="draft-import-bar" id="wizSetupBar">
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-              <div style="font-size:13px;font-weight:700">🧙 Live Draft Wizard</div>
+              <div style="font-size:13px;font-weight:700">🧙 Live Draft IQ Assistant</div>
               <span class="info-chip" id="wizModeChip" style="font-size:10px"></span>
             </div>
-            <div style="font-size:11px;color:var(--text2)">Rankings auto-update when you change league settings (Dynasty/Redraft, SF, scoring). Mark picks as they happen — TradeIQ highlights best value each round.</div>
+            <div style="font-size:11px;color:var(--text2)">Rankings auto-update when you change league settings (Dynasty/Redraft, SF, scoring). Mark picks as they happen — Fantasy IQ highlights best value each round.</div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0">
             <select id="wizTotalTeams" class="trade-partner-sel" style="max-width:110px" onchange="initWizard()">
@@ -1405,7 +1405,7 @@
 
         <!-- Recommendation bar -->
         <div class="wizard-rec-bar" id="wizRecBar" style="display:none">
-          <div class="wizard-rec-ttl">🎯 TradeIQ Recommends — Pick <span id="wizPickNum">1</span></div>
+          <div class="wizard-rec-ttl">🎯 Draft IQ Recommends — Pick <span id="wizPickNum">1</span></div>
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
             <div style="flex:1;min-width:0">
               <div class="wizard-rec-name" id="wizRecName">—</div>
@@ -1608,11 +1608,11 @@
 
     </div><!-- /tab-draft -->
 
-    <!-- ══ TAB: WAIVER WIRE ══ -->
+    <!-- ══ TAB: WAIVER IQ ══ -->
     <div id="tab-wire" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl">📋 Waiver Wire</div>
+          <div class="sec-ttl">Waiver IQ</div>
           <div class="sec-sub" id="wireSubHead">Weekly waiver targets — updated every Tuesday</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1653,18 +1653,18 @@
         <span class="wire-badge wire-stream">⚡ Streamer</span>
         <span class="wire-badge wire-stash">📦 Stash</span>
         <span class="wire-badge wire-deep">🔍 Deep Dive</span>
-        <span style="font-size:11px;color:var(--text3);padding:2px 4px;align-self:center">— Updated weekly. Click "Analyze" to pull a player into the Trade Analyzer.</span>
+        <span style="font-size:11px;color:var(--text3);padding:2px 4px;align-self:center">— Updated weekly. Click "Analyze" to pull a player into Trade IQ.</span>
       </div>
 
       <div id="wireList"></div>
     </div><!-- /tab-wire -->
 
-    <!-- ══ TAB: DYNASTY BUY/SELL ══ -->
+    <!-- ══ TAB: VALUE IQ ══ -->
     <div id="tab-buysell" class="tab">
       <div class="sec-hdr">
         <div>
           <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px">
-            <div class="sec-ttl">📈 Buy / Sell</div>
+            <div class="sec-ttl">Value IQ</div>
             <span style="background:var(--primary);color:#fff;font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;letter-spacing:.04em;text-transform:uppercase">Dynasty</span>
           </div>
           <div class="sec-sub">Trade targets based on current market values, age curves &amp; trend data</div>
@@ -1690,7 +1690,7 @@
 
       <div class="bsh-summary" style="margin-bottom:14px">
         <h4>💡 How This Works</h4>
-        <p>Players trending up with age on their side = Buy. Aging veterans or declining usage = Sell. These are <strong>trade recommendations</strong> — not start/sit advice. Use the Trade Analyzer to check specific deals.</p>
+        <p>Players trending up with age on their side = Buy. Aging veterans or declining usage = Sell. These are <strong>trade recommendations</strong> — not start/sit advice. Use Trade IQ to check specific deals.</p>
       </div>
 
       <!-- Mobile toggle (visible on mobile only via CSS) -->
@@ -1722,7 +1722,7 @@
 
 <!-- ══ FOOTER ══ -->
 <footer style="background:var(--bg2);border-top:1px solid var(--border);padding:14px 20px;text-align:center;font-size:11px;color:var(--text3);margin-bottom:56px">
-  <span>© 2026 TradeIQ · For entertainment purposes only</span>
+  <span>© 2026 Fantasy IQ · For entertainment purposes only</span>
   <span style="margin:0 8px">·</span>
   <button class="btn-link" style="font-size:11px" onclick="openModal('privacyModal')">Privacy Policy</button>
   <span style="margin:0 8px">·</span>
@@ -1738,27 +1738,27 @@
     </button>
     <button class="mob-tab" data-tab="analyzer" onclick="switchTab('analyzer')">
       <span class="mob-tab-icon">⚖️</span>
-      <span class="mob-tab-label">Trade</span>
+      <span class="mob-tab-label">Trade IQ</span>
     </button>
     <button class="mob-tab" data-tab="wire" onclick="switchTab('wire')">
       <span class="mob-tab-icon">📋</span>
-      <span class="mob-tab-label">Wire</span>
+      <span class="mob-tab-label">Waiver IQ</span>
     </button>
     <button class="mob-tab" data-tab="buysell" onclick="switchTab('buysell')">
       <span class="mob-tab-icon">📈</span>
-      <span class="mob-tab-label">Buy/Sell</span>
+      <span class="mob-tab-label">Value IQ</span>
     </button>
     <button class="mob-tab" data-tab="values" onclick="switchTab('values')">
       <span class="mob-tab-icon">📊</span>
-      <span class="mob-tab-label">Values</span>
+      <span class="mob-tab-label">Player IQ</span>
     </button>
     <button class="mob-tab" data-tab="draft" onclick="switchTab('draft')">
       <span class="mob-tab-icon">🎯</span>
-      <span class="mob-tab-label">Draft</span>
+      <span class="mob-tab-label">Draft IQ</span>
     </button>
     <button class="mob-tab" data-tab="roster" onclick="switchTab('roster')">
       <span class="mob-tab-icon">🏈</span>
-      <span class="mob-tab-label">My Team</span>
+      <span class="mob-tab-label">Team IQ</span>
     </button>
     <button class="mob-tab" data-tab="_settings" onclick="openMobSettings()">
       <span class="mob-tab-icon">⚙️</span>
@@ -1829,7 +1829,7 @@
   <div class="mo-box wide">
     <button class="mo-close" onclick="closeModal('sourcesModal')">✕</button>
     <div class="mo-ttl">📊 Ranking Sources</div>
-    <div class="mo-sub">TradeIQ averages values from all loaded sources — dynasty and redraft separately. More sources = more accurate consensus.</div>
+    <div class="mo-sub">Fantasy IQ averages values from all loaded sources — dynasty and redraft separately. More sources = more accurate consensus.</div>
 
     <!-- Active sources list -->
     <div class="src-list" id="sourcesList"></div>
@@ -1859,7 +1859,7 @@
   <div class="mo-box" style="max-width:400px">
     <button class="mo-close" onclick="closeModal('authModal')">✕</button>
     <div class="auth-hero">
-      <div class="logo-big"><em>Trade</em><span style="color:var(--text)">IQ</span></div>
+      <div class="logo-big"><em>Fantasy</em><span style="color:var(--text)">IQ</span></div>
       <div style="font-size:13px;color:var(--text2);margin-top:4px">Save your leagues, sync across devices &amp; unlock team analysis</div>
     </div>
     <!-- Tab switcher -->
@@ -1983,7 +1983,7 @@
     <div style="text-align:center;margin-bottom:16px">
       <div style="font-size:36px;margin-bottom:8px">📬</div>
       <div class="mo-ttl">Stay Ahead Every Week</div>
-      <div class="mo-sub">Get TradeIQ's weekly email — free for all registered users</div>
+      <div class="mo-sub">Get Fantasy IQ's weekly email — free for all registered users</div>
     </div>
 
     <div class="email-tier-row">
@@ -2026,12 +2026,12 @@
   <div class="mo-box" style="max-width:460px;text-align:center">
     <button class="mo-close" onclick="closeModal('proModal')">✕</button>
     <div style="font-size:32px;margin-bottom:10px">⚡</div>
-    <div style="font-size:20px;font-weight:800;margin-bottom:6px">TradeIQ Pro</div>
+    <div style="font-size:20px;font-weight:800;margin-bottom:6px">Fantasy IQ Pro</div>
     <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6" id="proModalFeatureText">This feature requires a Pro subscription.</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;text-align:left">
       <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Free</div>
-        <div style="font-size:12px;color:var(--text2);line-height:2">✅ Trade Analyzer<br>✅ Player Values<br>✅ Waiver Wire<br>✅ Basic Rankings</div>
+        <div style="font-size:12px;color:var(--text2);line-height:2">✅ Trade IQ<br>✅ Player IQ<br>✅ Waiver IQ<br>✅ Basic Rankings</div>
       </div>
       <div style="background:var(--primary-d);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:12px">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--primary-l);margin-bottom:8px">Pro ⚡</div>
@@ -2055,15 +2055,15 @@
       <p><strong style="color:var(--text)">1. What We Collect</strong><br>
       When you sign in with Google, we store your name, email address, and a unique account ID. If you connect a fantasy league, we store your league settings, roster information, and trade history. We do not collect payment information.</p>
       <p style="margin-top:12px"><strong style="color:var(--text)">2. How We Use It</strong><br>
-      Your data is used solely to provide TradeIQ features — syncing your settings across devices, saving connected leagues, and personalizing trade analysis. We do not sell your data to third parties. Ever.</p>
+      Your data is used solely to provide Fantasy IQ features — syncing your settings across devices, saving connected leagues, and personalizing trade analysis. We do not sell your data to third parties. Ever.</p>
       <p style="margin-top:12px"><strong style="color:var(--text)">3. Third-Party Services</strong><br>
-      TradeIQ uses Firebase (Google) for authentication and data storage, and the Sleeper API to fetch player and league data. We use Google Analytics to understand how the app is used in aggregate. These services have their own privacy policies.</p>
+      Fantasy IQ uses Firebase (Google) for authentication and data storage, and the Sleeper API to fetch player and league data. We use Google Analytics to understand how the app is used in aggregate. These services have their own privacy policies.</p>
       <p style="margin-top:12px"><strong style="color:var(--text)">4. Data Storage</strong><br>
       Your data is stored in Google Firebase (Firestore) with access restricted to your account only. League settings and preferences are also stored locally on your device via localStorage.</p>
       <p style="margin-top:12px"><strong style="color:var(--text)">5. Your Rights</strong><br>
       You can delete your account and all associated data at any time by contacting us. You can also use the app as a guest (no sign-in required) — guest data is stored only on your device.</p>
       <p style="margin-top:12px"><strong style="color:var(--text)">6. Cookies</strong><br>
-      TradeIQ does not use advertising cookies. We use localStorage for app functionality (caching rankings, saving settings). Firebase may set session cookies for authentication.</p>
+      Fantasy IQ does not use advertising cookies. We use localStorage for app functionality (caching rankings, saving settings). Firebase may set session cookies for authentication.</p>
       <p style="margin-top:12px"><strong style="color:var(--text)">7. Contact</strong><br>
       Questions? Email us at <a href="mailto:vestalagencyllc@gmail.com" style="color:var(--primary-l)">vestalagencyllc@gmail.com</a></p>
     </div>
@@ -3331,7 +3331,7 @@ function addSugToTrade(id) {
   if (!S.tradeA.find(x=>x.id===id)) S.tradeA.push(p);
   switchTab('analyzer');
   renderTrade();
-  showToast(`${p.full_name} added to Trade Analyzer (You Receive)`, 'ok');
+  showToast(`${p.full_name} added to Trade IQ (You Receive)`, 'ok');
 }
 function addSugPairToTrade(id1, id2) {
   [id1, id2].forEach(id => {
@@ -3340,7 +3340,7 @@ function addSugPairToTrade(id1, id2) {
   });
   switchTab('analyzer');
   renderTrade();
-  showToast('Players added to Trade Analyzer (You Receive)', 'ok');
+  showToast('Players added to Trade IQ (You Receive)', 'ok');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -3491,7 +3491,7 @@ function renderChips(arr, side) {
         <span title="Opportunity">O:${Math.round(b.opportunity)}</span>
         <span title="Physical">Ph:${Math.round(b.physical)}</span>
         <span title="Efficiency">E:${Math.round(b.efficiency)}</span>
-        ${p._engineScore!=null?`<span class="chip-eng-total" title="TradeIQ Score">TIQ:${p._engineScore}</span>`:''}
+        ${p._engineScore!=null?`<span class="chip-eng-total" title="Fantasy IQ Score">FIQ:${p._engineScore}</span>`:''}
       </div>`;
     })() : '';
     return `<div class="chip">
@@ -3971,7 +3971,7 @@ function sendToTrade(id) {
   if (!S.tradeB.find(x=>x.id===id)) S.tradeB.push(p);
   switchTab('analyzer');
   renderTrade();
-  showToast(`${p.full_name} added to Trade Analyzer (You Give)`, 'ok');
+  showToast(`${p.full_name} added to Trade IQ (You Give)`, 'ok');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -4118,10 +4118,10 @@ function updateModeChip() {
 // ═══════════════════════════════════════════════════════════
 const PRO_TABS    = new Set(['roster','league','buysell','draft']);
 const PRO_LABELS  = {
-  roster:  'My Team Analysis — see your full roster valuation, position grades, and personalized trade targets.',
-  league:  'League Analyzer — compare all teams, find the best trade partners, and track league-wide value.',
-  buysell: 'Buy/Sell/Hold Analysis — get AI-powered advice on which players to buy low, sell high, or hold.',
-  draft:   'Draft Simulator & Draft Wizard — practice rookie and redraft drafts with needs-based AI opponents.',
+  roster:  'Team IQ — see your full roster valuation, position grades, and personalized trade targets.',
+  league:  'League IQ — compare all teams, find the best trade partners, and track league-wide value.',
+  buysell: 'Value IQ — get AI-powered buy low, sell high, and hold advice for every player.',
+  draft:   'Draft IQ — practice rookie and redraft drafts with the AI-powered draft assistant and simulator.',
 };
 
 function requirePro(tabName) {
@@ -4363,7 +4363,7 @@ function trackEvent(name, params = {}) {
   } catch(e) {}
   // Also log to console in dev
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    console.log('[TradeIQ Analytics]', name, params);
+    console.log('[Fantasy IQ Analytics]', name, params);
   }
 }
 
@@ -4393,7 +4393,7 @@ const RANKING_SOURCES = [
   { key:'espn',name:'ESPN',                type:'csv',        dynasty:false, redraft:true,  color:'#ef4444' },
   { key:'fan', name:'Fantrax',             type:'csv',        dynasty:true,  redraft:true,  color:'#f97316' },
   { key:'cbs', name:'CBS Sports',          type:'csv',        dynasty:false, redraft:true,  color:'#6366f1' },
-  { key:'tiq', name:'TradeIQ Baseline',    type:'builtin',    dynasty:true,  redraft:true,  color:'#7c3aed' },
+  { key:'tiq', name:'Fantasy IQ Baseline', type:'builtin',    dynasty:true,  redraft:true,  color:'#7c3aed' },
 ];
 
 // S.sourceValues = { [key]: { [normalizedName]: { dv, rv, trend } } }
@@ -4761,20 +4761,20 @@ function showBookmarkletHelp(key) {
   modal.innerHTML = `<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:28px;max-width:520px;width:100%">
     <div style="font-size:18px;font-weight:800;margin-bottom:8px">🔖 ${src.name} Bookmarklet</div>
     <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6">
-      This bookmarklet scrapes ${src.name} rankings and imports them directly into TradeIQ — no CSV needed.
+      This bookmarklet scrapes ${src.name} rankings and imports them directly into Fantasy IQ — no CSV needed.
     </div>
     <div style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:14px;margin-bottom:16px">
       <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Step 1 — Add the bookmarklet</div>
       <div style="font-size:13px;color:var(--text2);margin-bottom:10px">Drag the button below to your Chrome bookmarks bar:</div>
-      <a href="${bm}" class="btn btn-p" style="display:inline-block;text-decoration:none;cursor:grab" ondragstart="void(0)">🔖 Import ${src.name} → TradeIQ</a>
+      <a href="${bm}" class="btn btn-p" style="display:inline-block;text-decoration:none;cursor:grab" ondragstart="void(0)">🔖 Import ${src.name} → Fantasy IQ</a>
       <div style="font-size:11px;color:var(--text3);margin-top:8px">Or right-click → Bookmark this link → choose Bookmarks Bar</div>
     </div>
     <div style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:14px;margin-bottom:20px">
       <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Step 2 — Use it</div>
       <ol style="font-size:13px;color:var(--text2);line-height:1.8;padding-left:18px">
         <li>Go to <a href="${src.bmUrl||'https://dynatyze.com/football'}" target="_blank" style="color:var(--primary-l)">${src.bmUrl||src.name}</a> (logged in)</li>
-        <li>Click the <strong>🔖 Import ${src.name} → TradeIQ</strong> bookmark</li>
-        <li>TradeIQ opens with the rankings auto-loaded ✅</li>
+        <li>Click the <strong>🔖 Import ${src.name} → Fantasy IQ</strong> bookmark</li>
+        <li>Fantasy IQ opens with the rankings auto-loaded ✅</li>
       </ol>
     </div>
     <button class="btn btn-ghost" onclick="document.getElementById('bmHelpModal').remove()">Close</button>
@@ -4924,7 +4924,7 @@ if(players.length<5){
     }
   });
 }
-if(players.length<5){alert('TradeIQ: Only found '+players.length+' players.\\nNavigate to '+SRC+' rankings page first, then click the bookmarklet.');return;}
+if(players.length<5){alert('Fantasy IQ: Only found '+players.length+' players.\\nNavigate to '+SRC+' rankings page first, then click the bookmarklet.');return;}
 players.sort(function(a,b){return a.rank-b.rank;});
 var csv='Rank,Name,Position\\n'+players.map(function(p,i){return (p.rank||i+1)+',"'+p.name.replace(/"/g,'')+'",'+p.pos;}).join('\\n');
 var b64;try{b64=btoa(unescape(encodeURIComponent(csv)));}catch(e){b64=btoa(csv);}
@@ -6077,7 +6077,7 @@ async function registerWithEmail() {
   try {
     await fbAuth.createUserWithEmailAndPassword(email, pass);
     closeModal('authModal');
-    showToast('Account created! Welcome to TradeIQ 🎉');
+    showToast('Account created! Welcome to Fantasy IQ 🎉');
   } catch(e) {
     errEl.textContent = e.code === 'auth/email-already-in-use' ? 'Email already in use — sign in instead.' :
                         e.code === 'auth/invalid-email'        ? 'Invalid email address.' :
@@ -8320,7 +8320,7 @@ function wireAnalyze(name) {
     if (!S.tradeA.find(x => x.id === p.id)) S.tradeA.push(p);
     switchTab('analyzer');
     renderTrade();
-    showToast(`${name} added to Trade Analyzer`);
+    showToast(`${name} added to Trade IQ`);
   } else {
     showToast('Player not found — try searching manually', 'err');
   }
@@ -9475,7 +9475,7 @@ function dsimExportRoster() {
 </script>
 
 <!-- ══ FLOATING AI CHAT ══ -->
-<button class="tiq-chat-btn" id="tiqChatBtn" onclick="toggleTiqChat()" title="Ask TradeIQ AI">💬</button>
+<button class="tiq-chat-btn" id="tiqChatBtn" onclick="toggleTiqChat()" title="Ask Fantasy IQ AI">💬</button>
 <div class="tiq-chat-panel" id="tiqChatPanel">
   <div class="tiq-chat-hdr">
     <div class="tiq-chat-hdr-title">
