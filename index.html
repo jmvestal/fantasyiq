@@ -2762,6 +2762,44 @@ const VALUE_DB = {
 // 2026 ROOKIES (just drafted, April 2026)
 // Values based on Justin Boone/Yahoo post-draft charts + consensus
 // ═══════════════════════════════════════════════════════════
+// RETIRED / INACTIVE PLAYERS — always excluded from every tab
+// Add any player who has officially retired or hasn't played in 2+ seasons
+// ═══════════════════════════════════════════════════════════
+const RETIRED_PLAYERS = new Set([
+  // QBs
+  'Tom Brady','Ben Roethlisberger','Philip Rivers','Eli Manning',
+  'Andrew Luck','Alex Smith','Nick Foles','Case Keenum',
+  'Ryan Fitzpatrick','Sam Bradford','Blaine Gabbert','Josh McCown',
+  'Colin Kaepernick','Tony Romo','Peyton Manning','Drew Brees',
+  'Matt Ryan','Carson Wentz','Jameis Winston',
+  // RBs
+  'Frank Gore','Adrian Peterson','Marshawn Lynch','Jamaal Charles',
+  'LeSean McCoy','Matt Forte','Arian Foster','Ray Rice',
+  'Darren McFadden','Jay Ajayi','Carlos Hyde','Latavius Murray',
+  'Devonta Freeman','Jordan Howard','Marlon Mack','Sony Michel',
+  'Rex Burkhead','Dion Lewis','Phillip Lindsay','LeGarrette Blount',
+  'Eddie Lacy','Chris Ivory','Dion Lewis','Devontae Booker',
+  'Todd Gurley','Isaiah Crowell','Doug Martin','Jonathan Stewart',
+  'DeMarco Murray','Giovani Bernard','James White','Danny Woodhead',
+  'Chris Thompson','Tevin Coleman','Bilal Powell','Duke Johnson',
+  // WRs
+  'Calvin Johnson','Larry Fitzgerald','Steve Smith Sr.','Torry Holt',
+  'T.Y. Hilton','DeSean Jackson','Emmanuel Sanders','Golden Tate',
+  'Randall Cobb','Jarvis Landry','Julio Jones','A.J. Green',
+  'JuJu Smith-Schuster','Odell Beckham Jr.','Dede Westbrook',
+  'Jamison Crowder','Cole Beasley','Robby Anderson','N\'Keal Harry',
+  'Marvin Jones Jr.','Kenny Stills','John Brown','Breshad Perriman',
+  'Michael Crabtree','Pierre Garcon','Donte Moncrief','Corey Coleman',
+  'Taylor Gabriel','Seth Roberts','Kelvin Benjamin','Cordarrelle Patterson',
+  'Eric Decker','Brandon Marshall','Demaryius Thomas','Andre Johnson',
+  'Dez Bryant','Jordy Nelson','A.J. Green','Percy Harvin',
+  'Victor Cruz','Anquan Boldin','Vincent Jackson','Reggie Wayne',
+  // TEs
+  'Rob Gronkowski','Jason Witten','Greg Olsen','Heath Miller',
+  'Antonio Gates','Tony Gonzalez','Jimmy Graham',
+]);
+
+// ═══════════════════════════════════════════════════════════
 const ROOKIES_2026 = [
   // QBs — KTC live values May 10 2026 (SF÷1.38 = 1QB baseline)
   {id:'r26-1',  full_name:'Fernando Mendoza',     position:'QB', team:'LV',  age:22, dynasty_val:4100, redraft_val:4200, rookie:true, trend:'up'},   // KTC SF:5671 — #1 pick
@@ -5699,7 +5737,7 @@ async function fetchDLFValues() {
 // Dynasty only — rv:0 so redraft values are never affected.
 // ═══════════════════════════════════════════════════════════
 const CUSTOM_BASE     = 'https://raw.githubusercontent.com/jmvestal/tradeiq/main/rankings/';
-const CUSTOM_CACHE_KEY = 'tradeiq_custom_v6';
+const CUSTOM_CACHE_KEY = 'tradeiq_custom_v7';
 const CUSTOM_TS_KEY    = 'tradeiq_custom_ts_v5';
 const CUSTOM_TTL       = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -6082,8 +6120,8 @@ function applyValueDB(p) {
 // FETCH SLEEPER PLAYERS
 // ═══════════════════════════════════════════════════════════
 async function fetchPlayers() {
-  const CACHE_KEY = 'tradeiq_sleeper_players_v4';
-  const CACHE_TTL = 12 * 60 * 60 * 1000; // 12 hours
+  const CACHE_KEY = 'tradeiq_sleeper_players_v5';
+  const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours (was 12 — shorter to catch retirements faster)
   // Try cache first
   try {
     const raw = localStorage.getItem(CACHE_KEY);
@@ -6107,6 +6145,9 @@ async function fetchPlayers() {
         p.active === true &&
         p.team &&
         p.status !== 'Inactive' &&
+        p.status !== 'Retired' &&
+        p.status !== 'Reserve/Retired' &&
+        !RETIRED_PLAYERS.has(p.full_name) &&
         (p.search_rank || 0) < 2500
       )
       .map(p => ({
@@ -6328,7 +6369,9 @@ async function init() {
   // not yet in Sleeper (unannounced signings, rookies pre-loaded, etc.)
   const sleeperNorms = new Set(sleeperPlayers.map(p => normName(p.full_name || '')));
   const freshRookies = ROOKIES_2026.filter(p => !sleeperNorms.has(normName(p.full_name || '')));
-  S.players = [...sleeperPlayers, ...freshRookies, ...PICKS];
+  // Final assembly — strip any retired player that slipped through any source
+  S.players = [...sleeperPlayers, ...freshRookies, ...PICKS]
+    .filter(p => !RETIRED_PLAYERS.has(p.full_name));
 
   // Mark fallback rookies
   FALLBACK_PLAYERS.forEach(p=>{ p.rookie = false; });
