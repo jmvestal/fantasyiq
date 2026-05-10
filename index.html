@@ -372,6 +372,15 @@
     .tiq-chip:hover{border-color:var(--primary);color:var(--primary-l);background:var(--primary-d)}
     .tiq-context-bar{padding:8px 12px;background:rgba(124,58,237,.1);border-bottom:1px solid rgba(124,58,237,.2);font-size:11px;color:var(--primary-l);display:flex;align-items:center;gap:6px}
     .tiq-context-bar strong{font-weight:700}
+    .scout-key-ind{font-size:10px;font-weight:700;cursor:pointer;padding:3px 8px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);white-space:nowrap;flex-shrink:0;transition:border-color .15s}
+    .scout-key-ind:hover{border-color:var(--primary)}
+    .scout-cfg-panel{padding:12px 14px;background:var(--bg);border-bottom:1px solid var(--border);font-size:11px;color:var(--text2)}
+    .scout-cfg-panel input{width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;margin:6px 0 8px}
+    .scout-cfg-panel input:focus{outline:none;border-color:var(--primary)}
+    .scout-cfg-btns{display:flex;gap:6px;align-items:center}
+    .scout-hdr-actions{display:flex;align-items:center;gap:5px}
+    .scout-hdr-actions button{background:none;border:none;color:var(--text2);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px}
+    .scout-hdr-actions button:hover{color:var(--text)}
     @media(max-width:640px){
       .tiq-chat-panel{position:fixed;left:0;right:0;bottom:0;width:100%;border-radius:20px 20px 0 0;height:72vh;max-height:72vh}
       .tiq-chat-btn{bottom:72px;right:12px}
@@ -8970,56 +8979,159 @@ function loadSampleDraft() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// TIQ AI CHAT — client-side trade/value assistant
-// Uses existing VALUE_DB + consensus data + current settings
+// SCOUT IQ — AI Chat powered by Claude API
+// Falls back to smart rule-based responses if no key set
 // ═══════════════════════════════════════════════════════════
-let _tiqFirstOpen = true;
-let _tiqChatLeague = null; // actively selected league for chat session
+let _tiqFirstOpen  = true;
+let _tiqChatLeague = null;
+let _scoutHistory  = [];   // [{role:'user'|'assistant', content:'...'}]
+let _scoutBusy     = false;
+const SCOUT_MAX_HIST = 10; // keep last 10 exchanges in memory
 
+// ── API key helpers ───────────────────────────────────────
+function scoutGetKey()   { return localStorage.getItem('scoutiq_apikey') || ''; }
+function scoutHasKey()   { return !!scoutGetKey(); }
+function scoutSaveKey(k) {
+  if (k) localStorage.setItem('scoutiq_apikey', k.trim());
+  else   localStorage.removeItem('scoutiq_apikey');
+}
+
+function toggleScoutConfig() {
+  const el = document.getElementById('scoutConfigPanel');
+  if (!el) return;
+  const opening = el.style.display === 'none' || !el.style.display;
+  el.style.display = opening ? 'block' : 'none';
+  if (opening) {
+    const inp = document.getElementById('scoutKeyInput');
+    if (inp) { inp.value = scoutGetKey(); inp.focus(); }
+  }
+}
+
+function saveScoutKey() {
+  const k = (document.getElementById('scoutKeyInput')?.value || '').trim();
+  scoutSaveKey(k);
+  document.getElementById('scoutConfigPanel').style.display = 'none';
+  _scoutHistory = [];
+  _updateScoutKeyIndicator();
+  if (k) addChatMsg('✅ **Claude API key saved!** I\'m now running on full AI — ask me anything about your fantasy team, trades, strategy, or the NFL.', 'ai');
+  else   addChatMsg('Key removed. Running in basic mode — add a key anytime for full AI conversations.', 'ai');
+}
+
+function clearScoutHistory() {
+  _scoutHistory = [];
+  const msgs = document.getElementById('tiqChatMsgs');
+  if (msgs) msgs.innerHTML = '<div class="tiq-msg ai">Conversation cleared. What can I help you with?</div>';
+  document.getElementById('scoutConfigPanel').style.display = 'none';
+  showChatChips([
+    { label: '🟢 Buy targets',  text: 'Who should I buy right now?' },
+    { label: '🔴 Sell high',    text: 'Who should I sell?' },
+    { label: '🔥 Top WRs',      text: 'Top 10 WRs right now' },
+    { label: '📋 Rate my team', text: 'Rate my team and find my weakest spot' }
+  ]);
+}
+
+function _updateScoutKeyIndicator() {
+  const el = document.getElementById('scoutKeyIndicator');
+  if (!el) return;
+  const has = scoutHasKey();
+  el.textContent = has ? '✅ AI on' : '🔑 Add key';
+  el.style.color  = has ? 'var(--success)' : 'var(--text3)';
+  el.title        = has ? 'Claude AI active — click to manage key' : 'Add API key for full AI responses';
+}
+
+// ── System prompt: inject all player data + settings ─────
+function buildScoutSystemPrompt() {
+  const { mode, qb, scoring, size, te } = S.settings;
+  const modeLabel = mode === 'dynasty' ? 'Dynasty' : 'Redraft';
+  const qbLabel   = qb === 'sf' ? 'Superflex' : qb === '2qb' ? '2-QB' : '1-QB';
+
+  // Top 150 players sorted by current value in user's format
+  const topPlayers = (S.players || [])
+    .filter(p => !['K','DEF','DST','PICK'].includes(p.position))
+    .map(p => ({ ...p, _v: calcValue(p) }))
+    .sort((a, b) => b._v - a._v)
+    .slice(0, 150);
+
+  const playerBlock = topPlayers.map(p =>
+    `${p.full_name}|${p.position}|${p.team||'FA'}|${p.age||'?'}yo|${p._v}|${p.trend||'flat'}${p.rookie?' ROOK':''}`
+  ).join('\n');
+
+  // Buy/sell signals from app logic
+  const { buys, sells } = _tiqGetBuySells();
+  const buyNames  = buys.slice(0, 15).map(p => `${p.full_name}(${p.position})`).join(', ');
+  const sellNames = sells.slice(0, 15).map(p => `${p.full_name}(${p.position})`).join(', ');
+
+  // User's connected roster (if any)
+  let rosterBlock = '';
+  const roster = S.roster || [];
+  if (roster.length) {
+    rosterBlock = `\n\nUSER'S ROSTER (${roster.length} players):\n` +
+      roster.map(p => `${p.full_name}(${p.position}/${p.team||'FA'},${calcValue(p)})`).join(', ');
+  }
+
+  // League context
+  const leagueLine = _tiqChatLeague
+    ? `\nCONNECTED LEAGUE: ${_tiqChatLeague.leagueName} | ${_tiqChatLeague.totalTeams||size} teams` : '';
+
+  return `You are Scout IQ, an expert AI fantasy football analyst embedded in the Fantasy IQ web app. You give sharp, specific, actionable fantasy advice. You have deep knowledge of NFL players, dynasty and redraft strategy, trade evaluation, and roster construction.
+
+CURRENT USER SETTINGS: ${size}-team | ${modeLabel} | ${qbLabel} | ${scoring.toUpperCase()}${te==='on'?' | TE Premium':''}${leagueLine}
+SEASON CONTEXT: 2026 NFL offseason/preseason
+
+PLAYER DATABASE — top 150 by value in user's format (name|pos|team|age|value|trend):
+${playerBlock}
+
+APP BUY-LOW SIGNALS: ${buyNames||'none'}
+APP SELL-HIGH SIGNALS: ${sellNames||'none'}${rosterBlock}
+
+RESPONSE STYLE:
+- Lead with the answer, then the reasoning. Be direct and confident.
+- Use **bold** for player names and key verdicts (win/lose, buy/sell, etc.).
+- Trade evals: state who wins, the % value edge, and a clear recommendation.
+- Player lookups: value, trend, position context, and a buy/sell/hold take.
+- Lists: use numbered or bulleted format when ranking multiple players.
+- Length: under 200 words unless detailed analysis is explicitly requested.
+- You have full NFL knowledge beyond this player list — use it for context, injuries, depth charts, and strategy questions.
+- Keep the tone conversational and confident, like a sharp fantasy analyst talking to a league-mate.`;
+}
+
+// ── Toggle chat panel ────────────────────────────────────
 function toggleTiqChat() {
   const panel = document.getElementById('tiqChatPanel');
   const isOpening = !panel.classList.contains('open');
   panel.classList.toggle('open');
   if (isOpening) {
-    setTimeout(() => document.getElementById('tiqChatInput').focus(), 100);
+    setTimeout(() => document.getElementById('tiqChatInput')?.focus(), 120);
     scrollChatToBottom();
-    if (_tiqFirstOpen) {
-      _tiqFirstOpen = false;
-      _tiqGreetUser();
-    }
+    _updateScoutKeyIndicator();
+    if (_tiqFirstOpen) { _tiqFirstOpen = false; _tiqGreetUser(); }
+  } else {
+    document.getElementById('scoutConfigPanel').style.display = 'none';
   }
 }
 
 function _tiqGreetUser() {
   const leagues = S.connectedLeagues || [];
   const active  = S.connectedLeague;
-
-  // Update context bar
-  if (active) {
-    _tiqChatLeague = active;
-    _tiqSetContextBar(active.leagueName);
-  }
+  if (active) { _tiqChatLeague = active; _tiqSetContextBar(active.leagueName); }
 
   if (leagues.length > 1) {
-    // Multiple leagues — let user pick
     const names = leagues.map(l => l.leagueName || `League ${l.leagueId}`).slice(0, 5);
-    addChatMsg(`Hey! 👋 I see you have **${leagues.length} leagues** connected. Which one do you want help with?`, 'ai');
+    addChatMsg(`Hey! 👋 You have **${leagues.length} leagues** connected. Which one do you want help with?`, 'ai');
     showChatChips([
       ...names.map(n => ({ label: n, text: `use league: ${n}` })),
       { label: '🌐 General advice', text: 'general' }
     ]);
   } else if (active) {
-    // Single active league
-    const lName = active.leagueName || 'your league';
-    addChatMsg(`Hey! 👋 I'm connected to **${lName}**. Ask me about trades, buy/sell targets, or your roster — I'll use your league settings.`, 'ai');
+    addChatMsg(`Hey! 👋 I'm locked into **${active.leagueName||'your league'}**. Ask me anything — trades, buy/sell, roster analysis, or general fantasy strategy.`, 'ai');
     showChatChips([
-      { label: '🟢 Buy targets', text: 'Who should I buy?' },
-      { label: '🔴 Sell targets', text: 'Who should I sell?' },
-      { label: '📋 Rate my team', text: 'Rate my team' },
-      { label: '📊 Top WRs', text: 'Top WRs' }
+      { label: '🟢 Who to buy',   text: 'Who should I buy right now?' },
+      { label: '🔴 Who to sell',  text: 'Who should I sell?' },
+      { label: '📋 Rate my team', text: 'Rate my team and find my weakest spot' },
+      { label: '🔥 Top WRs',      text: 'Top 10 WRs right now' }
     ]);
   }
-  // else: default greeting already in HTML
+  // else: default greeting in HTML
 }
 
 function _tiqSetContextBar(leagueName) {
@@ -9032,9 +9144,9 @@ function _tiqSetContextBar(leagueName) {
 }
 
 function showChatChips(chips) {
-  const container = document.getElementById('tiqChatChips');
-  if (!container) return;
-  container.innerHTML = chips.map(c =>
+  const el = document.getElementById('tiqChatChips');
+  if (!el) return;
+  el.innerHTML = chips.map(c =>
     `<button class="tiq-chip" onclick="useChatChip(${JSON.stringify(c.text)})">${c.label}</button>`
   ).join('');
 }
@@ -9043,13 +9155,6 @@ function useChatChip(text) {
   const inp = document.getElementById('tiqChatInput');
   if (inp) inp.value = text;
   sendTiqChat();
-  // Reset chips to defaults after use
-  setTimeout(() => showChatChips([
-    { label: '🟢 Buy targets', text: 'Who should I buy?' },
-    { label: '🔴 Sell targets', text: 'Who should I sell?' },
-    { label: '📊 Top WRs', text: 'Top WRs' },
-    { label: '📊 Top RBs', text: 'Top RBs' }
-  ]), 800);
 }
 
 function scrollChatToBottom() {
@@ -9062,28 +9167,114 @@ function addChatMsg(text, role) {
   const div = document.createElement('div');
   div.className = `tiq-msg ${role}`;
   div.innerHTML = text
-    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
-    .replace(/_(.*?)_/g,'<em>$1</em>')
-    .replace(/\n/g,'<br>');
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/_(.*?)_/g, '<em>$1</em>')
+    .replace(/\n/g, '<br>');
   el.appendChild(div);
   scrollChatToBottom();
   return div;
 }
 
-function sendTiqChat() {
+// ── Main send — async, AI-powered ────────────────────────
+async function sendTiqChat() {
+  if (_scoutBusy) return;
   const inp = document.getElementById('tiqChatInput');
-  const msg = inp.value.trim();
+  const msg = (inp.value || '').trim();
   if (!msg) return;
-  inp.value = '';
-  addChatMsg(msg, 'user');
+  inp.value    = '';
+  _scoutBusy   = true;
+  inp.disabled = true;
 
-  // Brief typing indicator
-  const typing = addChatMsg('…', 'ai typing');
-  setTimeout(() => {
+  // League-switch commands handled locally (no API round-trip)
+  const lc = msg.toLowerCase();
+  if (lc.startsWith('use league:') || lc === 'general') {
+    const reply = tiqChatReply(msg);
+    addChatMsg(msg, 'user');
+    addChatMsg(reply, 'ai');
+    _scoutBusy = false; inp.disabled = false; inp.focus();
+    return;
+  }
+
+  addChatMsg(msg, 'user');
+  _scoutHistory.push({ role: 'user', content: msg });
+
+  const typing = addChatMsg('Scout IQ is thinking…', 'ai typing');
+  const apiKey = scoutGetKey();
+
+  if (apiKey) {
+    // ── Claude API ────────────────────────────────────────
+    try {
+      const messages = _scoutHistory.slice(-(SCOUT_MAX_HIST * 2));
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5',
+          max_tokens: 600,
+          system: buildScoutSystemPrompt(),
+          messages
+        })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error?.message || `HTTP ${res.status}`);
+      }
+
+      const data  = await res.json();
+      const reply = data.content?.[0]?.text || 'I had trouble responding — please try again.';
+      typing.remove();
+      addChatMsg(reply, 'ai');
+      _scoutHistory.push({ role: 'assistant', content: reply });
+
+      // Trim history to stay lean
+      if (_scoutHistory.length > SCOUT_MAX_HIST * 2)
+        _scoutHistory = _scoutHistory.slice(-(SCOUT_MAX_HIST * 2));
+
+      // Contextual follow-up chips
+      showChatChips([
+        { label: '↩️ Follow up',    text: 'Can you elaborate on that?' },
+        { label: '📊 More detail',  text: 'Give me more detail on this' },
+        { label: '🟢 Buy targets',  text: 'Who should I buy right now?' },
+        { label: '🔴 Sell targets', text: 'Who should I sell?' }
+      ]);
+
+    } catch (err) {
+      typing.remove();
+      const isAuth = /401|auth|key|invalid/i.test(err.message);
+      addChatMsg(
+        isAuth ? '⚠️ **Invalid API key.** Click **🔑 Add key** above to update it.'
+               : `⚠️ AI unavailable (${err.message}) — using basic mode.`,
+        'ai'
+      );
+      // Degrade to rule-based
+      const fallback = tiqChatReply(msg);
+      addChatMsg(fallback, 'ai');
+      _scoutHistory.push({ role: 'assistant', content: fallback });
+    }
+
+  } else {
+    // ── Rule-based fallback ───────────────────────────────
+    await new Promise(r => setTimeout(r, 360));
     const reply = tiqChatReply(msg);
     typing.remove();
     addChatMsg(reply, 'ai');
-  }, 380);
+    _scoutHistory.push({ role: 'assistant', content: reply });
+
+    // One-time nudge to add key
+    if (_scoutHistory.length === 2) {
+      setTimeout(() =>
+        addChatMsg('💡 _For full AI conversations and deeper analysis, add a free Claude API key — click **🔑 Add key** in the header above._', 'ai'),
+      700);
+    }
+  }
+
+  _scoutBusy = false; inp.disabled = false; inp.focus();
 }
 
 // ── Internal: compute buy/sell lists without DOM ──────────
@@ -9917,22 +10108,37 @@ function dsimExportRoster() {
       <div class="tiq-chat-online"></div>
       <em>Scout</em><span style="color:var(--text)">IQ</span>
     </div>
-    <button onclick="toggleTiqChat()">✕</button>
+    <div class="scout-hdr-actions">
+      <button id="scoutKeyIndicator" class="scout-key-ind" onclick="toggleScoutConfig()">🔑 Add key</button>
+      <button onclick="clearScoutHistory()" title="Clear conversation" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:15px;line-height:1;padding:2px 3px">🗑</button>
+      <button onclick="toggleTiqChat()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px;line-height:1;padding:2px 3px">✕</button>
+    </div>
+  </div>
+  <!-- API Key Config Panel -->
+  <div id="scoutConfigPanel" class="scout-cfg-panel" style="display:none">
+    <div style="font-weight:700;margin-bottom:3px;font-size:12px">🔑 Claude API Key</div>
+    <div style="color:var(--text3);font-size:10px;line-height:1.5;margin-bottom:2px">Enables full AI conversations with memory. Get a free key at <a href="https://console.anthropic.com" target="_blank" style="color:var(--primary-l)">console.anthropic.com</a> — costs ~$0.001 per chat (Haiku model).</div>
+    <input id="scoutKeyInput" type="password" placeholder="sk-ant-api03-…" autocomplete="off" onkeydown="if(event.key==='Enter')saveScoutKey()">
+    <div class="scout-cfg-btns">
+      <button class="btn btn-p btn-xs" onclick="saveScoutKey()">Save Key</button>
+      <button class="btn btn-xs" onclick="document.getElementById('scoutKeyInput').value='';scoutSaveKey('');saveScoutKey()">Remove</button>
+      <span style="font-size:10px;color:var(--text3);margin-left:auto">Stored in your browser only</span>
+    </div>
   </div>
   <div id="tiqContextBar" style="display:none" class="tiq-context-bar">
     🏈 <span id="tiqContextLabel"></span>
   </div>
   <div class="tiq-chat-msgs" id="tiqChatMsgs">
-    <div class="tiq-msg ai">Hey, I'm Scout IQ — your fantasy football analyst. Ask me about player values, trades, buy/sell targets, or your roster. I'll answer based on your league settings.<br><br>Try: <em style="color:var(--primary-l)">"Who should I sell in dynasty?"</em></div>
+    <div class="tiq-msg ai">Hey, I'm Scout IQ — your fantasy football analyst. I can go deep on trades, player values, buy/sell targets, roster construction, and general NFL strategy.<br><br>Add a <strong>Claude API key</strong> (🔑 above) for full AI conversations. Or just ask away — I'll do my best either way.<br><br>Try: <em style="color:var(--primary-l)">"Should I trade Ja'Marr Chase for two young WRs?"</em></div>
   </div>
   <div class="tiq-chat-chips" id="tiqChatChips">
-    <button class="tiq-chip" onclick="useChatChip('Who should I buy?')">🟢 Buy targets</button>
+    <button class="tiq-chip" onclick="useChatChip('Who should I buy right now?')">🟢 Buy targets</button>
     <button class="tiq-chip" onclick="useChatChip('Who should I sell?')">🔴 Sell high</button>
-    <button class="tiq-chip" onclick="useChatChip('Top WRs')">Top WRs</button>
-    <button class="tiq-chip" onclick="useChatChip('Top RBs')">Top RBs</button>
+    <button class="tiq-chip" onclick="useChatChip('Top 10 WRs right now')">🔥 Top WRs</button>
+    <button class="tiq-chip" onclick="useChatChip('Rate my team and find my weakest spot')">📋 Rate team</button>
   </div>
   <div class="tiq-chat-footer">
-    <input id="tiqChatInput" placeholder="Ask about a trade, player, or roster…" onkeydown="if(event.key==='Enter')sendTiqChat()" maxlength="200">
+    <input id="tiqChatInput" placeholder="Ask about trades, players, strategy…" onkeydown="if(event.key==='Enter')sendTiqChat()" maxlength="400">
     <button onclick="sendTiqChat()">↑</button>
   </div>
 </div>
