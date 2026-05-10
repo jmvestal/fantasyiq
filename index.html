@@ -97,8 +97,14 @@
     /* ── TRADE LAYOUT ───────────────────── */
     .trade-cols{display:grid;grid-template-columns:1fr 120px 1fr;gap:14px;align-items:start}
     .trade-cols.two-col{grid-template-columns:1fr 1fr}
-    /* You Give on left, You Receive on right */
+    /* Desktop: You Give (left) | Grade (center) | You Receive (right) */
     #tradeCardA{order:3} #tradeMid{order:2} #tradeCardB{order:1}
+    /* Mobile: You Give (top) → You Receive (second) → Grade/Analyze (bottom) */
+    @media(max-width:960px){
+      #tradeCardB{order:1}
+      #tradeCardA{order:2}
+      #tradeMid{order:3}
+    }
     .trade-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
     .trade-card-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
     .trade-card-ttl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
@@ -115,12 +121,13 @@
     .dd-item:last-child{border-bottom:none}
     .dd-item:hover{background:var(--bg3)}
     .dd-none{padding:12px;font-size:13px;color:var(--text3);text-align:center}
-    /* Mobile inline suggestions — flow with page instead of floating */
-    @media(max-width:768px){
-      .dd{position:static;box-shadow:none;border-radius:0 0 9px 9px;border-top:none;max-height:none;margin-top:-1px}
-      .srch.has-results{border-radius:8px 8px 0 0;border-bottom-color:transparent}
-      .dd-item{padding:11px 12px}
-      .dd-item:active{background:var(--bg3)}
+    /* Touch devices: inline suggestions flow below input (no floating overlay) */
+    @media(max-width:960px){
+      .dd{position:static;box-shadow:none;border-radius:0 0 9px 9px;border-top:none;max-height:none;margin-top:0}
+      .srch.has-results{border-radius:8px 8px 0 0;border-color:var(--primary)}
+      .dd.open{border:1px solid var(--primary);border-top:none;background:var(--bg3)}
+      .dd-item{padding:13px 12px;border-bottom:1px solid var(--border)}
+      .dd-item:active,.dd-item:hover{background:var(--bg2)}
     }
 
     /* ── POSITION BADGES ────────────────── */
@@ -3005,18 +3012,22 @@ function buildSearch(inputId, ddId, onSelect, excludeFn) {
   const dd = document.getElementById(ddId);
   if (!input || !dd) return;
 
-  const isMobile = () => window.innerWidth <= 768;
+  const isTouchLayout = () => window.innerWidth <= 960;
 
   const closeDd = () => {
     dd.classList.remove('open');
     input.classList.remove('has-results');
   };
 
+  // Prevent blur from firing when user taps/clicks a suggestion (works on both iOS and desktop)
+  dd.addEventListener('mousedown', e => e.preventDefault());
+  dd.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
+
   input.addEventListener('input', () => {
     const q = input.value.trim().toLowerCase();
     if (q.length < 1) { closeDd(); return; }
 
-    const limit = isMobile() ? 10 : 16;
+    const limit = isTouchLayout() ? 10 : 16;
     const results = S.players
       .filter(p => !excludeFn || !excludeFn(p))
       .filter(p => p.full_name.toLowerCase().includes(q) || (p.team||'').toLowerCase().includes(q))
@@ -3039,11 +3050,16 @@ function buildSearch(inputId, ddId, onSelect, excludeFn) {
       }).join('');
     }
     dd.classList.add('open');
-    if (isMobile()) input.classList.add('has-results');
+    if (isTouchLayout()) {
+      input.classList.add('has-results');
+      // Scroll the suggestion list into view (iOS keyboard pushes content up)
+      requestAnimationFrame(() => dd.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+    }
   });
 
   input.addEventListener('blur', () => setTimeout(() => {
-    if (!isMobile()) closeDd();
+    // On touch layouts, blur fires before tap registers — let touchstart handler close instead
+    if (!isTouchLayout()) closeDd();
   }, 200));
   input.addEventListener('keydown', e => { if (e.key === 'Escape') { closeDd(); input.blur(); } });
 }
@@ -5954,9 +5970,9 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
 
-  // Mobile: tap outside open inline suggestion list to close it
+  // Touch layout: tap outside open inline suggestion list to close it
   document.addEventListener('touchstart', e => {
-    if (window.innerWidth > 768) return;
+    if (window.innerWidth > 960) return;
     document.querySelectorAll('.dd.open').forEach(dd => {
       const wrap = dd.closest('.srch-wrap');
       if (wrap && !wrap.contains(e.target)) {
