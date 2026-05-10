@@ -885,6 +885,27 @@
     .pc-stats-tbl td{text-align:right;padding:5px 5px;color:var(--text);white-space:nowrap}
     .pc-stats-tbl td:first-child{text-align:left;font-weight:700;color:var(--text2)}
     .pc-stats-tbl tr:nth-child(odd) td{background:rgba(255,255,255,.02)}
+    .pc-stats-tbl tr.pc-yr-hi td{background:rgba(124,58,237,.09)!important;border-top:1px solid rgba(124,58,237,.2)}
+    .pc-stats-tbl td.pc-ppg{color:var(--primary-l);font-weight:700}
+    /* Stat tabs */
+    .pc-stat-nav{display:flex;gap:0;margin:10px 0 0;border-bottom:2px solid var(--border)}
+    .pc-stab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;padding:7px 13px;font-size:12px;font-weight:700;color:var(--text3);cursor:pointer;transition:color .12s,border-color .12s;white-space:nowrap}
+    .pc-stab:hover{color:var(--text)}
+    .pc-stab.on{color:var(--primary-l);border-bottom-color:var(--primary-l)}
+    .pc-stats-panel{padding-top:12px;min-height:60px;overflow-x:auto}
+    /* Game log */
+    .pc-log-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px}
+    .pc-log-yrs{display:flex;gap:5px}
+    .pc-log-yr{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--text3);cursor:pointer;transition:all .1s}
+    .pc-log-yr:hover{border-color:var(--primary);color:var(--primary-l)}
+    .pc-log-yr.on{background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.4);color:var(--primary-l)}
+    /* Projections */
+    .pc-proj-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+    .pc-proj-ttl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+    .pc-proj-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .pc-proj-stat{text-align:center;padding:9px 4px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)}
+    .pc-proj-stat-val{font-size:20px;font-weight:900;color:var(--primary-l);line-height:1.1}
+    .pc-proj-stat-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text3);margin-top:3px}
     .pc-signal{padding:9px 12px;border-radius:8px;font-size:12px;margin-bottom:4px}
     .pc-signal.buy{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);color:#34d399}
     .pc-signal.sell{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);color:#f87171}
@@ -10466,32 +10487,19 @@ function showPlayerCard(name) {
     }
 
     // ── Show modal ──
-    const pcStats   = document.getElementById('pcStats');
     const pcOverlay = document.getElementById('pcOverlay');
     const pcModal   = document.getElementById('pcModal');
     if (!pcOverlay || !pcModal) { console.error('showPlayerCard: modal elements missing'); return; }
-    if (pcStats) pcStats.innerHTML =
-      '<div style="color:var(--text3);font-size:12px;padding:4px 0">Loading stats…</div>';
     pcOverlay.style.display = 'block';
     pcModal.style.display   = 'flex';
     document.body.style.overflow = 'hidden';
 
-    // ── Fetch season stats ──
-    if (slId) {
-      fetchPCStats(String(slId), p.position || '').then(html => {
-        const el = document.getElementById('pcStats');
-        if (el) el.innerHTML = html;
-      });
-    } else if (p.rookie) {
-      if (pcStats) pcStats.innerHTML =
-        '<div style="color:var(--text3);font-size:12px;padding:4px 0">2026 rookie — no NFL stats yet 🌱</div>';
-    } else if (p.position === 'PICK') {
-      if (pcStats) pcStats.innerHTML =
-        '<div style="color:var(--text3);font-size:12px;padding:4px 0">Draft pick — no player stats</div>';
-    } else {
-      if (pcStats) pcStats.innerHTML =
-        '<div style="color:var(--text3);font-size:12px;padding:4px 0">Stats unavailable</div>';
-    }
+    // ── Store player context for tab system, reset to Season tab ──
+    window._pcPlayer = { slId, pos: p.position || '', pname, isRookie: !!p.rookie, isPick: p.position === 'PICK', _data: {} };
+    // Reset tab buttons
+    document.querySelectorAll('.pc-stab').forEach((b, i) => b.classList.toggle('on', i === 0));
+    // Load season stats tab
+    pcStatsTab('season', null);
 
   } catch(err) {
     console.error('showPlayerCard error:', err.message, err.stack);
@@ -10499,14 +10507,64 @@ function showPlayerCard(name) {
   }
 }
 
-async function fetchPCStats(slId, position) {
-  const pos      = (position || '').toUpperCase();
-  const seasons  = [2025, 2024, 2023];
-  const scoring  = (typeof S !== 'undefined' && S.settings) ? S.settings.scoring : 'ppr';
-  const ptsKey   = scoring === 'std' ? 'pts_std' : scoring === 'half' ? 'pts_half_ppr' : 'pts_ppr';
-  const rows     = [];
+// ── Tab switcher ─────────────────────────────────────────────
+function pcStatsTab(tab, btn) {
+  document.querySelectorAll('.pc-stab').forEach(b => b.classList.remove('on'));
+  if (btn) {
+    btn.classList.add('on');
+  } else {
+    // find by index
+    const tabs = document.querySelectorAll('.pc-stab');
+    const idx  = ['season','log','proj'].indexOf(tab);
+    if (tabs[idx]) tabs[idx].classList.add('on');
+  }
+  const panel = document.getElementById('pcStats');
+  if (!panel || !window._pcPlayer) return;
+  const pl  = window._pcPlayer;
+  const key = '_' + tab;
 
-  await Promise.all(seasons.map(async yr => {
+  // Return cached render
+  if (pl._data[key]) { panel.innerHTML = pl._data[key]; return; }
+
+  // Special cases — no API needed
+  if (pl.isPick) {
+    const msg = '<div style="color:var(--text3);font-size:12px;padding:10px 0">Draft pick — no player stats</div>';
+    panel.innerHTML = pl._data[key] = msg; return;
+  }
+  if (pl.isRookie && tab !== 'proj') {
+    const msg = '<div style="color:var(--text3);font-size:12px;padding:10px 0">2026 rookie — no NFL stats yet 🌱</div>';
+    panel.innerHTML = pl._data[key] = msg; return;
+  }
+  if (!pl.slId) {
+    const msg = '<div style="color:var(--text3);font-size:12px;padding:10px 0">Stats unavailable — no player ID</div>';
+    panel.innerHTML = pl._data[key] = msg; return;
+  }
+
+  panel.innerHTML = '<div style="padding:16px 0;text-align:center;color:var(--text3);font-size:12px"><span class="spin" style="display:inline-block;width:14px;height:14px;border-width:2px;vertical-align:middle;margin-right:6px"></span>Loading…</div>';
+
+  let promise;
+  if (tab === 'season') promise = fetchPCStats(String(pl.slId), pl.pos);
+  else if (tab === 'log')    promise = fetchPCGameLog(String(pl.slId), pl.pos, 2025);
+  else if (tab === 'proj')   promise = fetchPCProjections(String(pl.slId), pl.pos);
+
+  if (promise) promise.then(html => {
+    pl._data[key] = html;
+    const p2 = document.getElementById('pcStats');
+    if (p2) p2.innerHTML = html;
+  }).catch(() => {
+    const p2 = document.getElementById('pcStats');
+    if (p2) p2.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:10px 0">Data unavailable</div>';
+  });
+}
+
+// ── Season stats (3-year table) ───────────────────────────────
+async function fetchPCStats(slId, position) {
+  const pos    = (position || '').toUpperCase();
+  const scoring = (S?.settings?.scoring) || 'ppr';
+  const ptsKey  = scoring === 'std' ? 'pts_std' : scoring === 'half' ? 'pts_half_ppr' : 'pts_ppr';
+  const rows    = [];
+
+  await Promise.all([2025, 2024, 2023].map(async yr => {
     try {
       const r = await fetch(
         `https://api.sleeper.app/v1/stats/nfl/player/${slId}?season_type=regular&season=${yr}&grouping=season`,
@@ -10520,52 +10578,226 @@ async function fetchPCStats(slId, position) {
   }));
 
   rows.sort((a, b) => b.yr - a.yr);
+  if (!rows.length) return '<div style="color:var(--text3);font-size:12px;padding:10px 0">No stats found — may be a first-year player or rookie</div>';
 
-  if (!rows.length) return '<div style="color:var(--text3);font-size:12px;padding:4px 0">No stats found — may be a first-year player</div>';
-
-  const n = v => (v || 0);
-  const f = v => parseFloat(v || 0).toFixed(1);
+  const n   = v => v || 0;
+  const f   = v => parseFloat(v || 0).toFixed(1);
+  const ppg = (pts, gp) => gp > 0 ? (pts / gp).toFixed(1) : '—';
+  const hi  = yr => yr === 2025 ? ' class="pc-yr-hi"' : '';
 
   let tbl = '';
   if (pos === 'QB') {
-    tbl = `<table class="pc-stats-tbl">
-      <tr><th>Year</th><th>G</th><th>Pts</th><th>Pass Yds</th><th>Pass TDs</th><th>INTs</th><th>Rush Yds</th><th>Rush TDs</th></tr>`;
-    for (const { yr, d } of rows) tbl += `<tr>
-      <td>${yr}</td><td>${n(d.gp)}</td><td>${f(d[ptsKey])}</td>
-      <td>${Math.round(n(d.pass_yd))}</td><td>${n(d.pass_td)}</td>
-      <td>${n(d.pass_int)}</td><td>${Math.round(n(d.rush_yd))}</td><td>${n(d.rush_td)}</td></tr>`;
-  } else if (pos === 'RB') {
-    tbl = `<table class="pc-stats-tbl">
-      <tr><th>Year</th><th>G</th><th>Pts</th><th>Rush Yds</th><th>Rush TDs</th><th>Rec</th><th>Rec Yds</th><th>Rec TDs</th></tr>`;
-    for (const { yr, d } of rows) tbl += `<tr>
-      <td>${yr}</td><td>${n(d.gp)}</td><td>${f(d[ptsKey])}</td>
-      <td>${Math.round(n(d.rush_yd))}</td><td>${n(d.rush_td)}</td>
-      <td>${n(d.rec)}</td><td>${Math.round(n(d.rec_yd))}</td><td>${n(d.rec_td)}</td></tr>`;
-  } else if (pos === 'WR' || pos === 'TE') {
-    tbl = `<table class="pc-stats-tbl">
-      <tr><th>Year</th><th>G</th><th>Pts</th><th>Rec</th><th>Targets</th><th>Rec Yds</th><th>Rec TDs</th><th>Y/R</th></tr>`;
+    tbl = `<table class="pc-stats-tbl"><tr><th>Year</th><th>G</th><th>Pts</th><th>Pts/G</th><th>Pass Yds</th><th>TDs</th><th>INTs</th><th>Rush Yds</th></tr>`;
     for (const { yr, d } of rows) {
+      const pts = n(d[ptsKey]), gp = n(d.gp);
+      tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td>${f(pts)}</td><td class="pc-ppg">${ppg(pts,gp)}</td><td>${Math.round(n(d.pass_yd))}</td><td>${n(d.pass_td)}</td><td>${n(d.pass_int)}</td><td>${Math.round(n(d.rush_yd))}</td></tr>`;
+    }
+  } else if (pos === 'RB') {
+    tbl = `<table class="pc-stats-tbl"><tr><th>Year</th><th>G</th><th>Pts</th><th>Pts/G</th><th>Att</th><th>Rush Yds</th><th>Rush TDs</th><th>Rec</th><th>Rec Yds</th></tr>`;
+    for (const { yr, d } of rows) {
+      const pts = n(d[ptsKey]), gp = n(d.gp);
+      tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td>${f(pts)}</td><td class="pc-ppg">${ppg(pts,gp)}</td><td>${n(d.rush_att)}</td><td>${Math.round(n(d.rush_yd))}</td><td>${n(d.rush_td)}</td><td>${n(d.rec)}</td><td>${Math.round(n(d.rec_yd))}</td></tr>`;
+    }
+  } else if (pos === 'WR' || pos === 'TE') {
+    tbl = `<table class="pc-stats-tbl"><tr><th>Year</th><th>G</th><th>Pts</th><th>Pts/G</th><th>Tgts</th><th>Rec</th><th>Yds</th><th>TDs</th><th>Y/R</th></tr>`;
+    for (const { yr, d } of rows) {
+      const pts = n(d[ptsKey]), gp = n(d.gp);
       const ypr = n(d.rec) > 0 ? (n(d.rec_yd) / n(d.rec)).toFixed(1) : '—';
-      tbl += `<tr>
-        <td>${yr}</td><td>${n(d.gp)}</td><td>${f(d[ptsKey])}</td>
-        <td>${n(d.rec)}</td><td>${n(d.rec_tgt)}</td><td>${Math.round(n(d.rec_yd))}</td>
-        <td>${n(d.rec_td)}</td><td>${ypr}</td></tr>`;
+      tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td>${f(pts)}</td><td class="pc-ppg">${ppg(pts,gp)}</td><td>${n(d.rec_tgt)}</td><td>${n(d.rec)}</td><td>${Math.round(n(d.rec_yd))}</td><td>${n(d.rec_td)}</td><td>${ypr}</td></tr>`;
     }
   } else if (pos === 'K') {
-    tbl = `<table class="pc-stats-tbl">
-      <tr><th>Year</th><th>G</th><th>Pts</th><th>FGM</th><th>FGA</th><th>XPM</th><th>XPA</th></tr>`;
-    for (const { yr, d } of rows) tbl += `<tr>
-      <td>${yr}</td><td>${n(d.gp)}</td><td>${f(d.pts_std || d.pts_ppr)}</td>
-      <td>${n(d.fgm)}</td><td>${n(d.fga)}</td><td>${n(d.xpm)}</td><td>${n(d.xpa)}</td></tr>`;
+    tbl = `<table class="pc-stats-tbl"><tr><th>Year</th><th>G</th><th>Pts</th><th>Pts/G</th><th>FGM</th><th>FGA</th><th>FG%</th><th>XPM</th></tr>`;
+    for (const { yr, d } of rows) {
+      const pts = n(d.pts_std || d.pts_ppr), gp = n(d.gp);
+      const fgPct = n(d.fga) > 0 ? Math.round(n(d.fgm)/n(d.fga)*100)+'%' : '—';
+      tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td>${f(pts)}</td><td class="pc-ppg">${ppg(pts,gp)}</td><td>${n(d.fgm)}</td><td>${n(d.fga)}</td><td>${fgPct}</td><td>${n(d.xpm)}</td></tr>`;
+    }
   } else {
-    // DEF / IDP / generic
-    tbl = `<table class="pc-stats-tbl">
-      <tr><th>Year</th><th>Games</th><th>Fantasy Pts</th></tr>`;
-    for (const { yr, d } of rows) tbl += `<tr>
-      <td>${yr}</td><td>${n(d.gp)}</td><td>${f(d.pts_std || d.pts_ppr || d.pts_half_ppr)}</td></tr>`;
+    tbl = `<table class="pc-stats-tbl"><tr><th>Year</th><th>G</th><th>Pts</th><th>Pts/G</th></tr>`;
+    for (const { yr, d } of rows) {
+      const pts = n(d.pts_std || d.pts_ppr || d.pts_half_ppr), gp = n(d.gp);
+      tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td>${f(pts)}</td><td class="pc-ppg">${ppg(pts,gp)}</td></tr>`;
+    }
   }
-  tbl += '</table>';
+  tbl += '</table><div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:right">2025 season highlighted · Source: Sleeper</div>';
   return tbl;
+}
+
+// ── Game log (week-by-week) ────────────────────────────────────
+async function fetchPCGameLog(slId, position, year) {
+  const pos     = (position || '').toUpperCase();
+  const scoring = (S?.settings?.scoring) || 'ppr';
+  const ptsKey  = scoring === 'std' ? 'pts_std' : scoring === 'half' ? 'pts_half_ppr' : 'pts_ppr';
+  const n = v => v || 0;
+  const f = v => parseFloat(v || 0).toFixed(1);
+
+  // Fetch each week in parallel (weeks 1-18)
+  const weekData = await Promise.all(
+    Array.from({ length: 18 }, (_, i) => i + 1).map(async wk => {
+      try {
+        const r = await fetch(
+          `https://api.sleeper.app/v1/stats/nfl/player/${slId}?season_type=regular&season=${year}&week=${wk}`,
+          { cache: 'force-cache' }
+        );
+        if (!r.ok) return null;
+        const d = await r.json();
+        if (!d || typeof d !== 'object') return null;
+        // A real weekly entry has pts OR at least one meaningful stat
+        const hasPts  = d[ptsKey] != null || d.pts_ppr != null || d.pts_std != null;
+        const hasStat = d.rush_yd != null || d.rec_yd != null || d.pass_yd != null || d.fgm != null;
+        if (!hasPts && !hasStat) return null;
+        // Detect if this is season totals being returned instead of weekly
+        // (season totals have gp > 3; real weekly game has gp === 1 or undefined)
+        if ((d.gp || 0) > 2) return null;
+        return { wk, d };
+      } catch(e) { return null; }
+    })
+  );
+
+  const weeks = weekData.filter(Boolean);
+
+  // Year-switcher buttons
+  const yrBtns = [2025, 2024, 2023].map(y =>
+    `<button class="pc-log-yr${y === year ? ' on' : ''}" onclick="pcLogYear(${y},this)">${y}</button>`
+  ).join('');
+
+  if (!weeks.length) {
+    return `<div class="pc-log-hdr"><div class="pc-log-yrs">${yrBtns}</div></div>
+      <div style="color:var(--text3);font-size:12px;padding:10px 0;text-align:center">
+        Weekly game log not available from API for ${year}.<br>
+        <a href="https://www.fantasypros.com/nfl/stats/" target="_blank" style="color:var(--primary-l);font-size:11px">View on FantasyPros ↗</a>
+      </div>`;
+  }
+
+  const totalPts = weeks.reduce((s, { d }) => s + n(d[ptsKey] || d.pts_ppr || d.pts_std || 0), 0);
+  const ppg = weeks.length ? (totalPts / weeks.length).toFixed(1) : '—';
+
+  let html = `<div class="pc-log-hdr">
+    <span style="font-size:12px;font-weight:700;color:var(--text2)">${year} · ${weeks.length}G · <span style="color:var(--primary-l)">${f(totalPts)} pts (${ppg}/g)</span></span>
+    <div class="pc-log-yrs">${yrBtns}</div>
+  </div>`;
+
+  if (pos === 'QB') {
+    html += `<table class="pc-stats-tbl"><tr><th>Wk</th><th>Pts</th><th>Pass Yds</th><th>TDs</th><th>INTs</th><th>Rush Yds</th></tr>`;
+    for (const { wk, d } of weeks) html += `<tr><td>Wk ${wk}</td><td class="pc-ppg">${f(n(d[ptsKey]||d.pts_ppr||0))}</td><td>${Math.round(n(d.pass_yd))}</td><td>${n(d.pass_td)}</td><td>${n(d.pass_int)}</td><td>${Math.round(n(d.rush_yd))}</td></tr>`;
+  } else if (pos === 'RB') {
+    html += `<table class="pc-stats-tbl"><tr><th>Wk</th><th>Pts</th><th>Att</th><th>Rush Yds</th><th>Rush TDs</th><th>Rec</th><th>Rec Yds</th></tr>`;
+    for (const { wk, d } of weeks) html += `<tr><td>Wk ${wk}</td><td class="pc-ppg">${f(n(d[ptsKey]||d.pts_ppr||0))}</td><td>${n(d.rush_att)}</td><td>${Math.round(n(d.rush_yd))}</td><td>${n(d.rush_td)}</td><td>${n(d.rec)}</td><td>${Math.round(n(d.rec_yd))}</td></tr>`;
+  } else if (pos === 'WR' || pos === 'TE') {
+    html += `<table class="pc-stats-tbl"><tr><th>Wk</th><th>Pts</th><th>Tgts</th><th>Rec</th><th>Yds</th><th>TDs</th></tr>`;
+    for (const { wk, d } of weeks) html += `<tr><td>Wk ${wk}</td><td class="pc-ppg">${f(n(d[ptsKey]||d.pts_ppr||0))}</td><td>${n(d.rec_tgt)}</td><td>${n(d.rec)}</td><td>${Math.round(n(d.rec_yd))}</td><td>${n(d.rec_td)}</td></tr>`;
+  } else if (pos === 'K') {
+    html += `<table class="pc-stats-tbl"><tr><th>Wk</th><th>Pts</th><th>FGM</th><th>FGA</th><th>XPM</th></tr>`;
+    for (const { wk, d } of weeks) html += `<tr><td>Wk ${wk}</td><td class="pc-ppg">${f(n(d.pts_std||d.pts_ppr||0))}</td><td>${n(d.fgm)}</td><td>${n(d.fga)}</td><td>${n(d.xpm)}</td></tr>`;
+  } else {
+    html += `<table class="pc-stats-tbl"><tr><th>Wk</th><th>Pts</th></tr>`;
+    for (const { wk, d } of weeks) html += `<tr><td>Wk ${wk}</td><td class="pc-ppg">${f(n(d.pts_ppr||d.pts_std||d.pts_half_ppr||0))}</td></tr>`;
+  }
+  html += '</table>';
+  return html;
+}
+
+function pcLogYear(year, btn) {
+  // Update year button states
+  document.querySelectorAll('.pc-log-yr').forEach(b => b.classList.remove('on'));
+  if (btn) btn.classList.add('on');
+  const panel = document.getElementById('pcStats');
+  if (!panel || !window._pcPlayer) return;
+  const pl = window._pcPlayer;
+  panel.innerHTML = '<div style="padding:16px 0;text-align:center;color:var(--text3);font-size:12px"><span class="spin" style="display:inline-block;width:14px;height:14px;border-width:2px;vertical-align:middle;margin-right:6px"></span>Loading…</div>';
+  fetchPCGameLog(String(pl.slId), pl.pos, year).then(html => {
+    const p2 = document.getElementById('pcStats');
+    if (p2) p2.innerHTML = html;
+  });
+}
+
+// ── 2026 Projections ──────────────────────────────────────────
+async function fetchPCProjections(slId, position) {
+  const pos     = (position || '').toUpperCase();
+  const scoring = (S?.settings?.scoring) || 'ppr';
+  const ptsKey  = scoring === 'std' ? 'pts_std' : scoring === 'half' ? 'pts_half_ppr' : 'pts_ppr';
+  const n = v => v || 0;
+  const f = v => parseFloat(v || 0).toFixed(1);
+  const r2 = v => v > 0 ? Math.round(v) : '—';
+
+  try {
+    const resp = await fetch(
+      `https://api.sleeper.app/v1/projections/nfl/player/${slId}?season_type=regular&season=2026&grouping=season`,
+      { cache: 'force-cache' }
+    );
+    if (!resp.ok) throw new Error('no projections');
+    const d = await resp.json();
+    if (!d || typeof d !== 'object' || Object.keys(d).length === 0) throw new Error('empty');
+
+    const pts = n(d[ptsKey] || d.pts_ppr || d.pts_std || d.pts_half_ppr);
+    const gp  = n(d.gp) || 17;
+    const ppg = pts > 0 ? (pts / gp).toFixed(1) : '—';
+
+    let stats = [];
+    if (pos === 'QB') {
+      stats = [
+        { v: f(pts),                  l: 'Proj Pts' },
+        { v: ppg,                     l: 'Pts/Game' },
+        { v: r2(d.pass_yd),           l: 'Pass Yds' },
+        { v: r2(d.pass_td),           l: 'Pass TDs' },
+        { v: r2(d.pass_int),          l: 'INTs' },
+        { v: r2(d.rush_yd),           l: 'Rush Yds' },
+      ];
+    } else if (pos === 'RB') {
+      stats = [
+        { v: f(pts),                  l: 'Proj Pts' },
+        { v: ppg,                     l: 'Pts/Game' },
+        { v: r2(d.rush_att),          l: 'Carries' },
+        { v: r2(d.rush_yd),           l: 'Rush Yds' },
+        { v: r2(d.rush_td),           l: 'Rush TDs' },
+        { v: r2(d.rec),               l: 'Rec' },
+        { v: r2(d.rec_yd),            l: 'Rec Yds' },
+        { v: r2(d.rec_td),            l: 'Rec TDs' },
+        { v: r2(d.rec_tgt),           l: 'Targets' },
+      ];
+    } else if (pos === 'WR' || pos === 'TE') {
+      stats = [
+        { v: f(pts),                  l: 'Proj Pts' },
+        { v: ppg,                     l: 'Pts/Game' },
+        { v: r2(d.rec_tgt),           l: 'Targets' },
+        { v: r2(d.rec),               l: 'Rec' },
+        { v: r2(d.rec_yd),            l: 'Rec Yds' },
+        { v: r2(d.rec_td),            l: 'Rec TDs' },
+        { v: r2(d.rush_yd) !== '—' ? r2(d.rush_yd) : null, l: 'Rush Yds' },
+      ].filter(s => s.v !== null && s.v !== '—' || ['Proj Pts','Pts/Game','Targets','Rec','Rec Yds','Rec TDs'].includes(s.l));
+    } else if (pos === 'K') {
+      stats = [
+        { v: f(pts),                  l: 'Proj Pts' },
+        { v: ppg,                     l: 'Pts/Game' },
+        { v: r2(d.fgm),              l: 'FGM' },
+        { v: r2(d.fga),              l: 'FGA' },
+        { v: r2(d.xpm),              l: 'XPM' },
+      ];
+    } else {
+      stats = [
+        { v: f(pts), l: 'Proj Pts' },
+        { v: ppg,    l: 'Pts/Game' },
+        { v: gp,     l: 'Games' },
+      ];
+    }
+
+    const grid = stats.map(s =>
+      `<div class="pc-proj-stat"><div class="pc-proj-stat-val">${s.v || '—'}</div><div class="pc-proj-stat-lbl">${s.l}</div></div>`
+    ).join('');
+
+    return `<div class="pc-proj-box">
+      <div class="pc-proj-ttl">🎯 2026 Season Projections</div>
+      <div class="pc-proj-grid">${grid}</div>
+    </div>
+    <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:4px">Source: Sleeper 2026 projections</div>`;
+
+  } catch(e) {
+    return `<div style="text-align:center;padding:20px 12px">
+      <div style="font-size:28px;margin-bottom:8px">📋</div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:4px">Projections Not Yet Available</div>
+      <div style="font-size:12px;color:var(--text3)">2026 season projections will appear here once data providers publish pre-season outlooks.</div>
+    </div>`;
+  }
 }
 
 function closePlayerCard() {
@@ -10579,6 +10811,8 @@ function closePlayerCard() {
 // ── Player card global refs ──────────────────────────────────
 window.showPlayerCard  = showPlayerCard;
 window.closePlayerCard = closePlayerCard;
+window.pcStatsTab      = pcStatsTab;
+window.pcLogYear       = pcLogYear;
 
 // Bubbling fallback — catches any clicks on [data-pcname] elements
 // that the inline onclick missed (e.g. child element was the target)
@@ -10625,8 +10859,12 @@ document.addEventListener('keydown', function(e) {
     </div>
     <div class="pc-body">
       <div id="pcSignal" style="display:none" class="pc-signal"></div>
-      <div class="pc-sec">Fantasy Stats</div>
-      <div id="pcStats"><div style="color:var(--text3);font-size:12px">Loading…</div></div>
+      <div class="pc-stat-nav">
+        <button class="pc-stab on"  onclick="pcStatsTab('season',this)">📊 Season Stats</button>
+        <button class="pc-stab"     onclick="pcStatsTab('log',this)">📋 Game Log</button>
+        <button class="pc-stab"     onclick="pcStatsTab('proj',this)">🎯 2026 Proj</button>
+      </div>
+      <div id="pcStats" class="pc-stats-panel"></div>
     </div>
   </div>
 </div>
