@@ -2117,44 +2117,52 @@ const S = {
 // ═══════════════════════════════════════════════════════════
 const VALUE_DB = {
   // ── QBs ──────────────────────────────────────
-  // dv = 1QB dynasty baseline (KTC SF ÷ 1.38) | rv = 1QB PPR redraft
-  'Josh Allen':             {dv:7200,rv:8500,trend:'flat'},
-  'Drake Maye':             {dv:6800,rv:7000,trend:'up'},
+  // dv = 1QB dynasty baseline (May 2026 consensus: DLF/FantasyCalc/KTC composite)
+  // rv = 1QB PPR redraft 2026 value
+  'Josh Allen':             {dv:6900,rv:8500,trend:'flat'},
+  'Drake Maye':             {dv:6400,rv:7000,trend:'up'},
   'Lamar Jackson':          {dv:5600,rv:8200,trend:'flat'},
-  'Jayden Daniels':         {dv:5700,rv:7200,trend:'up'},
-  'Caleb Williams':         {dv:5800,rv:6200,trend:'up'},
+  'Jayden Daniels':         {dv:5500,rv:7200,trend:'up'},
+  'Caleb Williams':         {dv:5500,rv:6200,trend:'up'},
   'Joe Burrow':             {dv:5400,rv:7500,trend:'up'},
-  'Justin Herbert':         {dv:4900,rv:6800,trend:'up'},
+  'Justin Herbert':         {dv:5000,rv:6800,trend:'up'},
   'Patrick Mahomes':        {dv:4900,rv:7800,trend:'flat'},
-  'Jaxson Dart':            {dv:4800,rv:6500,trend:'up'},
-  'Trevor Lawrence':        {dv:4500,rv:5500,trend:'up'},
-  'Jalen Hurts':            {dv:4500,rv:7000,trend:'flat'},
-  'Bo Nix':                 {dv:4400,rv:5200,trend:'up'},
-  'Brock Purdy':            {dv:4200,rv:7000,trend:'flat'},
-  'Jordan Love':            {dv:4100,rv:6200,trend:'flat'},
-  'Cam Ward':               {dv:3800,rv:5200,trend:'up'},
-  'Dak Prescott':           {dv:3600,rv:5500,trend:'down'},
-  'Tyler Shough':           {dv:3500,rv:4800,trend:'up'},
-  'C.J. Stroud':            {dv:3500,rv:6500,trend:'up'},
-  'CJ Stroud':              {dv:3500,rv:6500,trend:'up'},
-  'Sam Darnold':            {dv:3500,rv:4500,trend:'flat'},
-  'Baker Mayfield':         {dv:3400,rv:5500,trend:'flat'},
-  'Jared Goff':             {dv:3400,rv:5500,trend:'down'},
-  'Bryce Young':            {dv:3300,rv:4500,trend:'up'},
-  'Kyler Murray':           {dv:3000,rv:5000,trend:'flat'},
-  'Malik Willis':           {dv:2000,rv:1800,trend:'flat'},
-  'Daniel Jones':           {dv:2000,rv:1800,trend:'flat'},
-  'Matthew Stafford':       {dv:2700,rv:4500,trend:'down'},
-  'Michael Penix Jr.':      {dv:2300,rv:4800,trend:'up'},
-  'J.J. McCarthy':          {dv:2100,rv:3500,trend:'up'},
-  'JJ McCarthy':            {dv:2100,rv:3500,trend:'up'},
-  'Shedeur Sanders':        {dv:2100,rv:4500,trend:'up'},
-  'Tua Tagovailoa':         {dv:2000,rv:3500,trend:'flat'},
-  'Jalen Milroe':           {dv:1700,rv:2200,trend:'up'},
-  'Anthony Richardson':     {dv:1700,rv:3000,trend:'up'},
-  'Geno Smith':             {dv:1600,rv:3500,trend:'flat'},
-  'Justin Fields':          {dv:1500,rv:2000,trend:'flat'},
-  'Kirk Cousins':           {dv:1500,rv:2500,trend:'down'},
+  'Jalen Hurts':            {dv:4600,rv:7000,trend:'flat'},
+  'Jaxson Dart':            {dv:4600,rv:6500,trend:'up'},
+  // ── 2026 QB Rookies — calibrated to draft capital + landing spot ──
+  'Fernando Mendoza':       {dv:4200,rv:4000,trend:'up'},   // #1 overall, LV starter
+  'Ty Simpson':             {dv:3400,rv:1800,trend:'up'},   // #13 overall, LAR — 1-2yr window
+  'Drew Allar':             {dv:2000,rv:1000,trend:'flat'}, // Round 2, PIT
+  'Carson Beck':            {dv:1500,rv:800, trend:'flat'}, // Round 2, CIN — backing Burrow
+  'Garrett Nussmeier':      {dv:1200,rv:700, trend:'flat'}, // KC — backing Mahomes
+  // ── Established starters (May 2026 calibrated) ───────────────
+  'Trevor Lawrence':        {dv:4200,rv:5500,trend:'up'},
+  'Bo Nix':                 {dv:4200,rv:5200,trend:'up'},
+  'Brock Purdy':            {dv:4000,rv:7000,trend:'flat'},
+  'Jordan Love':            {dv:3500,rv:6200,trend:'flat'},
+  'Cam Ward':               {dv:3000,rv:5000,trend:'up'},   // 2nd year TEN
+  'Dak Prescott':           {dv:3400,rv:5500,trend:'down'},
+  'Tyler Shough':           {dv:3200,rv:5000,trend:'up'},
+  'C.J. Stroud':            {dv:2800,rv:6500,trend:'up'},
+  'CJ Stroud':              {dv:2800,rv:6500,trend:'up'},
+  'Sam Darnold':            {dv:2700,rv:4500,trend:'flat'},
+  'Baker Mayfield':         {dv:2700,rv:5500,trend:'flat'},
+  'Jared Goff':             {dv:2700,rv:5500,trend:'down'},
+  'Bryce Young':            {dv:2500,rv:4200,trend:'up'},
+  'Kyler Murray':           {dv:2600,rv:5000,trend:'flat'},
+  'Matthew Stafford':       {dv:1900,rv:4500,trend:'down'},
+  'Malik Willis':           {dv:2200,rv:4500,trend:'up'},   // MIA starter
+  'Daniel Jones':           {dv:2200,rv:4000,trend:'flat'},
+  'Michael Penix Jr.':      {dv:1700,rv:4800,trend:'up'},
+  'J.J. McCarthy':          {dv:1500,rv:3500,trend:'up'},
+  'JJ McCarthy':            {dv:1500,rv:3500,trend:'up'},
+  'Shedeur Sanders':        {dv:1500,rv:4500,trend:'up'},   // CLE — starter path
+  'Tua Tagovailoa':         {dv:1400,rv:3500,trend:'flat'},
+  'Jalen Milroe':           {dv:1200,rv:2200,trend:'up'},
+  'Anthony Richardson':     {dv:1300,rv:3000,trend:'up'},
+  'Geno Smith':             {dv:1100,rv:3500,trend:'flat'},
+  'Justin Fields':          {dv:1000,rv:2500,trend:'flat'},
+  'Kirk Cousins':           {dv:1000,rv:2500,trend:'down'},
   'Derek Carr':             {dv:500, rv:1500,trend:'down'},
   // ── RBs ──────────────────────────────────────
   // dv = dynasty (KTC SF baseline) | rv = redraft PPR
@@ -2228,6 +2236,36 @@ const VALUE_DB = {
   'Kareem Hunt':            {dv:900, rv:1800,trend:'down'},
   'Austin Ekeler':          {dv:600, rv:1500,trend:'down'},
   'Rashaad Penny':          {dv:400, rv:1000,trend:'flat'},
+  // 2026 RB Rookies — post-draft calibrated values
+  'Jeremiyah Love':         {dv:7670,rv:6000,trend:'up'},   // #3 overall, ARI — elite talent
+  'Jadarian Price':         {dv:5500,rv:4200,trend:'up'},   // Round 2, SEA — great landing spot
+  'Darius Taylor':          {dv:4200,rv:3200,trend:'up'},   // MIN — committee upside
+  'Jaydn Ott':              {dv:3600,rv:2800,trend:'up'},   // SF
+  'Nicholas Singleton':     {dv:3200,rv:3000,trend:'up'},   // TEN
+  'Jonah Coleman':          {dv:3800,rv:3000,trend:'up'},   // DEN — improved landing
+  'Demond Claiborne':       {dv:3200,rv:2800,trend:'up'},   // MIN
+  'Emmett Johnson':         {dv:3200,rv:2600,trend:'up'},   // KC
+  'DJ Giddens':             {dv:3500,rv:2800,trend:'up'},   // IND
+  'Devin Neal':             {dv:2800,rv:2400,trend:'up'},   // NO
+  'Kaelon Black':           {dv:2600,rv:2200,trend:'up'},   // SF
+  'Mike Washington Jr.':    {dv:2800,rv:2200,trend:'up'},   // LV
+  // 2026 WR Rookies — post-draft calibrated values
+  'Carnell Tate':           {dv:5800,rv:4500,trend:'up'},   // #4, TEN — elite prospect
+  'Jordyn Tyson':           {dv:5400,rv:4200,trend:'up'},   // NO
+  'Makai Lemon':            {dv:5000,rv:4000,trend:'up'},   // PHI — Biletnikoff winner
+  'KC Concepcion':          {dv:4500,rv:3200,trend:'up'},   // CLE
+  'Omar Cooper Jr.':        {dv:3900,rv:2800,trend:'up'},   // HOU
+  'Antonio Williams':       {dv:3800,rv:3000,trend:'up'},   // WAS
+  'Zachariah Branch':       {dv:3600,rv:2800,trend:'up'},   // ATL
+  'Chris Bell':             {dv:3400,rv:2800,trend:'up'},   // MIA
+  'Germie Bernard':         {dv:3000,rv:2400,trend:'up'},   // PIT
+  'Malachi Fields':         {dv:2800,rv:2200,trend:'up'},   // NYG
+  'Ted Hurst':              {dv:2800,rv:2200,trend:'up'},   // TB
+  'Elijah Sarratt':         {dv:2400,rv:1800,trend:'up'},   // BAL
+  // 2026 TE Rookies — post-draft calibrated values
+  'Max Klare':              {dv:4500,rv:3200,trend:'up'},   // LAR
+  'Eli Raridon':            {dv:3800,rv:2800,trend:'up'},   // NE
+  'Oscar Delp':             {dv:3200,rv:2400,trend:'up'},   // NO
   // Depth RBs — commonly traded/streamed
   'Dameon Pierce':          {dv:1800,rv:2200,trend:'flat'},
   'Samaje Perine':          {dv:1400,rv:2000,trend:'flat'},
@@ -2573,21 +2611,21 @@ const VALUE_DB = {
 // Values based on Justin Boone/Yahoo post-draft charts + consensus
 // ═══════════════════════════════════════════════════════════
 const ROOKIES_2026 = [
-  // QBs
-  {id:'r26-1',  full_name:'Fernando Mendoza',     position:'QB', team:'LV',  age:22, dynasty_val:4100, redraft_val:4500, rookie:true, trend:'up'},
-  {id:'r26-2',  full_name:'Ty Simpson',            position:'QB', team:'LAR', age:22, dynasty_val:2600, redraft_val:2200, rookie:true, trend:'up'},
-  {id:'r26-3',  full_name:'Carson Beck',           position:'QB', team:'CIN', age:23, dynasty_val:3500, redraft_val:2600, rookie:true, trend:'up'},
-  {id:'r26-4',  full_name:'Garrett Nussmeier',     position:'QB', team:'KC',  age:22, dynasty_val:3200, redraft_val:2400, rookie:true, trend:'up'},
-  {id:'r26-5',  full_name:'Drew Allar',            position:'QB', team:'PIT', age:22, dynasty_val:2800, redraft_val:2000, rookie:true, trend:'flat'},
+  // QBs — calibrated post-2026 draft (May 2026)
+  {id:'r26-1',  full_name:'Fernando Mendoza',     position:'QB', team:'LV',  age:22, dynasty_val:4200, redraft_val:4000, rookie:true, trend:'up'},   // #1 overall
+  {id:'r26-2',  full_name:'Ty Simpson',            position:'QB', team:'LAR', age:22, dynasty_val:3400, redraft_val:1800, rookie:true, trend:'up'},   // #13 overall
+  {id:'r26-3',  full_name:'Carson Beck',           position:'QB', team:'CIN', age:23, dynasty_val:1500, redraft_val:800,  rookie:true, trend:'flat'}, // Round 2, backing Burrow
+  {id:'r26-4',  full_name:'Garrett Nussmeier',     position:'QB', team:'KC',  age:22, dynasty_val:1200, redraft_val:700,  rookie:true, trend:'flat'}, // KC backup
+  {id:'r26-5',  full_name:'Drew Allar',            position:'QB', team:'PIT', age:22, dynasty_val:2000, redraft_val:1000, rookie:true, trend:'flat'}, // Round 2 PIT
   // RBs
   {id:'r26-6',  full_name:'Jeremiyah Love',        position:'RB', team:'ARI', age:21, dynasty_val:7670, redraft_val:6000, rookie:true, trend:'up'},
   {id:'r26-7',  full_name:'Nicholas Singleton',    position:'RB', team:'TEN', age:22, dynasty_val:3200, redraft_val:3000, rookie:true, trend:'up'},
   {id:'r26-8',  full_name:'Darius Taylor',         position:'RB', team:'MIN', age:21, dynasty_val:4200, redraft_val:3200, rookie:true, trend:'up'},
   {id:'r26-9',  full_name:'Jaydn Ott',             position:'RB', team:'SF',  age:22, dynasty_val:3600, redraft_val:2800, rookie:true, trend:'up'},
-  {id:'r26-10', full_name:'Jonah Coleman',         position:'RB', team:'SEA', age:22, dynasty_val:3000, redraft_val:2400, rookie:true, trend:'flat'},
-  {id:'r26-11', full_name:'Jadarian Price',        position:'RB', team:'HOU', age:22, dynasty_val:4800, redraft_val:3600, rookie:true, trend:'up'},
+  {id:'r26-10', full_name:'Jonah Coleman',         position:'RB', team:'DEN', age:22, dynasty_val:3800, redraft_val:3000, rookie:true, trend:'up'},  // DEN — better landing
+  {id:'r26-11', full_name:'Jadarian Price',        position:'RB', team:'SEA', age:22, dynasty_val:5500, redraft_val:4200, rookie:true, trend:'up'},  // SEA — RB2 post-draft
   {id:'r26-12', full_name:'Demond Claiborne',      position:'RB', team:'MIN', age:22, dynasty_val:3200, redraft_val:2800, rookie:true, trend:'up'},
-  {id:'r26-12b',full_name:'Kaytron Allen',         position:'RB', team:'NO',  age:22, dynasty_val:2200, redraft_val:2000, rookie:true, trend:'up'},
+  {id:'r26-12b',full_name:'Kaytron Allen',         position:'RB', team:'WAS', age:22, dynasty_val:2500, redraft_val:2200, rookie:true, trend:'up'},  // WAS
   {id:'r26-rb1', full_name:'DJ Giddens',           position:'RB', team:'IND', age:22, dynasty_val:3500, redraft_val:2800, rookie:true, trend:'up'},
   {id:'r26-rb2', full_name:'Emmett Johnson',       position:'RB', team:'KC',  age:22, dynasty_val:3200, redraft_val:2600, rookie:true, trend:'up'},
   {id:'r26-rb3', full_name:'Devin Neal',           position:'RB', team:'NO',  age:22, dynasty_val:2800, redraft_val:2400, rookie:true, trend:'up'},
@@ -5671,7 +5709,7 @@ function applyValueDB(p) {
 // FETCH SLEEPER PLAYERS
 // ═══════════════════════════════════════════════════════════
 async function fetchPlayers() {
-  const CACHE_KEY = 'tradeiq_sleeper_players_v3';
+  const CACHE_KEY = 'tradeiq_sleeper_players_v4';
   const CACHE_TTL = 12 * 60 * 60 * 1000; // 12 hours
   // Try cache first
   try {
@@ -5710,7 +5748,7 @@ async function fetchPlayers() {
         years_exp: p.years_exp || 0,
         search_rank: p.search_rank || 999,
         trend: 'flat',
-        rookie: false,
+        rookie: (p.years_exp || 0) === 0,
       }));
 
     // Cache raw player list (before applyValueDB — that runs on load from cache too)
