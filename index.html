@@ -62,6 +62,8 @@
     .nav-btn{padding:6px 14px;border-radius:7px;border:none;background:none;color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
     .nav-btn:hover{color:var(--text);background:var(--bg3)}
     .nav-btn.active{background:var(--primary-d);color:var(--primary-l)}
+    .pro-badge{font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;vertical-align:middle;margin-left:3px;letter-spacing:.04em}
+    body.logged-in .pro-badge{display:none}
     .pc-badge{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0}
 
     /* ── LAYOUT ─────────────────────────── */
@@ -811,16 +813,16 @@
 <!-- ═══ HEADER ═══ -->
 <header class="hdr">
   <div class="hdr-inner">
-    <div class="logo"><em>Trade</em><span>IQ</span></div>
+    <div class="logo" onclick="switchTab('home')" style="cursor:pointer" title="Home"><em>Trade</em><span>IQ</span></div>
     <nav class="nav">
       <button class="nav-btn active" data-tab="home" onclick="switchTab('home')">🏠 Home</button>
       <button class="nav-btn" data-tab="analyzer">⚖️ Trade Analyzer</button>
       <button class="nav-btn" data-tab="values">📊 Player Values</button>
       <button class="nav-btn" data-tab="wire">📋 Waiver Wire</button>
       <button class="nav-btn" data-tab="buysell">📈 Buy/Sell</button>
-      <button class="nav-btn" data-tab="roster">🏈 My Team</button>
-      <button class="nav-btn" data-tab="league">🏆 League</button>
-      <button class="nav-btn" data-tab="draft">🎯 Draft</button>
+      <button class="nav-btn" data-tab="roster">🏈 My Team <span class="pro-badge">PRO</span></button>
+      <button class="nav-btn" data-tab="league">🏆 League <span class="pro-badge">PRO</span></button>
+      <button class="nav-btn" data-tab="draft">🎯 Draft <span class="pro-badge">PRO</span></button>
     </nav>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
       <div class="pc-badge" id="pcBadge">Loading players…</div>
@@ -1192,6 +1194,9 @@
           <button class="pos-btn" data-pos="RB">RB</button>
           <button class="pos-btn" data-pos="WR">WR</button>
           <button class="pos-btn" data-pos="TE">TE</button>
+          <button class="pos-btn" data-pos="K">K</button>
+          <button class="pos-btn" data-pos="DEF">DST</button>
+          <button class="pos-btn" data-pos="IDP">IDP</button>
           <button class="pos-btn" data-pos="PICK">Picks</button>
         </div>
         <input class="srch tbl-srch" id="tblSearch" placeholder="Search players…" oninput="renderValuesTable()">
@@ -2000,6 +2005,30 @@
   </div>
 </div>
 
+<!-- ══ MODAL: UPGRADE TO PRO ══ -->
+<div class="mo" id="proModal" onclick="moBackdropClose(event,'proModal')">
+  <div class="mo-box" style="max-width:460px;text-align:center">
+    <button class="mo-close" onclick="closeModal('proModal')">✕</button>
+    <div style="font-size:32px;margin-bottom:10px">⚡</div>
+    <div style="font-size:20px;font-weight:800;margin-bottom:6px">TradeIQ Pro</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6" id="proModalFeatureText">This feature requires a Pro subscription.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;text-align:left">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Free</div>
+        <div style="font-size:12px;color:var(--text2);line-height:2">✅ Trade Analyzer<br>✅ Player Values<br>✅ Waiver Wire<br>✅ Basic Rankings</div>
+      </div>
+      <div style="background:var(--primary-d);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:12px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--primary-l);margin-bottom:8px">Pro ⚡</div>
+        <div style="font-size:12px;color:var(--text);line-height:2">⭐ My Team Analysis<br>⭐ Buy/Sell/Hold<br>⭐ League Analyzer<br>⭐ Draft Simulator<br>⭐ Multiple Leagues<br>⭐ Personalized Intel</div>
+      </div>
+    </div>
+    <div style="font-size:22px;font-weight:900;color:var(--primary-l);margin-bottom:4px">$4.99<span style="font-size:13px;font-weight:400;color:var(--text2)">/month</span></div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:18px">Cancel anytime · Free trial coming soon</div>
+    <button class="btn btn-p" style="width:100%;justify-content:center;font-size:14px;padding:12px" onclick="closeModal('proModal');openModal('authModal')">Get Started →</button>
+    <div style="font-size:11px;color:var(--text3);margin-top:10px">Already have an account? <span style="color:var(--primary-l);cursor:pointer" onclick="closeModal('proModal');openModal('authModal')">Sign in</span></div>
+  </div>
+</div>
+
 <!-- ══ MODAL: PRIVACY POLICY ══ -->
 <div class="mo" id="privacyModal" onclick="moBackdropClose(event,'privacyModal')">
   <div class="mo-box wide">
@@ -2061,6 +2090,7 @@ const S = {
   ready: false,
   // Auth & league
   auth: null,
+  isPremium: false,
   connectedLeague: null,
   connectedLeagues: [],
   _sleeperUser: null,
@@ -2379,6 +2409,152 @@ const VALUE_DB = {
   'Stefon Diggs':           {dv:300, rv:500, trend:'down'},
   'JuJu Smith-Schuster':    {dv:50,  rv:50,  trend:'down'},
   'Christian McCaffrey':    {dv:2500,rv:3500,trend:'down'},
+
+  // ── KICKERS ──────────────────────────────────────────────
+  'Brandon Aubrey':         {dv:400, rv:4000,trend:'up'},
+  "Ka'imi Fairbairn":       {dv:300, rv:3500,trend:'flat'},
+  'Cameron Dicker':         {dv:280, rv:3200,trend:'up'},
+  'Cam Little':             {dv:260, rv:3000,trend:'up'},
+  'Jason Myers':            {dv:240, rv:2700,trend:'flat'},
+  'Eddy Pineiro':           {dv:220, rv:2400,trend:'flat'},
+  'Tyler Loop':             {dv:200, rv:2200,trend:'up'},
+  'Evan McPherson':         {dv:200, rv:2100,trend:'flat'},
+  'Andy Borregales':        {dv:190, rv:1900,trend:'up'},
+  'Cairo Santos':           {dv:180, rv:1800,trend:'flat'},
+  'Chase McLaughlin':       {dv:170, rv:1700,trend:'flat'},
+  'Harrison Butker':        {dv:300, rv:1700,trend:'flat'},
+  'Jake Bates':             {dv:160, rv:1600,trend:'up'},
+  'Will Reichard':          {dv:200, rv:1500,trend:'up'},
+  'Chris Boswell':          {dv:160, rv:1500,trend:'flat'},
+  'Wil Lutz':               {dv:150, rv:1400,trend:'flat'},
+  'Harrison Mevis':         {dv:140, rv:1300,trend:'up'},
+  'Charlie Smyth':          {dv:130, rv:1200,trend:'up'},
+  'Chad Ryland':            {dv:120, rv:1100,trend:'flat'},
+  'Zane Gonzalez':          {dv:110, rv:1000,trend:'flat'},
+  'Jake Elliott':           {dv:110, rv:1000,trend:'flat'},
+  'Blake Grupe':            {dv:100, rv:900, trend:'up'},
+  'Joey Slye':              {dv:90,  rv:800, trend:'flat'},
+  'Daniel Carlson':         {dv:90,  rv:800, trend:'flat'},
+  'Nick Folk':              {dv:80,  rv:700, trend:'down'},
+  'Ben Sauls':              {dv:80,  rv:700, trend:'up'},
+  'Tyler Bass':             {dv:80,  rv:650, trend:'flat'},
+  'Jake Moody':             {dv:70,  rv:600, trend:'up'},
+  'Jason Sanders':          {dv:70,  rv:600, trend:'flat'},
+  'Cade York':              {dv:60,  rv:500, trend:'flat'},
+  'Andre Szmyt':            {dv:60,  rv:500, trend:'up'},
+  'Matt Gay':               {dv:60,  rv:500, trend:'flat'},
+  'Ryan Fitzgerald':        {dv:50,  rv:450, trend:'up'},
+
+  // ── TEAM DEFENSES (DST) ──────────────────────────────────
+  // dv intentionally low (DST irrelevant in dynasty); rv = 2026 redraft ranking
+  'Houston Texans':         {dv:50,  rv:5000,trend:'up'},
+  'Denver Broncos':         {dv:50,  rv:4700,trend:'up'},
+  'Seattle Seahawks':       {dv:50,  rv:4400,trend:'flat'},
+  'Los Angeles Rams':       {dv:50,  rv:4100,trend:'flat'},
+  'Philadelphia Eagles':    {dv:50,  rv:3800,trend:'flat'},
+  'New England Patriots':   {dv:50,  rv:3550,trend:'up'},
+  'Minnesota Vikings':      {dv:50,  rv:3300,trend:'flat'},
+  'Jacksonville Jaguars':   {dv:50,  rv:3050,trend:'flat'},
+  'Pittsburgh Steelers':    {dv:50,  rv:2800,trend:'flat'},
+  'Cleveland Browns':       {dv:50,  rv:2600,trend:'flat'},
+  'Los Angeles Chargers':   {dv:50,  rv:2400,trend:'flat'},
+  'Green Bay Packers':      {dv:50,  rv:2200,trend:'flat'},
+  'Baltimore Ravens':       {dv:50,  rv:2000,trend:'flat'},
+  'Kansas City Chiefs':     {dv:50,  rv:1800,trend:'flat'},
+  'Detroit Lions':          {dv:50,  rv:1620,trend:'flat'},
+  'Buffalo Bills':          {dv:50,  rv:1450,trend:'flat'},
+  'Atlanta Falcons':        {dv:50,  rv:1290,trend:'flat'},
+  'Indianapolis Colts':     {dv:50,  rv:1140,trend:'flat'},
+  'Chicago Bears':          {dv:50,  rv:1000,trend:'flat'},
+  'San Francisco 49ers':    {dv:50,  rv:870, trend:'flat'},
+  'New Orleans Saints':     {dv:50,  rv:780, trend:'flat'},
+  'New York Giants':        {dv:50,  rv:700, trend:'flat'},
+  'Carolina Panthers':      {dv:50,  rv:640, trend:'flat'},
+  'Dallas Cowboys':         {dv:50,  rv:580, trend:'flat'},
+  'Miami Dolphins':         {dv:50,  rv:520, trend:'flat'},
+  'Tampa Bay Buccaneers':   {dv:50,  rv:470, trend:'flat'},
+  'Washington Commanders':  {dv:50,  rv:420, trend:'flat'},
+  'Tennessee Titans':       {dv:50,  rv:380, trend:'flat'},
+  'Cincinnati Bengals':     {dv:50,  rv:340, trend:'flat'},
+  'Las Vegas Raiders':      {dv:50,  rv:300, trend:'flat'},
+  'New York Jets':          {dv:50,  rv:260, trend:'flat'},
+  'Arizona Cardinals':      {dv:50,  rv:200, trend:'flat'},
+
+  // ── IDP — EDGE RUSHERS / DEs ─────────────────────────────
+  'Will Anderson Jr.':      {dv:8000,rv:3088,trend:'up'},
+  'Aidan Hutchinson':       {dv:7800,rv:3958,trend:'up'},
+  'Brian Burns':            {dv:7600,rv:1911,trend:'flat'},
+  'Maxx Crosby':            {dv:7100,rv:3876,trend:'flat'},
+  'Myles Garrett':          {dv:6900,rv:3835,trend:'flat'},
+  'Nik Bonitto':            {dv:6700,rv:1299,trend:'up'},
+  'Byron Young':            {dv:850, rv:1363,trend:'up'},
+  'Laiatu Latu':            {dv:400, rv:807, trend:'up'},
+  // ── IDP — LINEBACKERS ────────────────────────────────────
+  'Micah Parsons':          {dv:7300,rv:2789,trend:'up'},
+  'Roquan Smith':           {dv:6500,rv:4000,trend:'flat'},
+  'Jordyn Brooks':          {dv:6300,rv:3553,trend:'flat'},
+  'Ernest Jones IV':        {dv:6100,rv:3633,trend:'up'},
+  'Cedric Gray':            {dv:5900,rv:1532,trend:'up'},
+  'Nate Landman':           {dv:5700,rv:1805,trend:'flat'},
+  'T.J. Edwards':           {dv:5500,rv:3280,trend:'flat'},
+  'Jack Campbell':          {dv:5300,rv:3435,trend:'up'},
+  'Fred Warner':            {dv:5100,rv:3794,trend:'flat'},
+  'Foyesade Oluokun':       {dv:4900,rv:3754,trend:'flat'},
+  'Carson Schwesinger':     {dv:4700,rv:3357,trend:'up'},
+  'Zaire Franklin':         {dv:4500,rv:3673,trend:'flat'},
+  'Nick Bolton':            {dv:4300,rv:2976,trend:'flat'},
+  'Alex Singleton':         {dv:4200,rv:3474,trend:'flat'},
+  'Kaden Elliss':           {dv:4000,rv:2752,trend:'flat'},
+  'Quay Walker':            {dv:3800,rv:3165,trend:'flat'},
+  'Quincy Williams':        {dv:3600,rv:2901,trend:'flat'},
+  'Azeez Al-Shaair':        {dv:3400,rv:2394,trend:'flat'},
+  'Robert Spillane':        {dv:3200,rv:3514,trend:'flat'},
+  'Edgerrin Cooper':        {dv:3000,rv:3203,trend:'up'},
+  'Payton Wilson':          {dv:2800,rv:555, trend:'up'},
+  'Daiyan Henley':          {dv:2600,rv:3013,trend:'up'},
+  'Tyrel Dodson':           {dv:2500,rv:1632,trend:'flat'},
+  'Blake Cashman':          {dv:2400,rv:3593,trend:'flat'},
+  'Bobby Okereke':          {dv:2200,rv:2076,trend:'flat'},
+  'Jihaad Campbell':        {dv:2000,rv:262, trend:'up'},
+  'Dre Greenlaw':           {dv:1900,rv:1139,trend:'flat'},
+  'Zack Baun':              {dv:1800,rv:3917,trend:'flat'},
+  'Jamien Sherwood':        {dv:1600,rv:3713,trend:'up'},
+  'DeMarvion Overshown':    {dv:1500,rv:200, trend:'up'},
+  'Jack Gibbens':           {dv:1400,rv:200, trend:'flat'},
+  'SirVocea Dennis':        {dv:1300,rv:200, trend:'flat'},
+  'Divine Deablo':          {dv:1200,rv:250, trend:'flat'},
+  'Devin Bush Jr.':         {dv:1100,rv:955, trend:'flat'},
+  'Drake Thomas':           {dv:1000,rv:396, trend:'up'},
+  'Nakobe Dean':            {dv:950, rv:200, trend:'up'},
+  'Germaine Pratt':         {dv:900, rv:1267,trend:'flat'},
+  // ── IDP — SAFETIES ───────────────────────────────────────
+  'Nick Cross':             {dv:800, rv:2288,trend:'up'},
+  'Nick Emmanwori':         {dv:750, rv:1108,trend:'up'},
+  'Derwin James Jr.':       {dv:700, rv:3051,trend:'flat'},
+  'Brian Branch':           {dv:680, rv:2863,trend:'up'},
+  'Kyle Hamilton':          {dv:660, rv:3396,trend:'up'},
+  'Kam Curl':               {dv:640, rv:1076,trend:'flat'},
+  'Jessie Bates III':       {dv:620, rv:2715,trend:'flat'},
+  'Antoine Winfield Jr.':   {dv:600, rv:2826,trend:'flat'},
+  'Minkah Fitzpatrick':     {dv:580, rv:2699,trend:'flat'},
+  'Jalen Pitre':            {dv:560, rv:2573,trend:'flat'},
+  'Budda Baker':            {dv:540, rv:2446,trend:'flat'},
+  'Harrison Smith':         {dv:520, rv:2319,trend:'flat'},
+  'Jordan Poyer':           {dv:500, rv:2192,trend:'flat'},
+  'Xavier McKinney':        {dv:480, rv:2100,trend:'up'},
+  'Talanoa Hufanga':        {dv:460, rv:1900,trend:'up'},
+  'Quentin Lake':           {dv:440, rv:1600,trend:'up'},
+  'Reed Blankenship':       {dv:420, rv:1400,trend:'up'},
+  'Tyler Owens':            {dv:400, rv:1200,trend:'up'},
+  'Marcus Williams':        {dv:380, rv:1100,trend:'flat'},
+  'Chamarri Conner':        {dv:360, rv:1000,trend:'flat'},
+  'Kareem Jackson':         {dv:340, rv:900, trend:'down'},
+  'Javon Hargrave':         {dv:320, rv:800, trend:'flat'},
+  // ── IDP — CORNERS ────────────────────────────────────────
+  'Jaire Alexander':        {dv:720, rv:2500,trend:'flat'},
+  'Sauce Gardner':          {dv:700, rv:2400,trend:'up'},
+  'Denzel Ward':            {dv:680, rv:2200,trend:'flat'},
+  'Devon Witherspoon':      {dv:260, rv:720, trend:'up'},
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -3440,9 +3616,24 @@ function renderValuesTable() {
   if (ths[6]) ths[6].style.display = isDynasty ? '' : 'none';
 
   const pos = S.tablePos;
+  // IDP filter covers all defensive positions; DEF covers DEF+DST
+  const IDP_POSITIONS = new Set(['DE','DT','LB','CB','S','FS','SS','DB','OLB','ILB','MLB','DL','IDP']);
+  const DST_POSITIONS = new Set(['DEF','DST']);
+
+  // Hide IDP button in dynasty? No — keep it. Hide DST in dynasty since no dynasty value.
+  const idpBtn = document.querySelector('.pos-btn[data-pos="IDP"]');
+  const defBtn = document.querySelector('.pos-btn[data-pos="DEF"]');
+  const kBtn   = document.querySelector('.pos-btn[data-pos="K"]');
+  // In dynasty: DST has no value — show button but it will show 50-value entries
+  // In redraft: all buttons visible
 
   let rows = S.players
-    .filter(p => pos === 'ALL' || p.position === pos)
+    .filter(p => {
+      if (pos === 'ALL') return true;
+      if (pos === 'IDP') return IDP_POSITIONS.has(p.position);
+      if (pos === 'DEF') return DST_POSITIONS.has(p.position);
+      return p.position === pos;
+    })
     .filter(p => !q || p.full_name.toLowerCase().includes(q) || (p.team||'').toLowerCase().includes(q))
     .map(p => ({ ...p, _val: calcValue(p) }))   // ← mode + QB/scoring/TE/size all applied
     .sort((a,b) => {
@@ -3463,7 +3654,7 @@ function renderValuesTable() {
 
   const maxV = Math.max(...rows.map(r=>r._val), 1);
   const tbody = document.getElementById('valTbody');
-  tbody.innerHTML = rows.slice(0,300).map((p,i) => {
+  tbody.innerHTML = rows.slice(0,500).map((p,i) => {
     const v      = p._val;                          // adjusted for mode + all settings
     const tier   = getTier(v);
     const engT   = p._engineTier;
@@ -3888,7 +4079,41 @@ function updateModeChip() {
 // ═══════════════════════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// PREMIUM FEATURE GATING
+// ═══════════════════════════════════════════════════════════
+const PRO_TABS    = new Set(['roster','league','buysell','draft']);
+const PRO_LABELS  = {
+  roster:  'My Team Analysis — see your full roster valuation, position grades, and personalized trade targets.',
+  league:  'League Analyzer — compare all teams, find the best trade partners, and track league-wide value.',
+  buysell: 'Buy/Sell/Hold Analysis — get AI-powered advice on which players to buy low, sell high, or hold.',
+  draft:   'Draft Simulator & Draft Wizard — practice rookie and redraft drafts with needs-based AI opponents.',
+};
+
+function requirePro(tabName) {
+  // For now: require login only. Subscription check will gate further once payments are live.
+  if (!S.auth) {
+    const el = document.getElementById('proModalFeatureText');
+    if (el) el.textContent = PRO_LABELS[tabName] || 'This feature requires a Pro account.';
+    openModal('proModal');
+    return true; // blocked
+  }
+  // TODO: when Stripe is live, also check S.isPremium
+  return false; // allowed
+}
+
+async function checkPremiumStatus(user) {
+  if (!user || !fbDb) { S.isPremium = false; return; }
+  try {
+    const doc = await fbDb.collection('users').doc(user.uid).get();
+    S.isPremium = doc.exists && doc.data()?.plan === 'pro';
+  } catch(e) { S.isPremium = false; }
+}
+
 function switchTab(name) {
+  // Gate pro-only tabs
+  if (PRO_TABS.has(name) && requirePro(name)) return;
+
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.mob-tab').forEach(b=>b.classList.remove('active'));
@@ -5417,7 +5642,7 @@ function applyValueDB(p) {
 // FETCH SLEEPER PLAYERS
 // ═══════════════════════════════════════════════════════════
 async function fetchPlayers() {
-  const CACHE_KEY = 'tradeiq_sleeper_players_v2';
+  const CACHE_KEY = 'tradeiq_sleeper_players_v3';
   const CACHE_TTL = 12 * 60 * 60 * 1000; // 12 hours
   // Try cache first
   try {
@@ -5746,6 +5971,7 @@ function handleAuthStateChange(user) {
   if (user) {
     btn.style.display  = 'none';
     pill.style.display = 'flex';
+    document.body.classList.add('logged-in');
     const first = user.displayName?.split(' ')[0] || 'User';
     nm.textContent   = first;
     init.textContent = first[0].toUpperCase();
@@ -5754,6 +5980,7 @@ function handleAuthStateChange(user) {
       wrap.innerHTML = `<img class="user-avatar" src="${user.photoURL}" alt="">`;
     }
     closeModal('authModal');
+    checkPremiumStatus(user);
     // If players haven't loaded yet, defer — init() will call loadConnectedLeagues() when ready
     if (S.ready) {
       loadConnectedLeagues();
@@ -5767,6 +5994,8 @@ function handleAuthStateChange(user) {
   } else {
     btn.style.display  = 'block';
     pill.style.display = 'none';
+    document.body.classList.remove('logged-in');
+    S.isPremium = false;
     if (document.getElementById('tab-home')?.classList.contains('active')) renderHome();
   }
 }
