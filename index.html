@@ -2465,11 +2465,22 @@ function calcValue(p) {
   }
 
   // ── LEAGUE SIZE ──
-  // QBs get scarcer as leagues grow — every QB matters more with more teams
-  // Other positions: elites worth more in small leagues, depth worth more in large
+  // QB scarcity depends on both league size AND format.
+  // 2QB: you need 2x QBs regardless — even a small 2QB league is starved for QBs.
+  // SF:  one flex QB slot per team — size still matters but less than 1QB.
+  // 1QB: standard scarcity — only top N QBs matter, so small leagues have surplus.
   let szMod;
   if (pos === 'QB') {
-    szMod = { 8: 0.88, 10: 0.94, 12: 1.00, 14: 1.08, 16: 1.18 }[size] || 1.0;
+    if (qb === '2qb') {
+      // 2QB needs 2× starting QBs — size has modest effect on top of the 1.55× format boost
+      szMod = { 8: 1.00, 10: 1.04, 12: 1.08, 14: 1.13, 16: 1.20 }[size] || 1.0;
+    } else if (qb === 'sf') {
+      // SF: one flex slot — small leagues still value QBs highly
+      szMod = { 8: 0.96, 10: 1.00, 12: 1.04, 14: 1.09, 16: 1.15 }[size] || 1.0;
+    } else {
+      // 1QB: surplus in small leagues, scarcity in large
+      szMod = { 8: 0.84, 10: 0.92, 12: 1.00, 14: 1.08, 16: 1.18 }[size] || 1.0;
+    }
   } else {
     const isElite = v > 5500;
     szMod = ({ 8: isElite ? 1.12 : 0.86, 10: isElite ? 1.06 : 0.93,
@@ -5191,8 +5202,11 @@ async function init() {
     fetchCustomRankings(),
   ]);
   const sleeperPlayers = await fetchPlayers();
-  // Merge: Sleeper + 2026 rookies + picks
-  S.players = [...sleeperPlayers, ...ROOKIES_2026, ...PICKS];
+  // Merge: Sleeper players take priority; VALUE_DB/ROOKIES fill gaps for players
+  // not yet in Sleeper (unannounced signings, rookies pre-loaded, etc.)
+  const sleeperNorms = new Set(sleeperPlayers.map(p => normName(p.full_name || '')));
+  const freshRookies = ROOKIES_2026.filter(p => !sleeperNorms.has(normName(p.full_name || '')));
+  S.players = [...sleeperPlayers, ...freshRookies, ...PICKS];
 
   // Mark fallback rookies
   FALLBACK_PLAYERS.forEach(p=>{ p.rookie = false; });
