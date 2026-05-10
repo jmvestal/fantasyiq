@@ -1335,8 +1335,8 @@
         <div class="val-signin-left">
           <span style="font-size:18px">⚙️</span>
           <div>
-            <div style="font-weight:700;font-size:13px">Showing default rankings · 12-Team · 1-QB · PPR · Dynasty</div>
-            <div style="font-size:11px;color:var(--text2);margin-top:2px">Sign in to customize for your exact league settings</div>
+            <div style="font-weight:700;font-size:13px" id="valBannerDesc">Showing default Dynasty rankings · 12-Team · 1-QB · PPR</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">Sign in to unlock custom league size, QB format &amp; scoring</div>
           </div>
         </div>
         <button class="btn btn-p btn-sm" onclick="openModal('authModal')">Sign In to Customize</button>
@@ -3241,8 +3241,8 @@ const BUYSELL_REASONS = {
 // ═══════════════════════════════════════════════════════════
 // VALUE ENGINE
 // ═══════════════════════════════════════════════════════════
-function calcValue(p) {
-  const { mode, size, qb, scoring, te, rookieOpt } = S.settings;
+function calcValue(p, _over) {
+  const { mode, size, qb, scoring, te, rookieOpt } = _over || S.settings;
   const pos = p.position;
 
   // ── PICKS ──
@@ -4010,7 +4010,22 @@ function loadFromUrl() {
 function renderValuesTable() {
   const q = document.getElementById('tblSearch').value.toLowerCase();
   const { col, dir } = S.tableSort;
-  const { mode, size, qb, scoring } = S.settings;
+
+  // Non-signed-in users: lock Player IQ to default 12T/1QB/PPR settings.
+  // Mode (dynasty/redraft) stays free. Only size/qb/scoring/te are gated.
+  const isLoggedIn = !!S.auth;
+  const vtSettings = isLoggedIn ? S.settings : {
+    ...S.settings, size: 12, qb: '1qb', scoring: 'ppr', te: 'off'
+  };
+
+  // Update sign-in banner description dynamically
+  const bannerDesc = document.getElementById('valBannerDesc');
+  if (bannerDesc && !isLoggedIn) {
+    const mLbl = S.settings.mode === 'dynasty' ? 'Dynasty' : 'Redraft';
+    bannerDesc.textContent = `Showing default ${mLbl} rankings · 12-Team · 1-QB · PPR`;
+  }
+
+  const { mode, size, qb, scoring } = vtSettings;
   const isDynasty = mode === 'dynasty';
 
   // ── Picks button: dynasty-only concept ──
@@ -4062,7 +4077,7 @@ function renderValuesTable() {
       return p.position === pos;
     })
     .filter(p => !q || p.full_name.toLowerCase().includes(q) || (p.team||'').toLowerCase().includes(q))
-    .map(p => ({ ...p, _val: calcValue(p) }))   // ← mode + QB/scoring/TE/size all applied
+    .map(p => ({ ...p, _val: calcValue(p, isLoggedIn ? null : vtSettings) }))   // ← locked to defaults for free users
     .sort((a,b) => {
       let av, bv;
       if (col === 'value') { av = a._val; bv = b._val; }
@@ -4120,7 +4135,11 @@ function renderValuesTable() {
   // update sub
   const modeStr = isDynasty ? 'Dynasty' : 'Redraft';
   const qbStr   = qb === 'sf' ? 'SF' : qb === '2qb' ? '2-QB' : '1-QB';
-  document.getElementById('valTableSub').textContent = `${rows.length} players · ${modeStr} · ${size}-Team · ${qbStr} · ${scoring.toUpperCase()} — rankings adjust to your settings`;
+  if (isLoggedIn) {
+    document.getElementById('valTableSub').textContent = `${rows.length} players · ${modeStr} · ${size}-Team · ${qbStr} · ${scoring.toUpperCase()} — rankings adjust to your settings`;
+  } else {
+    document.getElementById('valTableSub').textContent = `${rows.length} players · ${modeStr} · 12-Team · 1-QB · PPR — sign in to customize`;
+  }
 
   // sort indicators
   document.querySelectorAll('#valTable th').forEach(th => { th.classList.remove('sort-asc','sort-desc'); });
