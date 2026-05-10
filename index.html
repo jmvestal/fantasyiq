@@ -257,7 +257,15 @@
     .tiq-chat-footer input:focus{outline:none;border-color:var(--primary)}
     .tiq-chat-footer button{background:var(--primary);border:none;color:#fff;padding:8px 13px;border-radius:8px;cursor:pointer;font-size:15px;font-weight:700}
     .tiq-chat-footer button:hover{background:var(--primary-l)}
-    @media(max-width:640px){.tiq-chat-panel{width:calc(100vw - 24px);right:12px;bottom:128px}}
+    .tiq-chat-chips{display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px 4px;border-top:1px solid var(--border)}
+    .tiq-chip{background:var(--bg);border:1px solid var(--border2);color:var(--text2);font-size:11px;padding:5px 10px;border-radius:20px;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:inherit}
+    .tiq-chip:hover{border-color:var(--primary);color:var(--primary-l);background:var(--primary-d)}
+    .tiq-context-bar{padding:8px 12px;background:rgba(124,58,237,.1);border-bottom:1px solid rgba(124,58,237,.2);font-size:11px;color:var(--primary-l);display:flex;align-items:center;gap:6px}
+    .tiq-context-bar strong{font-weight:700}
+    @media(max-width:640px){
+      .tiq-chat-panel{position:fixed;left:0;right:0;bottom:0;width:100%;border-radius:20px 20px 0 0;height:70vh;max-height:70vh}
+      .tiq-chat-btn{bottom:72px;right:14px}
+    }
     .bsh-stats{display:flex;gap:10px;margin-bottom:14px}
     .bsh-stat{flex:1;background:var(--bg3);border-radius:8px;padding:10px;text-align:center}
     .bsh-stat-num{font-size:22px;font-weight:900}
@@ -379,39 +387,54 @@
     @media(max-width:768px){
       .mob-tab-bar{display:block}
       .nav{display:none}
-      .hdr-inner{gap:8px}
-      .logo{font-size:16px;letter-spacing:-.5px}
+      .hdr-inner{gap:6px;height:50px}
+      .logo{font-size:15px;letter-spacing:-.5px}
       .pc-badge{display:none}
-      .src-btn{padding:5px 8px;font-size:12px}
-      .auth-btn{padding:5px 10px;font-size:12px}
-      .main{padding:12px 12px calc(68px + env(safe-area-inset-bottom,0px))}
+      .src-btn{padding:5px 8px;font-size:11px}
+      .auth-btn{padding:5px 11px;font-size:12px;border-radius:7px}
+      .main{padding:10px 10px calc(68px + env(safe-area-inset-bottom,0px))}
       .anl-grid{grid-template-columns:1fr}
       .platform-grid{grid-template-columns:repeat(2,1fr)}
       .team-grade-bar{grid-template-columns:repeat(2,1fr)}
       .league-summary{grid-template-columns:repeat(2,1fr)}
       .draft-summary-grid{grid-template-columns:repeat(2,1fr)}
-      .sec-hdr{flex-direction:column;gap:10px}
+      .sec-hdr{flex-direction:column;gap:8px}
       .sec-hdr>div:last-child{width:100%;flex-wrap:wrap}
-      .tbar{flex-direction:column;align-items:stretch}
+      .sec-ttl{font-size:17px}
+      .sec-sub{font-size:11px}
+      .tbar{flex-direction:column;align-items:stretch;gap:8px}
       .tbar .tbl-srch{min-width:0}
       .trade-card-val{font-size:18px}
+      .trade-card{padding:12px}
+      .panel{border-radius:8px}
       .bsh-stats{flex-wrap:wrap}
-      .stat-row{flex-wrap:wrap}
-      .stat-card{min-width:calc(50% - 6px)}
+      .stat-row{flex-wrap:wrap;gap:8px}
+      .stat-card{min-width:calc(50% - 5px);padding:10px}
+      .stat-card-val{font-size:20px}
       .wizard-roster{grid-template-columns:repeat(3,1fr)}
-      .mo-box{padding:20px}
-      .toast{bottom:calc(68px + env(safe-area-inset-bottom,0px) + 8px);right:12px;left:12px;max-width:none}
+      .mo-box{padding:18px;border-radius:14px 14px 0 0;margin:0;max-height:92vh;overflow-y:auto}
+      .mo{align-items:flex-end}
+      .toast{bottom:calc(70px + env(safe-area-inset-bottom,0px) + 6px);right:10px;left:10px;max-width:none;border-radius:10px}
+      .layout{min-height:calc(100vh - 50px)}
+      .trade-chip{font-size:12px;padding:5px 8px}
+      .chip-rm{width:20px;height:20px;font-size:13px}
     }
     @media(max-width:480px){
-      .main{padding:10px 10px calc(68px + env(safe-area-inset-bottom,0px))}
-      .trade-card{padding:12px}
-      .grade-ring{width:56px;height:56px}
-      .grade-ring .gr{font-size:18px}
-      .sec-ttl{font-size:16px}
-      .chip-name{font-size:12px}
+      .main{padding:8px 8px calc(68px + env(safe-area-inset-bottom,0px))}
+      .trade-card{padding:10px}
+      .grade-ring{width:54px;height:54px}
+      .grade-ring .gr{font-size:17px}
+      .sec-ttl{font-size:15px}
+      .chip-name{font-size:11px}
       .wizard-roster{grid-template-columns:repeat(2,1fr)}
       .mob-settings-grid{grid-template-columns:1fr}
       .draft-grid{grid-template-columns:1fr}
+      .hdr-inner{height:46px}
+      .logo{font-size:14px}
+      .auth-btn{padding:4px 9px;font-size:11px}
+      .panel{padding:12px}
+      .pos-btn{padding:5px 9px;font-size:11px}
+      .badge{font-size:9px;padding:1px 4px}
     }
     ::-webkit-scrollbar{width:5px;height:5px}
     ::-webkit-scrollbar-track{background:var(--bg)}
@@ -6871,13 +6894,83 @@ function loadSampleDraft() {
 // TIQ AI CHAT — client-side trade/value assistant
 // Uses existing VALUE_DB + consensus data + current settings
 // ═══════════════════════════════════════════════════════════
+let _tiqFirstOpen = true;
+let _tiqChatLeague = null; // actively selected league for chat session
+
 function toggleTiqChat() {
   const panel = document.getElementById('tiqChatPanel');
+  const isOpening = !panel.classList.contains('open');
   panel.classList.toggle('open');
-  if (panel.classList.contains('open')) {
+  if (isOpening) {
     setTimeout(() => document.getElementById('tiqChatInput').focus(), 100);
     scrollChatToBottom();
+    if (_tiqFirstOpen) {
+      _tiqFirstOpen = false;
+      _tiqGreetUser();
+    }
   }
+}
+
+function _tiqGreetUser() {
+  const leagues = S.connectedLeagues || [];
+  const active  = S.connectedLeague;
+
+  // Update context bar
+  if (active) {
+    _tiqChatLeague = active;
+    _tiqSetContextBar(active.leagueName);
+  }
+
+  if (leagues.length > 1) {
+    // Multiple leagues — let user pick
+    const names = leagues.map(l => l.leagueName || `League ${l.leagueId}`).slice(0, 5);
+    addChatMsg(`Hey! 👋 I see you have **${leagues.length} leagues** connected. Which one do you want help with?`, 'ai');
+    showChatChips([
+      ...names.map(n => ({ label: n, text: `use league: ${n}` })),
+      { label: '🌐 General advice', text: 'general' }
+    ]);
+  } else if (active) {
+    // Single active league
+    const lName = active.leagueName || 'your league';
+    addChatMsg(`Hey! 👋 I'm connected to **${lName}**. Ask me about trades, buy/sell targets, or your roster — I'll use your league settings.`, 'ai');
+    showChatChips([
+      { label: '🟢 Buy targets', text: 'Who should I buy?' },
+      { label: '🔴 Sell targets', text: 'Who should I sell?' },
+      { label: '📋 Rate my team', text: 'Rate my team' },
+      { label: '📊 Top WRs', text: 'Top WRs' }
+    ]);
+  }
+  // else: default greeting already in HTML
+}
+
+function _tiqSetContextBar(leagueName) {
+  const bar = document.getElementById('tiqContextBar');
+  const lbl = document.getElementById('tiqContextLabel');
+  if (bar && lbl) {
+    lbl.textContent = leagueName || '';
+    bar.style.display = leagueName ? 'flex' : 'none';
+  }
+}
+
+function showChatChips(chips) {
+  const container = document.getElementById('tiqChatChips');
+  if (!container) return;
+  container.innerHTML = chips.map(c =>
+    `<button class="tiq-chip" onclick="useChatChip(${JSON.stringify(c.text)})">${c.label}</button>`
+  ).join('');
+}
+
+function useChatChip(text) {
+  const inp = document.getElementById('tiqChatInput');
+  if (inp) inp.value = text;
+  sendTiqChat();
+  // Reset chips to defaults after use
+  setTimeout(() => showChatChips([
+    { label: '🟢 Buy targets', text: 'Who should I buy?' },
+    { label: '🔴 Sell targets', text: 'Who should I sell?' },
+    { label: '📊 Top WRs', text: 'Top WRs' },
+    { label: '📊 Top RBs', text: 'Top RBs' }
+  ]), 800);
 }
 
 function scrollChatToBottom() {
@@ -6889,7 +6982,10 @@ function addChatMsg(text, role) {
   const el = document.getElementById('tiqChatMsgs');
   const div = document.createElement('div');
   div.className = `tiq-msg ${role}`;
-  div.innerHTML = text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+  div.innerHTML = text
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/_(.*?)_/g,'<em>$1</em>')
+    .replace(/\n/g,'<br>');
   el.appendChild(div);
   scrollChatToBottom();
   return div;
@@ -6911,12 +7007,82 @@ function sendTiqChat() {
   }, 380);
 }
 
+// ── Internal: compute buy/sell lists without DOM ──────────
+function _tiqGetBuySells() {
+  if (!S.players || !S.players.length) return { buys: [], sells: [] };
+  const buySet  = new Set(BUYSELL_OVERRIDES.buy.map(n => n.toLowerCase()));
+  const sellSet = new Set(BUYSELL_OVERRIDES.sell.map(n => n.toLowerCase()));
+  const holdSet = new Set(BUYSELL_OVERRIDES.hold.map(n => n.toLowerCase()));
+  const buys = [], sells = [];
+  const eligible = S.players.filter(p =>
+    p.position !== 'K' && p.position !== 'DEF' && p.position !== 'PICK' && calcValue(p) >= 2500
+  );
+  for (const p of eligible) {
+    const nm    = p.full_name.toLowerCase();
+    const vdb   = VALUE_DB[p.full_name];
+    const trend = vdb?.trend || 'flat';
+    const val   = calcValue(p);
+    const age   = p.age || 0;
+    let action;
+    if (buySet.has(nm))              action = 'BUY';
+    else if (sellSet.has(nm))        action = 'SELL';
+    else if (holdSet.has(nm))        action = 'HOLD';
+    else if (trend === 'up'   && age <= 26) action = 'BUY';
+    else if (trend === 'down' && age >= 30) action = 'SELL';
+    else if (trend === 'down')              action = 'SELL';
+    else if (age >= 32 && val > 3500)       action = 'SELL';
+    else                                    action = 'HOLD';
+    if (action === 'BUY')  buys.push({ ...p, val, trend, action });
+    if (action === 'SELL') sells.push({ ...p, val, trend, action });
+  }
+  buys.sort((a,b) => b.val - a.val);
+  sells.sort((a,b) => b.val - a.val);
+  return { buys, sells };
+}
+
+// ── Internal: roster analysis ─────────────────────────────
+function _tiqRosterAnalysis() {
+  const roster = S.roster || [];
+  if (!roster.length) return null;
+  const byPos = {};
+  for (const p of roster) {
+    const pos = p.position || 'UNK';
+    if (!byPos[pos]) byPos[pos] = [];
+    byPos[pos].push({ name: p.full_name || p.player_id, val: calcValue(p), pos });
+  }
+  // Sort each group by val desc
+  for (const pos of Object.keys(byPos)) byPos[pos].sort((a,b) => b.val - a.val);
+  return byPos;
+}
+
 function tiqChatReply(msg) {
   const lc = msg.toLowerCase();
   const qb = S.settings.qb.toUpperCase();
   const sz = S.settings.size;
   const mode = S.settings.mode;
   const modeLabel = mode === 'dynasty' ? 'dynasty' : 'redraft';
+  const settings = `${sz}-team ${qb} ${modeLabel}`;
+
+  // ── LEAGUE SELECTION from chip/text ───────────────────
+  if (lc.startsWith('use league:')) {
+    const target = msg.slice('use league:'.length).trim().toLowerCase();
+    const found  = (S.connectedLeagues || []).find(l =>
+      (l.leagueName || '').toLowerCase().includes(target)
+    );
+    if (found) {
+      _tiqChatLeague = found;
+      S.connectedLeague = found;
+      _tiqSetContextBar(found.leagueName);
+      const lName = found.leagueName || 'that league';
+      return `✅ Switched to **${lName}**! I'll use those settings now.\n\nAsk me about trades, buy/sell targets, or your roster.`;
+    }
+    return `I couldn't find that league. Try connecting it via the Leagues tab first.`;
+  }
+  if (lc === 'general') {
+    _tiqChatLeague = null;
+    _tiqSetContextBar('');
+    return `No problem! I'll give general dynasty/redraft advice without a specific league context.\n\nAsk me about player values, trade evals, or top players by position!`;
+  }
 
   // ── Find all player mentions ──────────────────────────
   const mentioned = [];
@@ -6927,16 +7093,12 @@ function tiqChatReply(msg) {
     if (fn.length > 3 && lc.includes(fn)) { mentioned.push(p); continue; }
     if (last.length >= 4 && lc.includes(last) && !mentioned.find(x => x.id === p.id)) mentioned.push(p);
   }
-  // Deduplicate & sort by value
   const players = [...new Map(mentioned.map(p => [p.id, p])).values()]
     .sort((a,b) => (b.dynasty_val||0) - (a.dynasty_val||0))
     .slice(0, 5);
 
-  const settings = `${sz}-team ${qb} ${modeLabel}`;
-
   // ── TRADE query ───────────────────────────────────────
-  if (players.length >= 2 && (lc.includes('trade') || lc.includes('for') || lc.includes('swap') || lc.includes('deal'))) {
-    // Split: player[0] is "giving", rest is "getting" (or detect "for" keyword split)
+  if (players.length >= 2 && (lc.includes('trade') || lc.includes(' for ') || lc.includes('swap') || lc.includes('deal'))) {
     let give = [players[0]], get = players.slice(1);
     const forIdx = lc.indexOf(' for ');
     if (forIdx > -1) {
@@ -6953,12 +7115,9 @@ function tiqChatReply(msg) {
     const pct   = Math.max(vGive, vGet) > 0 ? Math.round(Math.abs(diff) / Math.max(vGive, vGet) * 100) : 0;
     const giveStr = give.map(p => `**${p.full_name}** (${fmtVal(calcValue(p))})`).join(' + ');
     const getStr  = get.map(p  => `**${p.full_name}** (${fmtVal(calcValue(p))})`).join(' + ');
-
     if (pct < 7) return `📊 This trade is essentially **even** in your ${settings} league.\n\nYou give: ${giveStr}\nYou get: ${getStr}\n\nNeither side has a clear edge (${pct}% difference). If the player you're getting fits your roster needs better, lean toward accepting.`;
-
     const youWin = diff > 0;
-    const winSide = youWin ? getStr : giveStr;
-    const grade   = pct >= 25 ? (youWin ? '✅ Strong win' : '❌ Bad deal') : (youWin ? '✅ Slight win' : '⚠️ Slight loss');
+    const grade  = pct >= 25 ? (youWin ? '✅ Strong win' : '❌ Bad deal') : (youWin ? '✅ Slight win' : '⚠️ Slight loss');
     return `${grade} in your ${settings} league.\n\nYou give: ${giveStr}\nYou get: ${getStr}\n\n${youWin ? 'You come out **ahead by ' + pct + '%**. I\'d take this trade.' : 'You\'re giving up **' + pct + '% more value**. Push back for a better offer.'}`;
   }
 
@@ -6971,8 +7130,6 @@ function tiqChatReply(msg) {
     const tier = getTier(v);
     const age  = p.age || '?';
     const trendStr = p.trend === 'up' ? '📈 Rising' : p.trend === 'down' ? '📉 Falling' : '➡️ Stable';
-
-    // BSH recommendation
     let rec = '';
     if (mode === 'dynasty' && p.position === 'RB') {
       rec = (age !== '?' && age >= 29) ? '\n\n**Recommendation: SELL** — RBs decline fast after 28.' :
@@ -6981,7 +7138,6 @@ function tiqChatReply(msg) {
       rec = (age !== '?' && age >= 32) ? '\n\n**Recommendation: SELL** — WR value fades at 32+.' :
             (age !== '?' && age <= 23) ? '\n\n**Recommendation: BUY** — Under 24 with upside ahead.' : '';
     }
-
     return `**${p.full_name}** · ${p.position} · ${p.team||'FA'} · Age ${age}\n\nValue in your ${settings} league: **${fmtVal(v)}** (${tier.label})\nDynasty: ${fmtVal(dv)} · Redraft: ${fmtVal(rv)}\nTrend: ${trendStr}${rec}`;
   }
 
@@ -6998,20 +7154,72 @@ function tiqChatReply(msg) {
       const top = (S.players||[]).filter(p => p.position === pos)
         .map(p => ({ ...p, _v: calcValue(p) }))
         .sort((a,b) => b._v - a._v).slice(0, 8);
-      return `**Top ${pos}s** in your ${settings} league:\n\n` + top.map((p,i) => `${i+1}. ${p.full_name} (${p.team||'FA'}) — **${fmtVal(p._v)}**`).join('\n');
+      return `**Top ${pos}s** in your ${settings} league:\n\n` +
+        top.map((p,i) => `${i+1}. ${p.full_name} (${p.team||'FA'}) — **${fmtVal(p._v)}**`).join('\n');
     }
   }
 
-  // ── BUY/SELL/HOLD ────────────────────────────────────
-  if (lc.includes('waiver') || lc.includes('wire') || lc.includes('add')) {
-    return `For waiver wire advice, check the **📋 Waiver Wire** tab! It's updated weekly with streaming and dynasty targets based on usage, opportunity, and value gaps.`;
+  // ── BUY TARGETS ──────────────────────────────────────
+  if (lc.includes('buy') && !lc.includes('sell')) {
+    if (!S.players || !S.players.length) return `Player data is still loading. Try again in a moment!`;
+    const { buys } = _tiqGetBuySells();
+    if (!buys.length) return `No strong buy targets found right now in ${modeLabel} mode. All top players appear fairly valued.`;
+    const top = buys.slice(0, 6);
+    const lines = top.map((p,i) => {
+      const reason = getBuySellReason(p, 'BUY');
+      return `${i+1}. **${p.full_name}** (${p.position}/${p.team||'FA'}, Age ${p.age||'?'}) — ${fmtVal(p.val)}\n   _${reason}_`;
+    }).join('\n');
+    return `🟢 **Top Buy Targets** (${modeLabel}):\n\n${lines}\n\nThese players are trading below their expected value — now is a good time to buy.`;
   }
-  if (lc.includes('buy') || lc.includes('sell')) {
-    return `For dynasty buy/sell advice, head to the **📈 Buy/Sell** tab! It analyzes every player on your roster and flags the best sell-high and buy-low targets right now.`;
+
+  // ── SELL TARGETS ─────────────────────────────────────
+  if (lc.includes('sell') && !lc.includes('buy')) {
+    if (!S.players || !S.players.length) return `Player data is still loading. Try again in a moment!`;
+    const { sells } = _tiqGetBuySells();
+    if (!sells.length) return `No strong sell targets found right now in ${modeLabel} mode.`;
+    const top = sells.slice(0, 6);
+    const lines = top.map((p,i) => {
+      const reason = getBuySellReason(p, 'SELL');
+      return `${i+1}. **${p.full_name}** (${p.position}/${p.team||'FA'}, Age ${p.age||'?'}) — ${fmtVal(p.val)}\n   _${reason}_`;
+    }).join('\n');
+    return `🔴 **Top Sell Targets** (${modeLabel}):\n\n${lines}\n\nThese players are likely at or past peak value — consider moving them while demand is high.`;
+  }
+
+  // ── WAIVER WIRE ───────────────────────────────────────
+  if (lc.includes('waiver') || lc.includes('wire') || lc.includes('add')) {
+    const wires = (S.players||[])
+      .filter(p => p.position !== 'K' && p.position !== 'DEF' && p.position !== 'PICK')
+      .map(p => ({ ...p, _v: calcValue(p) }))
+      .filter(p => p._v >= 1500 && p._v < 4000)
+      .sort((a,b) => b._v - a._v).slice(0, 5);
+    if (!wires.length) return `Head to the **📋 Waiver Wire** tab for full streaming and dynasty targets updated weekly!`;
+    const lines = wires.map((p,i) => `${i+1}. **${p.full_name}** (${p.position}/${p.team||'FA'}) — ${fmtVal(p._v)}`).join('\n');
+    return `📋 **Waiver Wire targets** in your ${settings} league:\n\n${lines}\n\nCheck the **Waiver Wire** tab for full weekly analysis!`;
+  }
+
+  // ── ROSTER ANALYSIS ───────────────────────────────────
+  if (lc.includes('my team') || lc.includes('rate my') || lc.includes('my roster') ||
+      lc.includes('weakest') || lc.includes('what do i need') || lc.includes('roster grade')) {
+    const byPos = _tiqRosterAnalysis();
+    if (!byPos) return `Import your team first! Connect your Sleeper or ESPN league via the **Leagues** tab, or paste your roster there.`;
+    const posOrder = ['QB','RB','WR','TE'];
+    const grades = [];
+    let weakPos = null, weakAvg = Infinity;
+    for (const pos of posOrder) {
+      const group = byPos[pos] || [];
+      if (!group.length) { grades.push(`${pos}: no players`); continue; }
+      const avg = group.reduce((s,p) => s + p.val, 0) / group.length;
+      const label = avg >= 7000 ? 'Elite 🔥' : avg >= 5000 ? 'Strong 💪' : avg >= 3500 ? 'Solid ✅' : avg >= 2000 ? 'Thin ⚠️' : 'Weak ❌';
+      grades.push(`**${pos}**: ${label} (${group.slice(0,2).map(p=>p.name).join(', ')})`);
+      if (avg < weakAvg) { weakAvg = avg; weakPos = pos; }
+    }
+    const rosterSize = Object.values(byPos).flat().length;
+    return `📋 **Roster Analysis** (${rosterSize} players):\n\n${grades.join('\n')}\n\n${weakPos ? `💡 Your weakest position is **${weakPos}** — consider targeting upgrades there.` : ''}`;
   }
 
   // ── HELP / CATCH-ALL ─────────────────────────────────
-  return `I can help with:\n\n• **Trade eval** — "Should I trade Puka Nacua for Bijan Robinson?"\n• **Player value** — "What is Brock Bowers worth?"\n• **Position rankings** — "Top WRs" or "Best TEs"\n• **Comparisons** — "Compare JSN and Malik Nabers"\n\nTry mentioning player names and I'll pull their current values from your ${settings} settings!`;
+  const leagueLine = _tiqChatLeague ? `\n\nI'm analyzing your **${_tiqChatLeague.leagueName}** league settings.` : '';
+  return `I can help with:\n\n• **Trade eval** — "Should I trade Puka Nacua for Bijan Robinson?"\n• **Player value** — "What is Brock Bowers worth?"\n• **Position rankings** — "Top WRs" or "Best TEs"\n• **Buy/sell targets** — "Who should I buy?" or "Who should I sell?"\n• **Roster grade** — "Rate my team"\n• **Comparisons** — "Compare JSN and Malik Nabers"${leagueLine}`;
 }
 </script>
 
@@ -7025,11 +7233,20 @@ function tiqChatReply(msg) {
     </div>
     <button onclick="toggleTiqChat()">✕</button>
   </div>
+  <div id="tiqContextBar" style="display:none" class="tiq-context-bar">
+    🏈 <span id="tiqContextLabel"></span>
+  </div>
   <div class="tiq-chat-msgs" id="tiqChatMsgs">
-    <div class="tiq-msg ai">Hey! Ask me about any player's value, trade evaluations, buy/sell advice, or position rankings — I'll answer based on your current league settings. Try <em style="color:var(--primary-l)">"Should I trade Puka Nacua for Bijan Robinson?"</em></div>
+    <div class="tiq-msg ai">Hey! Ask me about player values, trades, buy/sell targets, or your roster. I'll answer based on your league settings.<br><br>Try: <em style="color:var(--primary-l)">"Who should I sell in dynasty?"</em></div>
+  </div>
+  <div class="tiq-chat-chips" id="tiqChatChips">
+    <button class="tiq-chip" onclick="useChatChip('Who should I buy?')">🟢 Buy targets</button>
+    <button class="tiq-chip" onclick="useChatChip('Who should I sell?')">🔴 Sell high</button>
+    <button class="tiq-chip" onclick="useChatChip('Top WRs')">Top WRs</button>
+    <button class="tiq-chip" onclick="useChatChip('Top RBs')">Top RBs</button>
   </div>
   <div class="tiq-chat-footer">
-    <input id="tiqChatInput" placeholder="Ask about a trade or player…" onkeydown="if(event.key==='Enter')sendTiqChat()" maxlength="200">
+    <input id="tiqChatInput" placeholder="Ask about a trade, player, or roster…" onkeydown="if(event.key==='Enter')sendTiqChat()" maxlength="200">
     <button onclick="sendTiqChat()">↑</button>
   </div>
 </div>
