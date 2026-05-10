@@ -1018,7 +1018,7 @@
             <tr>
               <th style="width:44px" onclick="sortTable('rank')">#</th>
               <th onclick="sortTable('name')">Player</th>
-              <th onclick="sortTable('pos')">Pos</th>
+              <th style="display:none"></th>
               <th onclick="sortTable('team')">Team</th>
               <th onclick="sortTable('age')">Age</th>
               <th onclick="sortTable('value')">Dynasty</th>
@@ -2862,9 +2862,8 @@ function renderChips(arr, side) {
       </div>`;
     })() : '';
     return `<div class="chip">
-      <span class="pb pb-${p.position}">${p.position}</span>
       <div class="chip-info">
-        <div class="chip-name">${p.full_name}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}${tierBadge}</div>
+        <div class="chip-name">${p.full_name}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''} <span class="pb pb-${p.position}" style="font-size:9px;vertical-align:middle">${p.position}</span>${tierBadge}</div>
         <div class="chip-sub">${p.team||''}${p.age?' · Age '+p.age:''}</div>
         ${bdHtml}
       </div>
@@ -3045,21 +3044,16 @@ function renderValuesTable() {
     const crossTd = isDynasty
       ? `<td><span style="font-size:12px;color:var(--text2)">${fmtVal(rvRaw)}</span></td>`
       : `<td style="display:none"></td>`;
-    // Diff badge (dynasty vs redraft baseline) only in dynasty view
-    const dvDiff = isDynasty && p.dynasty_val && rvRaw ? p.dynasty_val - rvRaw : 0;
-    const diffLabel = dvDiff > 500 ? `<span style="font-size:10px;color:var(--success);margin-left:3px">+DYN</span>`
-                    : dvDiff < -500 ? `<span style="font-size:10px;color:var(--warn);margin-left:3px">+RDR</span>` : '';
     return `<tr>
       <td><span style="color:var(--text3);font-size:12px">${i+1}</span></td>
-      <td><strong>${p.full_name}</strong>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</td>
-      <td><span class="pb pb-${p.position}">${p.position}</span></td>
+      <td><strong>${p.full_name}</strong>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''} <span class="pb pb-${p.position}" style="font-size:9px;vertical-align:middle">${p.position}</span></td>
+      <td style="display:none"></td>
       <td style="color:var(--text2)">${p.team||'—'}</td>
       <td style="color:var(--text2)">${p.age||'—'}</td>
       <td>
         <div class="mini-bar">
           <span style="font-weight:700;font-size:13px;min-width:42px;color:var(--primary-l)">${fmtVal(v)}</span>
           <div class="mini-track"><div class="mini-fill" style="width:${dvBar}%"></div></div>
-          ${diffLabel}
         </div>
       </td>
       ${crossTd}
@@ -3156,14 +3150,10 @@ function renderRosterList() {
   function row(p, slotLabel, cls) {
     const pos = p.position === 'DST' ? 'DEF' : p.position;
     const v   = calcValue(p);
-    const dvDiff = (p.dynasty_val||0) - (p.redraft_val||0);
-    const badge  = dvDiff > 800  ? '<span style="font-size:9px;color:var(--success);margin-left:4px">+DYN</span>'
-                 : dvDiff < -800 ? '<span style="font-size:9px;color:var(--warn);margin-left:4px">+RDR</span>' : '';
     return `<div class="ros-row">
       <span class="ros-slot-lbl ${cls}">${slotLabel}</span>
-      <span class="pb pb-${pos}" style="flex-shrink:0">${pos}</span>
       <div class="ros-row-info">
-        <div style="font-weight:600;font-size:13px">${p.full_name}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}${badge}</div>
+        <div style="font-weight:600;font-size:13px">${p.full_name}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''} <span class="pb pb-${pos}" style="font-size:9px;vertical-align:middle">${pos}</span></div>
         <div style="font-size:11px;color:var(--text3)">${p.team||'FA'}${p.age?' · Age '+p.age:''}</div>
       </div>
       <div style="font-weight:700;font-size:13px;color:var(--primary-l);flex-shrink:0">${fmtVal(v)}</div>
@@ -3192,10 +3182,10 @@ function renderRosterList() {
     (S.settings.mode === 'redraft' && (slots.K > 0 || slots.DEF > 0));
 
   let html = '<div class="ros-section-hdr">Starters</div>';
-  html += group('QB',   qbStarters,    slots.QB,    'is-starter');
-  html += group('RB',   rbStarters,    slots.RB,    'is-starter');
-  html += group('WR',   wrStarters,    slots.WR,    'is-starter');
-  html += group('TE',   teStarters,    slots.TE,    'is-starter');
+  html += group('QB',   qbStarters,    slots.QB,    'is-slot-QB');
+  html += group('RB',   rbStarters,    slots.RB,    'is-slot-RB');
+  html += group('WR',   wrStarters,    slots.WR,    'is-slot-WR');
+  html += group('TE',   teStarters,    slots.TE,    'is-slot-TE');
   if (slots.FLEX  > 0) html += group('FLEX',  flexStarters,  slots.FLEX,  'is-flex');
   if (slots.SFLEX > 0) html += group('SFLX',  sflexStarters, slots.SFLEX, 'is-flex');
 
@@ -5437,7 +5427,7 @@ async function importSleeperLeague(leagueId) {
   // Build ALL teams for league analyzer
   const allTeams = (rosters||[]).map(roster => {
     const teamIds = [...(roster.players||[]), ...(roster.reserve||[])];
-    const teamPlayers = teamIds.map(id => S.players.find(p=>(p.player_id||p.id)===id)).filter(Boolean);
+    const teamPlayers = teamIds.map(id => S.players.find(p=>String(p.player_id||p.id)===String(id))).filter(Boolean);
     return {
       rosterId:  roster.roster_id,
       ownerId:   roster.owner_id,
@@ -5452,7 +5442,7 @@ async function importSleeperLeague(leagueId) {
 
   // My roster players
   const allIds = [...(userRoster.players||[]), ...(userRoster.reserve||[])];
-  const rosterPlayers = allIds.map(id => S.players.find(p=>(p.player_id||p.id)===id)).filter(Boolean);
+  const rosterPlayers = allIds.map(id => S.players.find(p=>String(p.player_id||p.id)===String(id))).filter(Boolean);
 
   // Build league data object
   const leagueData = {
@@ -5487,7 +5477,9 @@ function detectSleeperSettings(leagueInfo) {
   const scoring   = leagueInfo.scoring_settings || {};
 
   const size = String(settings.num_teams || 12);
-  const mode = settings.type === 2 ? 'dynasty' : 'redraft';
+  // Sleeper: type/keep_type 2 = dynasty, 1 = keeper (treat as dynasty for value purposes)
+  const leagueType = Number(settings.type ?? leagueInfo.type ?? 0);
+  const mode = (leagueType === 2 || leagueType === 1) ? 'dynasty' : 'redraft';
 
   const qbSlots = positions.filter(p => p === 'QB').length;
   const hasSF   = positions.includes('SUPER_FLEX');
@@ -5560,7 +5552,7 @@ async function processESPNData(data, leagueId) {
   const detectedSettings = { mode:'redraft', size, qb:'1qb', scoring:'ppr', te:'off' };
   const rosterPlayers = (me.roster?.entries||[]).map(e => {
     const pid = String(e.playerPoolEntry?.playerId || '');
-    return S.players.find(p => (p.player_id||p.id) === pid);
+    return S.players.find(p => String(p.player_id||p.id) === pid);
   }).filter(Boolean);
   const leagueData = {
     platform:'espn', leagueId, leagueName: data.settings?.name||`ESPN League ${leagueId}`,
@@ -5662,7 +5654,7 @@ async function loadConnectedLeagues() {
     const latest = arr.sort((a,b)=>(b.connectedAt||0)-(a.connectedAt||0))[0];
     S.connectedLeague = latest;
     // Restore roster from saved IDs
-    S.roster = (latest.rosterIds||[]).map(id=>S.players.find(p=>(p.player_id||p.id)===id)).filter(Boolean);
+    S.roster = (latest.rosterIds||[]).map(id=>S.players.find(p=>String(p.player_id||p.id)===String(id))).filter(Boolean);
     applyLeagueSettings(latest.settings);
     updateLeagueBar();
     renderRosterList();
@@ -5693,7 +5685,7 @@ async function silentSleeperRefresh(lg) {
     }
     if (!userRoster) return;
     const allIds = [...(userRoster.players||[]), ...(userRoster.reserve||[])].map(String);
-    const rosterPlayers = allIds.map(id => S.players.find(p=>(p.player_id||p.id)===id)).filter(Boolean);
+    const rosterPlayers = allIds.map(id => S.players.find(p=>String(p.player_id||p.id)===String(id))).filter(Boolean);
     const updatedLeague = { ...S.connectedLeague, rosterIds: allIds, connectedAt: Date.now() };
     S.connectedLeague = updatedLeague;
     S.roster = rosterPlayers;
@@ -5724,7 +5716,7 @@ async function switchLeague(leagueId) {
   const lg = S.connectedLeagues.find(l=>l.leagueId===leagueId);
   if (!lg) return;
   S.connectedLeague = lg;
-  S.roster = (lg.rosterIds||[]).map(id=>S.players.find(p=>(p.player_id||p.id)===id)).filter(Boolean);
+  S.roster = (lg.rosterIds||[]).map(id=>S.players.find(p=>String(p.player_id||p.id)===String(id))).filter(Boolean);
   applyLeagueSettings(lg.settings);
   updateLeagueBar();
   renderRosterList();
@@ -6461,8 +6453,7 @@ function rosterPickerChip(p, side) {
   const val   = calcValue(p);
   const valFmt = val >= 1000 ? (val/1000).toFixed(1)+'k' : val;
   return `<div class="lrp${isIn?' in-trade':''}" onclick="toggleLeagueTradePlayer('${escHtml(pid)}','${side}')">
-    <span class="pb pb-${p.position}">${p.position}</span>
-    <span class="lrp-name">${escHtml(p.full_name||'Unknown')}</span>
+    <span class="lrp-name">${escHtml(p.full_name||'Unknown')} <span class="pb pb-${p.position}" style="font-size:9px;vertical-align:middle">${p.position}</span></span>
     <span class="lrp-val">${valFmt}</span>
     ${isIn ? '<span style="color:var(--success);font-size:13px;flex-shrink:0">✓</span>' : ''}
   </div>`;
