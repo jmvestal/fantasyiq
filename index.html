@@ -902,8 +902,15 @@
     .pc-stats-tbl tr:nth-child(odd) td{background:rgba(255,255,255,.02)}
     .pc-stats-tbl tr.pc-yr-hi td{background:rgba(124,58,237,.09)!important;border-top:1px solid rgba(124,58,237,.2)}
     .pc-stats-tbl td.pc-ppg{color:var(--primary-l);font-weight:700}
+    /* Scoring toggle */
+    .pc-scoring-row{display:flex;align-items:center;gap:7px;margin:12px 0 4px}
+    .pc-sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
+    .pc-sc-tog{display:flex;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:2px;gap:2px}
+    .pc-sc-btn{background:none;border:none;border-radius:6px;padding:4px 11px;font-size:11px;font-weight:700;color:var(--text3);cursor:pointer;transition:all .13s;white-space:nowrap}
+    .pc-sc-btn:hover{color:var(--text)}
+    .pc-sc-btn.on{background:var(--primary);color:#fff;box-shadow:0 1px 6px rgba(124,58,237,.4)}
     /* Stat tabs */
-    .pc-stat-nav{display:flex;gap:0;margin:10px 0 0;border-bottom:2px solid var(--border)}
+    .pc-stat-nav{display:flex;gap:0;margin:6px 0 0;border-bottom:2px solid var(--border)}
     .pc-stab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;padding:7px 13px;font-size:12px;font-weight:700;color:var(--text3);cursor:pointer;transition:color .12s,border-color .12s;white-space:nowrap}
     .pc-stab:hover{color:var(--text)}
     .pc-stab.on{color:var(--primary-l);border-bottom-color:var(--primary-l)}
@@ -10687,8 +10694,18 @@ function showPlayerCard(name) {
     document.body.style.overflow = 'hidden';
 
     // ── Store player context for tab system, reset to Season tab ──
+    // Use player-card-local scoring (defaults to league setting)
+    window._pcScoring = S?.settings?.scoring || 'ppr';
     window._pcPlayer = { slId, pos: p.position || '', pname, isRookie: !!p.rookie, isPick: p.position === 'PICK', player: p, _data: {} };
-    // Reset tab buttons
+
+    // Show/configure scoring toggle for skill positions only
+    const skillPos = ['RB','WR','TE','QB'].includes((p.position||'').toUpperCase());
+    const scoringRow = document.getElementById('pcScoringRow');
+    if (scoringRow) scoringRow.style.display = skillPos ? 'flex' : 'none';
+    // Sync toggle buttons to current scoring
+    _syncPcScoringBtns();
+
+    // Reset stat tab buttons
     document.querySelectorAll('.pc-stab').forEach((b, i) => b.classList.toggle('on', i === 0));
     // Load season stats tab
     pcStatsTab('season', null);
@@ -10820,6 +10837,28 @@ function _aggStats(wks) {
   return t;
 }
 
+// ── Scoring toggle helpers ────────────────────────────────────
+function _syncPcScoringBtns() {
+  const sc = window._pcScoring || 'ppr';
+  document.getElementById('pcScPPR')?.classList.toggle('on',  sc === 'ppr');
+  document.getElementById('pcScHalf')?.classList.toggle('on', sc === 'half');
+  document.getElementById('pcScStd')?.classList.toggle('on',  sc === 'std');
+}
+
+function pcSetScoring(scoring, btn) {
+  if (window._pcScoring === scoring) return; // no change
+  window._pcScoring = scoring;
+  _syncPcScoringBtns();
+  // Clear cached renders so they recalculate with new scoring
+  if (window._pcPlayer) window._pcPlayer._data = {};
+  // Re-render whichever tab is currently active
+  const activeTab = document.querySelector('.pc-stab.on');
+  const tabName = activeTab
+    ? (['season','log','proj'][[...document.querySelectorAll('.pc-stab')].indexOf(activeTab)] || 'season')
+    : 'season';
+  pcStatsTab(tabName, activeTab);
+}
+
 // ── Manual fantasy point calculator (fallback when Sleeper pts are missing) ──
 function _calcFPts(d) {
   const n = v => parseFloat(v) || 0;
@@ -10851,7 +10890,7 @@ function _resolvePts(d) {
 // ── Season stats (3-year table) ───────────────────────────────
 async function fetchPCStats(slId, position) {
   const pos     = (position || '').toUpperCase();
-  const scoring = (S?.settings?.scoring) || 'ppr';
+  const scoring = window._pcScoring || (S?.settings?.scoring) || 'ppr';
 
   // Single season-totals call per year (way faster than 18 weekly calls)
   const [s25, s24, s23] = await Promise.all([
@@ -10875,13 +10914,10 @@ async function fetchPCStats(slId, position) {
   const ppg = (pts, gp) => gp > 0 ? (pts / gp).toFixed(1) : '—';
   const hi  = yr => yr === 2025 ? ' class="pc-yr-hi"' : '';
 
-  // skill pos label: show user's scoring with the "other" for comparison
-  const userPtsLbl = scoring === 'std' ? 'Std Pts' : scoring === 'half' ? 'Half Pts' : 'PPR Pts';
-  const altPtsLbl  = scoring === 'ppr'  ? 'Std Pts' : 'PPR Pts';
+  const ptsLbl = scoring === 'std' ? 'Std Pts' : scoring === 'half' ? 'Half Pts' : 'PPR Pts';
 
   let tbl = '';
   if (pos === 'QB') {
-    // QBs: PPR = Std (no reception bonus), just show one pts column
     tbl = `<table class="pc-stats-tbl"><tr><th>Year</th><th>G</th><th>Pts</th><th>Pts/G</th><th>Pass Yds</th><th>TDs</th><th>INTs</th><th>Rush Yds</th></tr>`;
     for (const { yr, d } of rows) {
       const { ppr, std, half } = _resolvePts(d);
@@ -10890,23 +10926,21 @@ async function fetchPCStats(slId, position) {
       tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td>${f(pts)}</td><td class="pc-ppg">${ppg(pts,gp)}</td><td>${Math.round(n(d.pass_yd))}</td><td>${n(d.pass_td)}</td><td>${n(d.pass_int)}</td><td>${Math.round(n(d.rush_yd))}</td></tr>`;
     }
   } else if (pos === 'RB') {
-    tbl = `<table class="pc-stats-tbl"><tr><th>Year</th><th>G</th><th>${userPtsLbl}</th><th>${altPtsLbl}</th><th>Pts/G</th><th>Att</th><th>Rush Yds</th><th>Rush TDs</th><th>Rec</th><th>Rec Yds</th></tr>`;
+    tbl = `<table class="pc-stats-tbl"><tr><th>Year</th><th>G</th><th>${ptsLbl}</th><th>Pts/G</th><th>Att</th><th>Rush Yds</th><th>Rush TDs</th><th>Rec</th><th>Rec Yds</th></tr>`;
     for (const { yr, d } of rows) {
       const { ppr, std, half } = _resolvePts(d);
-      const userPts = scoring === 'std' ? std : scoring === 'half' ? half : ppr;
-      const altPts  = scoring === 'ppr'  ? std : ppr;
-      const gp = n(d.gp);
-      tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td class="pc-ppg">${f(userPts)}</td><td style="color:var(--text3)">${f(altPts)}</td><td>${ppg(userPts,gp)}</td><td>${n(d.rush_att)}</td><td>${Math.round(n(d.rush_yd))}</td><td>${n(d.rush_td)}</td><td>${n(d.rec)}</td><td>${Math.round(n(d.rec_yd))}</td></tr>`;
+      const pts = scoring === 'std' ? std : scoring === 'half' ? half : ppr;
+      const gp  = n(d.gp);
+      tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td class="pc-ppg">${f(pts)}</td><td>${ppg(pts,gp)}</td><td>${n(d.rush_att)}</td><td>${Math.round(n(d.rush_yd))}</td><td>${n(d.rush_td)}</td><td>${n(d.rec)}</td><td>${Math.round(n(d.rec_yd))}</td></tr>`;
     }
   } else if (pos === 'WR' || pos === 'TE') {
-    tbl = `<table class="pc-stats-tbl"><tr><th>Year</th><th>G</th><th>${userPtsLbl}</th><th>${altPtsLbl}</th><th>Pts/G</th><th>Tgts</th><th>Rec</th><th>Yds</th><th>TDs</th><th>Y/R</th></tr>`;
+    tbl = `<table class="pc-stats-tbl"><tr><th>Year</th><th>G</th><th>${ptsLbl}</th><th>Pts/G</th><th>Tgts</th><th>Rec</th><th>Yds</th><th>TDs</th><th>Y/R</th></tr>`;
     for (const { yr, d } of rows) {
       const { ppr, std, half } = _resolvePts(d);
-      const userPts = scoring === 'std' ? std : scoring === 'half' ? half : ppr;
-      const altPts  = scoring === 'ppr'  ? std : ppr;
-      const gp = n(d.gp);
+      const pts = scoring === 'std' ? std : scoring === 'half' ? half : ppr;
+      const gp  = n(d.gp);
       const ypr = n(d.rec) > 0 ? (n(d.rec_yd) / n(d.rec)).toFixed(1) : '—';
-      tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td class="pc-ppg">${f(userPts)}</td><td style="color:var(--text3)">${f(altPts)}</td><td>${ppg(userPts,gp)}</td><td>${n(d.rec_tgt)}</td><td>${n(d.rec)}</td><td>${Math.round(n(d.rec_yd))}</td><td>${n(d.rec_td)}</td><td>${ypr}</td></tr>`;
+      tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td class="pc-ppg">${f(pts)}</td><td>${ppg(pts,gp)}</td><td>${n(d.rec_tgt)}</td><td>${n(d.rec)}</td><td>${Math.round(n(d.rec_yd))}</td><td>${n(d.rec_td)}</td><td>${ypr}</td></tr>`;
     }
   } else if (pos === 'K') {
     tbl = `<table class="pc-stats-tbl"><tr><th>Year</th><th>G</th><th>Pts</th><th>Pts/G</th><th>FGM</th><th>FGA</th><th>FG%</th><th>XPM</th></tr>`;
@@ -10924,17 +10958,14 @@ async function fetchPCStats(slId, position) {
       tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td>${f(pts)}</td><td class="pc-ppg">${ppg(pts,gp)}</td></tr>`;
     }
   }
-  const scoringNote = (pos === 'RB' || pos === 'WR' || pos === 'TE')
-    ? `${userPtsLbl} highlighted · Alt scoring shown dim`
-    : 'Fantasy points';
-  tbl += `</table><div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:right">2025 highlighted · ${scoringNote} · Source: Sleeper</div>`;
+  tbl += `</table><div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:right">2025 highlighted · ${ptsLbl} · Source: Sleeper</div>`;
   return tbl;
 }
 
 // ── Game log (week-by-week) ────────────────────────────────────
 async function fetchPCGameLog(slId, position, year) {
   const pos     = (position || '').toUpperCase();
-  const scoring = (S?.settings?.scoring) || 'ppr';
+  const scoring = window._pcScoring || (S?.settings?.scoring) || 'ppr';
   const n = v => parseFloat(v) || 0;
   const f = v => parseFloat(v || 0).toFixed(1);
 
@@ -11002,7 +11033,7 @@ function pcLogYear(year, btn) {
 // ── 2026 Projections ──────────────────────────────────────────
 async function fetchPCProjections(slId, position, player) {
   const pos     = (position || '').toUpperCase();
-  const scoring = (S?.settings?.scoring) || 'ppr';
+  const scoring = window._pcScoring || (S?.settings?.scoring) || 'ppr';
   const ptsKey  = scoring === 'std' ? 'pts_std' : scoring === 'half' ? 'pts_half_ppr' : 'pts_ppr';
   const n = v => parseFloat(v) || 0;
   const f = v => parseFloat(v || 0).toFixed(1);
@@ -11126,6 +11157,7 @@ window.showPlayerCard  = showPlayerCard;
 window.closePlayerCard = closePlayerCard;
 window.pcStatsTab      = pcStatsTab;
 window.pcLogYear       = pcLogYear;
+window.pcSetScoring    = pcSetScoring;
 
 // Bubbling fallback — catches any clicks on [data-pcname] elements
 // that the inline onclick missed (e.g. child element was the target)
@@ -11172,6 +11204,15 @@ document.addEventListener('keydown', function(e) {
     </div>
     <div class="pc-body">
       <div id="pcSignal" style="display:none" class="pc-signal"></div>
+      <!-- Scoring toggle — shown for skill positions -->
+      <div id="pcScoringRow" class="pc-scoring-row" style="display:none">
+        <span class="pc-sc-lbl">Scoring:</span>
+        <div class="pc-sc-tog">
+          <button class="pc-sc-btn" id="pcScPPR"  onclick="pcSetScoring('ppr',this)">PPR</button>
+          <button class="pc-sc-btn" id="pcScHalf" onclick="pcSetScoring('half',this)">Half</button>
+          <button class="pc-sc-btn" id="pcScStd"  onclick="pcSetScoring('std',this)">Std</button>
+        </div>
+      </div>
       <div class="pc-stat-nav">
         <button class="pc-stab on"  onclick="pcStatsTab('season',this)">📊 Season Stats</button>
         <button class="pc-stab"     onclick="pcStatsTab('log',this)">📋 Game Log</button>
