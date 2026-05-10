@@ -1388,6 +1388,8 @@
           <div class="sec-sub">Connect your league for roster grades, trade targets &amp; buy/sell advice</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <!-- League switcher (visible when 2+ leagues connected) -->
+          <select id="rosterTabLgSel" class="trade-partner-sel" style="display:none;font-size:12px;padding:6px 10px" onchange="switchLeagueGlobal(this.value)"></select>
           <button class="btn btn-sm btn-s" onclick="openModal('connectModal')">🔗 Connect League</button>
           <button class="btn btn-p btn-sm" id="bshBtn" onclick="runBSH()" disabled>Run Buy/Sell/Hold</button>
         </div>
@@ -1463,6 +1465,8 @@
           <div class="sec-sub" id="leagueAnalyzerSub">Connect a league to rank all teams</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <!-- League switcher (visible when 2+ leagues connected) -->
+          <select id="leagueTabLgSel" class="trade-partner-sel" style="display:none;font-size:12px;padding:6px 10px" onchange="switchLeagueGlobal(this.value)"></select>
           <div class="league-view-toggle" id="leagueViewToggle">
             <button class="lvt-btn on" data-lv="dynasty" onclick="setLeagueView('dynasty')">🏆 Dynasty</button>
             <button class="lvt-btn" data-lv="winnow" onclick="setLeagueView('winnow')">⚡ Win Now</button>
@@ -1966,6 +1970,11 @@
     <div class="mob-settings-handle"></div>
     <div class="mob-settings-ttl">League Settings</div>
     <div class="mob-settings-grid">
+      <!-- Active league switcher — shown only when 2+ leagues connected -->
+      <div class="mob-s-section" id="mobLgSection" style="grid-column:1/-1;display:none">
+        <div class="mob-s-label">🏈 Active League</div>
+        <select id="mobLgSel" class="sidebar-lg-sel" onchange="switchLeagueGlobal(this.value)"></select>
+      </div>
       <div class="mob-s-section">
         <div class="mob-s-label">Mode</div>
         <div class="mob-tog-row">
@@ -9447,11 +9456,22 @@ function _refreshLeagueSels() {
     if (show) tgSel.innerHTML = opts;
   }
 
-  // Waiver IQ tab selector
-  const wSel = document.getElementById('wireTabLgSel');
-  if (wSel) {
-    wSel.style.display = leagues.length > 1 ? '' : 'none';
-    if (leagues.length > 1) wSel.innerHTML = opts;
+  // Tab-level selectors (Waiver IQ, Team IQ, League IQ) — show when 2+ leagues
+  ['wireTabLgSel', 'rosterTabLgSel', 'leagueTabLgSel'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.display = leagues.length > 1 ? '' : 'none';
+      if (leagues.length > 1) el.innerHTML = opts;
+    }
+  });
+
+  // Mobile settings sheet league selector
+  const mobLgSec = document.getElementById('mobLgSection');
+  const mobLgSel = document.getElementById('mobLgSel');
+  if (mobLgSec && mobLgSel) {
+    const show = leagues.length > 1;
+    mobLgSec.style.display = show ? '' : 'none';
+    if (show) mobLgSel.innerHTML = opts;
   }
 
   // Scout IQ chat dropdown
@@ -10767,11 +10787,38 @@ function _aggStats(wks) {
   return t;
 }
 
+// ── Manual fantasy point calculator (fallback when Sleeper pts are missing) ──
+function _calcFPts(d) {
+  const n = v => parseFloat(v) || 0;
+  const base =
+    n(d.pass_yd) * 0.04 + n(d.pass_td) * 4 - n(d.pass_int) * 2 + n(d.pass_2pt) * 2 +
+    n(d.rush_yd) * 0.1  + n(d.rush_td) * 6  + n(d.rush_2pt) * 2 +
+    n(d.rec_yd)  * 0.1  + n(d.rec_td)  * 6  + n(d.rec_2pt)  * 2 +
+    // FG tiers: 0-39=3, 40-49=4, 50+=5 — use 3 flat as safe estimate
+    n(d.fgm) * 3 + n(d.xpm) * 1 -
+    n(d.fum_lost) * 2;
+  return {
+    std:  base,
+    half: base + n(d.rec) * 0.5,
+    ppr:  base + n(d.rec) * 1.0
+  };
+}
+
+// ── Get resolved PPR / Std / Half pts for a stat row ──
+function _resolvePts(d) {
+  const n = v => parseFloat(v) || 0;
+  const raw = _calcFPts(d);
+  return {
+    ppr:  n(d.pts_ppr)       > 0 ? n(d.pts_ppr)       : raw.ppr,
+    std:  n(d.pts_std)       > 0 ? n(d.pts_std)       : raw.std,
+    half: n(d.pts_half_ppr)  > 0 ? n(d.pts_half_ppr)  : raw.half,
+  };
+}
+
 // ── Season stats (3-year table) ───────────────────────────────
 async function fetchPCStats(slId, position) {
   const pos     = (position || '').toUpperCase();
   const scoring = (S?.settings?.scoring) || 'ppr';
-  const ptsKey  = scoring === 'std' ? 'pts_std' : scoring === 'half' ? 'pts_half_ppr' : 'pts_ppr';
 
   const [allWks25, allWks24, allWks23] = await Promise.all([
     _loadSleeperWeeks(2025),
@@ -10788,46 +10835,64 @@ async function fetchPCStats(slId, position) {
 
   if (!rows.length) return '<div style="color:var(--text3);font-size:12px;padding:10px 0">No stats found — player may not have played in 2023–2025</div>';
 
-  const n   = v => v || 0;
+  const n   = v => parseFloat(v) || 0;
   const f   = v => parseFloat(v || 0).toFixed(1);
   const ppg = (pts, gp) => gp > 0 ? (pts / gp).toFixed(1) : '—';
   const hi  = yr => yr === 2025 ? ' class="pc-yr-hi"' : '';
 
+  // skill pos label: show user's scoring with the "other" for comparison
+  const userPtsLbl = scoring === 'std' ? 'Std Pts' : scoring === 'half' ? 'Half Pts' : 'PPR Pts';
+  const altPtsLbl  = scoring === 'ppr'  ? 'Std Pts' : 'PPR Pts';
+
   let tbl = '';
   if (pos === 'QB') {
+    // QBs: PPR = Std (no reception bonus), just show one pts column
     tbl = `<table class="pc-stats-tbl"><tr><th>Year</th><th>G</th><th>Pts</th><th>Pts/G</th><th>Pass Yds</th><th>TDs</th><th>INTs</th><th>Rush Yds</th></tr>`;
     for (const { yr, d } of rows) {
-      const pts = n(d[ptsKey]), gp = n(d.gp);
+      const { ppr, std, half } = _resolvePts(d);
+      const pts = scoring === 'std' ? std : scoring === 'half' ? half : ppr;
+      const gp  = n(d.gp);
       tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td>${f(pts)}</td><td class="pc-ppg">${ppg(pts,gp)}</td><td>${Math.round(n(d.pass_yd))}</td><td>${n(d.pass_td)}</td><td>${n(d.pass_int)}</td><td>${Math.round(n(d.rush_yd))}</td></tr>`;
     }
   } else if (pos === 'RB') {
-    tbl = `<table class="pc-stats-tbl"><tr><th>Year</th><th>G</th><th>Pts</th><th>Pts/G</th><th>Att</th><th>Rush Yds</th><th>Rush TDs</th><th>Rec</th><th>Rec Yds</th></tr>`;
+    tbl = `<table class="pc-stats-tbl"><tr><th>Year</th><th>G</th><th>${userPtsLbl}</th><th>${altPtsLbl}</th><th>Pts/G</th><th>Att</th><th>Rush Yds</th><th>Rush TDs</th><th>Rec</th><th>Rec Yds</th></tr>`;
     for (const { yr, d } of rows) {
-      const pts = n(d[ptsKey]), gp = n(d.gp);
-      tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td>${f(pts)}</td><td class="pc-ppg">${ppg(pts,gp)}</td><td>${n(d.rush_att)}</td><td>${Math.round(n(d.rush_yd))}</td><td>${n(d.rush_td)}</td><td>${n(d.rec)}</td><td>${Math.round(n(d.rec_yd))}</td></tr>`;
+      const { ppr, std, half } = _resolvePts(d);
+      const userPts = scoring === 'std' ? std : scoring === 'half' ? half : ppr;
+      const altPts  = scoring === 'ppr'  ? std : ppr;
+      const gp = n(d.gp);
+      tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td class="pc-ppg">${f(userPts)}</td><td style="color:var(--text3)">${f(altPts)}</td><td>${ppg(userPts,gp)}</td><td>${n(d.rush_att)}</td><td>${Math.round(n(d.rush_yd))}</td><td>${n(d.rush_td)}</td><td>${n(d.rec)}</td><td>${Math.round(n(d.rec_yd))}</td></tr>`;
     }
   } else if (pos === 'WR' || pos === 'TE') {
-    tbl = `<table class="pc-stats-tbl"><tr><th>Year</th><th>G</th><th>Pts</th><th>Pts/G</th><th>Tgts</th><th>Rec</th><th>Yds</th><th>TDs</th><th>Y/R</th></tr>`;
+    tbl = `<table class="pc-stats-tbl"><tr><th>Year</th><th>G</th><th>${userPtsLbl}</th><th>${altPtsLbl}</th><th>Pts/G</th><th>Tgts</th><th>Rec</th><th>Yds</th><th>TDs</th><th>Y/R</th></tr>`;
     for (const { yr, d } of rows) {
-      const pts = n(d[ptsKey]), gp = n(d.gp);
+      const { ppr, std, half } = _resolvePts(d);
+      const userPts = scoring === 'std' ? std : scoring === 'half' ? half : ppr;
+      const altPts  = scoring === 'ppr'  ? std : ppr;
+      const gp = n(d.gp);
       const ypr = n(d.rec) > 0 ? (n(d.rec_yd) / n(d.rec)).toFixed(1) : '—';
-      tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td>${f(pts)}</td><td class="pc-ppg">${ppg(pts,gp)}</td><td>${n(d.rec_tgt)}</td><td>${n(d.rec)}</td><td>${Math.round(n(d.rec_yd))}</td><td>${n(d.rec_td)}</td><td>${ypr}</td></tr>`;
+      tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td class="pc-ppg">${f(userPts)}</td><td style="color:var(--text3)">${f(altPts)}</td><td>${ppg(userPts,gp)}</td><td>${n(d.rec_tgt)}</td><td>${n(d.rec)}</td><td>${Math.round(n(d.rec_yd))}</td><td>${n(d.rec_td)}</td><td>${ypr}</td></tr>`;
     }
   } else if (pos === 'K') {
     tbl = `<table class="pc-stats-tbl"><tr><th>Year</th><th>G</th><th>Pts</th><th>Pts/G</th><th>FGM</th><th>FGA</th><th>FG%</th><th>XPM</th></tr>`;
     for (const { yr, d } of rows) {
-      const pts = n(d.pts_std || d.pts_ppr), gp = n(d.gp);
+      const { std } = _resolvePts(d);
+      const gp = n(d.gp);
       const fgPct = n(d.fga) > 0 ? Math.round(n(d.fgm)/n(d.fga)*100)+'%' : '—';
-      tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td>${f(pts)}</td><td class="pc-ppg">${ppg(pts,gp)}</td><td>${n(d.fgm)}</td><td>${n(d.fga)}</td><td>${fgPct}</td><td>${n(d.xpm)}</td></tr>`;
+      tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td>${f(std)}</td><td class="pc-ppg">${ppg(std,gp)}</td><td>${n(d.fgm)}</td><td>${n(d.fga)}</td><td>${fgPct}</td><td>${n(d.xpm)}</td></tr>`;
     }
   } else {
     tbl = `<table class="pc-stats-tbl"><tr><th>Year</th><th>G</th><th>Pts</th><th>Pts/G</th></tr>`;
     for (const { yr, d } of rows) {
-      const pts = n(d.pts_std||d.pts_ppr||d.pts_half_ppr), gp = n(d.gp);
+      const { ppr, std } = _resolvePts(d);
+      const pts = ppr || std, gp = n(d.gp);
       tbl += `<tr${hi(yr)}><td>${yr}</td><td>${gp}</td><td>${f(pts)}</td><td class="pc-ppg">${ppg(pts,gp)}</td></tr>`;
     }
   }
-  tbl += '</table><div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:right">2025 highlighted · Source: Sleeper</div>';
+  const scoringNote = (pos === 'RB' || pos === 'WR' || pos === 'TE')
+    ? `${userPtsLbl} highlighted · Alt scoring shown dim`
+    : 'Fantasy points';
+  tbl += `</table><div style="font-size:10px;color:var(--text3);margin-top:6px;text-align:right">2025 highlighted · ${scoringNote} · Source: Sleeper</div>`;
   return tbl;
 }
 
@@ -10835,8 +10900,7 @@ async function fetchPCStats(slId, position) {
 async function fetchPCGameLog(slId, position, year) {
   const pos     = (position || '').toUpperCase();
   const scoring = (S?.settings?.scoring) || 'ppr';
-  const ptsKey  = scoring === 'std' ? 'pts_std' : scoring === 'half' ? 'pts_half_ppr' : 'pts_ppr';
-  const n = v => v || 0;
+  const n = v => parseFloat(v) || 0;
   const f = v => parseFloat(v || 0).toFixed(1);
 
   const allWks = await _loadSleeperWeeks(year);
@@ -10851,30 +10915,37 @@ async function fetchPCGameLog(slId, position, year) {
       <div style="color:var(--text3);font-size:12px;padding:12px 0;text-align:center">No game data found for ${year}.</div>`;
   }
 
-  const totals  = _aggStats(weeks);
-  const totalPts = n(totals[ptsKey]);
+  // Get pts per week using resolved scoring (fallback to manual calc)
+  const wkPts = wk => {
+    const r = _resolvePts(wk.d);
+    return scoring === 'std' ? r.std : scoring === 'half' ? r.half : r.ppr;
+  };
+
+  const totals   = _aggStats(weeks);
+  const totalPts = wkPts({ d: totals });
   const ppgVal   = weeks.length ? (totalPts / weeks.length).toFixed(1) : '—';
+  const scoringLbl = scoring === 'std' ? 'Std' : scoring === 'half' ? 'Half' : 'PPR';
 
   let html = `<div class="pc-log-hdr">
-    <span style="font-size:12px;font-weight:700;color:var(--text2)">${year} · ${weeks.length}G · <span style="color:var(--primary-l)">${f(totalPts)} pts (${ppgVal}/g)</span></span>
+    <span style="font-size:12px;font-weight:700;color:var(--text2)">${year} · ${weeks.length}G · <span style="color:var(--primary-l)">${f(totalPts)} ${scoringLbl} pts (${ppgVal}/g)</span></span>
     <div class="pc-log-yrs">${yrBtns}</div>
   </div>`;
 
   if (pos === 'QB') {
     html += `<table class="pc-stats-tbl"><tr><th>Wk</th><th>Pts</th><th>Pass Yds</th><th>TDs</th><th>INTs</th><th>Rush Yds</th></tr>`;
-    for (const { wk, d } of weeks) html += `<tr><td>Wk ${wk}</td><td class="pc-ppg">${f(n(d[ptsKey]))}</td><td>${Math.round(n(d.pass_yd))}</td><td>${n(d.pass_td)}</td><td>${n(d.pass_int)}</td><td>${Math.round(n(d.rush_yd))}</td></tr>`;
+    for (const wk of weeks) html += `<tr><td>Wk ${wk.wk}</td><td class="pc-ppg">${f(wkPts(wk))}</td><td>${Math.round(n(wk.d.pass_yd))}</td><td>${n(wk.d.pass_td)}</td><td>${n(wk.d.pass_int)}</td><td>${Math.round(n(wk.d.rush_yd))}</td></tr>`;
   } else if (pos === 'RB') {
     html += `<table class="pc-stats-tbl"><tr><th>Wk</th><th>Pts</th><th>Att</th><th>Rush Yds</th><th>Rush TDs</th><th>Rec</th><th>Rec Yds</th></tr>`;
-    for (const { wk, d } of weeks) html += `<tr><td>Wk ${wk}</td><td class="pc-ppg">${f(n(d[ptsKey]))}</td><td>${n(d.rush_att)}</td><td>${Math.round(n(d.rush_yd))}</td><td>${n(d.rush_td)}</td><td>${n(d.rec)}</td><td>${Math.round(n(d.rec_yd))}</td></tr>`;
+    for (const wk of weeks) html += `<tr><td>Wk ${wk.wk}</td><td class="pc-ppg">${f(wkPts(wk))}</td><td>${n(wk.d.rush_att)}</td><td>${Math.round(n(wk.d.rush_yd))}</td><td>${n(wk.d.rush_td)}</td><td>${n(wk.d.rec)}</td><td>${Math.round(n(wk.d.rec_yd))}</td></tr>`;
   } else if (pos === 'WR' || pos === 'TE') {
     html += `<table class="pc-stats-tbl"><tr><th>Wk</th><th>Pts</th><th>Tgts</th><th>Rec</th><th>Yds</th><th>TDs</th></tr>`;
-    for (const { wk, d } of weeks) html += `<tr><td>Wk ${wk}</td><td class="pc-ppg">${f(n(d[ptsKey]))}</td><td>${n(d.rec_tgt)}</td><td>${n(d.rec)}</td><td>${Math.round(n(d.rec_yd))}</td><td>${n(d.rec_td)}</td></tr>`;
+    for (const wk of weeks) html += `<tr><td>Wk ${wk.wk}</td><td class="pc-ppg">${f(wkPts(wk))}</td><td>${n(wk.d.rec_tgt)}</td><td>${n(wk.d.rec)}</td><td>${Math.round(n(wk.d.rec_yd))}</td><td>${n(wk.d.rec_td)}</td></tr>`;
   } else if (pos === 'K') {
     html += `<table class="pc-stats-tbl"><tr><th>Wk</th><th>Pts</th><th>FGM</th><th>FGA</th><th>XPM</th></tr>`;
-    for (const { wk, d } of weeks) html += `<tr><td>Wk ${wk}</td><td class="pc-ppg">${f(n(d.pts_std||d.pts_ppr||0))}</td><td>${n(d.fgm)}</td><td>${n(d.fga)}</td><td>${n(d.xpm)}</td></tr>`;
+    for (const wk of weeks) html += `<tr><td>Wk ${wk.wk}</td><td class="pc-ppg">${f(_resolvePts(wk.d).std)}</td><td>${n(wk.d.fgm)}</td><td>${n(wk.d.fga)}</td><td>${n(wk.d.xpm)}</td></tr>`;
   } else {
     html += `<table class="pc-stats-tbl"><tr><th>Wk</th><th>Pts</th></tr>`;
-    for (const { wk, d } of weeks) html += `<tr><td>Wk ${wk}</td><td class="pc-ppg">${f(n(d[ptsKey]))}</td></tr>`;
+    for (const wk of weeks) html += `<tr><td>Wk ${wk.wk}</td><td class="pc-ppg">${f(wkPts(wk))}</td></tr>`;
   }
   html += '</table>';
   return html;
