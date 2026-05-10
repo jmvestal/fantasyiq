@@ -505,6 +505,32 @@
     .dsim-done-stat{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 18px;min-width:90px}
     .dsim-done-stat-val{font-size:20px;font-weight:800;color:var(--primary-l)}
     .dsim-done-stat-lbl{font-size:11px;color:var(--text3);margin-top:2px}
+    /* Team rankings after draft complete */
+    .dsim-rank-section{text-align:left;max-width:700px;margin:0 auto 24px}
+    .dsim-rank-banner{background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.35);border-radius:10px;padding:14px 18px;margin-bottom:14px;text-align:center}
+    .dsim-rank-headline{font-size:22px;font-weight:900;color:var(--primary-l);line-height:1.1}
+    .dsim-rank-sub{font-size:13px;color:var(--text2);margin-top:4px}
+    .dsim-rank-table{width:100%;border-collapse:collapse;margin-bottom:14px}
+    .dsim-rank-table th{padding:6px 10px;background:var(--bg3);border:1px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text3);white-space:nowrap}
+    .dsim-rank-table td{padding:7px 10px;border:1px solid var(--border);font-size:12px;background:var(--bg2);vertical-align:middle}
+    .dsim-rank-table tr.my-row td{background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.3);font-weight:700}
+    .dsim-rank-num{font-size:14px;font-weight:900;width:30px;text-align:center}
+    .dsim-rank-medal{font-size:16px;width:24px;text-align:center}
+    .dsim-rank-team{font-weight:700;font-size:13px}
+    .dsim-rank-val{font-weight:800;color:var(--primary-l)}
+    .dsim-rank-top{font-size:11px;color:var(--text3)}
+    .dsim-team-detail{border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden}
+    .dsim-team-detail-hdr{padding:9px 14px;background:var(--bg3);display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+    .dsim-team-detail-hdr:hover{background:var(--bg2)}
+    .dsim-team-detail-hdr.my-hdr{background:rgba(124,58,237,.12);border-bottom:1px solid rgba(124,58,237,.25)}
+    .dsim-team-detail-name{font-weight:800;font-size:13px;flex:1}
+    .dsim-team-detail-val{font-weight:700;color:var(--primary-l);font-size:12px}
+    .dsim-team-detail-body{display:none;padding:8px 12px;background:var(--bg2)}
+    .dsim-team-detail-body.open{display:block}
+    .dsim-team-pick-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px}
+    .dsim-team-pick-row:last-child{border-bottom:none}
+    .dsim-all-teams-toggle{background:none;border:1px solid var(--border);border-radius:7px;padding:7px 16px;font-size:12px;color:var(--text2);cursor:pointer;margin-bottom:12px;width:100%}
+    .dsim-all-teams-toggle:hover{border-color:var(--primary);color:var(--primary-l)}
     .wizard-rec-bar{background:var(--primary-d);border:1px solid rgba(124,58,237,.3);border-radius:10px;padding:12px 14px;margin-bottom:12px}
     .wizard-rec-ttl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--primary-l);margin-bottom:6px}
     .wizard-rec-name{font-size:15px;font-weight:800;letter-spacing:-.3px}
@@ -1697,9 +1723,18 @@
             <button class="btn btn-p btn-sm" onclick="resetDraftSim()">↺ Draft Again</button>
             <button class="btn btn-s btn-sm" onclick="dsimExportRoster()">📋 View Roster Analysis</button>
           </div>
+          <!-- Team power rankings -->
+          <div id="dsimTeamRankings" class="dsim-rank-section"></div>
+
           <div style="text-align:left;max-width:700px;margin:0 auto">
             <div class="draft-board-ttl">Your Draft Summary</div>
             <div id="dsimDonePicks"></div>
+          </div>
+
+          <!-- All teams breakdown -->
+          <div style="text-align:left;max-width:700px;margin:24px auto 0">
+            <button class="dsim-all-teams-toggle" onclick="dsimToggleAllTeams(this)">▼ Show All Teams' Rosters</button>
+            <div id="dsimAllTeams" style="display:none"></div>
           </div>
         </div>
 
@@ -10119,8 +10154,8 @@ function dsimFinish() {
   const grade = dsimFinalGrade();
   document.getElementById('dsimFinalGrade').textContent = grade;
 
-  // Stats
-  const myPicks = DSIM.picks.filter(pk => pk.teamIdx === DSIM.mySlot);
+  // ── Stats bar ──
+  const myPicks  = DSIM.picks.filter(pk => pk.teamIdx === DSIM.mySlot);
   const totalVal = myPicks.reduce((s, pk) => s + calcValue(pk.player), 0);
   const avgVal   = myPicks.length ? Math.round(totalVal / myPicks.length) : 0;
   const steals   = _dsimCountSteals();
@@ -10138,7 +10173,10 @@ function dsimFinish() {
     </div>`).join('');
   }
 
-  // Summary picks
+  // ── Team Power Rankings ──
+  _dsimRenderTeamRankings();
+
+  // ── Your draft summary picks ──
   const picksEl = document.getElementById('dsimDonePicks');
   if (picksEl) {
     picksEl.innerHTML = myPicks.map(pk => {
@@ -10164,6 +10202,117 @@ function dsimFinish() {
       </div>`;
     }).join('');
   }
+
+  // ── All Teams section (hidden until toggled) ──
+  _dsimRenderAllTeams();
+}
+
+function _dsimTeamTotals() {
+  // Returns array [{teamIdx, total, picks, topPick}] sorted by total desc
+  return Array.from({ length: DSIM.numTeams }, (_, i) => {
+    const picks = DSIM.picks.filter(pk => pk.teamIdx === i);
+    const total = picks.reduce((s, pk) => s + calcValue(pk.player), 0);
+    const sorted = [...picks].sort((a, b) => calcValue(b.player) - calcValue(a.player));
+    const topPick = sorted[0] ? (sorted[0].player.full_name || sorted[0].player.name || '?') : '—';
+    return { teamIdx: i, total, picks, topPick };
+  }).sort((a, b) => b.total - a.total);
+}
+
+function _dsimRenderTeamRankings() {
+  const rankEl = document.getElementById('dsimTeamRankings');
+  if (!rankEl) return;
+
+  const teams  = _dsimTeamTotals();
+  const myRank = teams.findIndex(t => t.teamIdx === DSIM.mySlot) + 1;
+  const n      = DSIM.numTeams;
+  const medals = ['🥇','🥈','🥉'];
+
+  // Ordinal suffix
+  const ord = r => { const s=['th','st','nd','rd']; const v=r%100; return r+(s[(v-20)%10]||s[v]||s[0]); };
+
+  let html = `<div class="dsim-rank-banner">
+    <div class="dsim-rank-headline">${ord(myRank)} Place out of ${n} Teams</div>
+    <div class="dsim-rank-sub">Based on total projected roster value</div>
+  </div>
+  <div class="draft-board-ttl">Team Power Rankings</div>
+  <table class="dsim-rank-table">
+    <thead><tr>
+      <th style="width:30px">#</th>
+      <th></th>
+      <th>Team</th>
+      <th>Total Value</th>
+      <th>Top Pick</th>
+    </tr></thead>
+    <tbody>`;
+
+  teams.forEach((t, idx) => {
+    const rank  = idx + 1;
+    const isMine = t.teamIdx === DSIM.mySlot;
+    const label = isMine ? '★ You' : `Team ${t.teamIdx + 1}`;
+    const medal = medals[idx] || '';
+    html += `<tr class="${isMine ? 'my-row' : ''}">
+      <td class="dsim-rank-num">${rank}</td>
+      <td class="dsim-rank-medal">${medal}</td>
+      <td class="dsim-rank-team">${label}</td>
+      <td class="dsim-rank-val">${fmtVal(t.total)}</td>
+      <td class="dsim-rank-top">${escHtml(t.topPick)}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  rankEl.innerHTML = html;
+}
+
+function _dsimRenderAllTeams() {
+  const el = document.getElementById('dsimAllTeams');
+  if (!el) return;
+
+  const teams = _dsimTeamTotals(); // already sorted by value
+  let html = '';
+
+  teams.forEach((t, idx) => {
+    const rank   = idx + 1;
+    const isMine = t.teamIdx === DSIM.mySlot;
+    const label  = isMine ? `★ You (Team ${t.teamIdx + 1})` : `Team ${t.teamIdx + 1}`;
+    const picksSorted = [...t.picks].sort((a, b) => a.overall - b.overall);
+
+    html += `<div class="dsim-team-detail">
+      <div class="dsim-team-detail-hdr ${isMine ? 'my-hdr' : ''}" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span style="font-size:11px;font-weight:800;color:var(--text3);min-width:22px">#${rank}</span>
+        <span class="dsim-team-detail-name">${label}</span>
+        <span class="dsim-team-detail-val">${fmtVal(t.total)}</span>
+        <span style="margin-left:8px;color:var(--text3);font-size:11px">▼</span>
+      </div>
+      <div class="dsim-team-detail-body ${isMine ? 'open' : ''}">`;
+
+    if (picksSorted.length) {
+      picksSorted.forEach(pk => {
+        const p   = pk.player;
+        const pos = (p.position === 'DST' ? 'DEF' : p.position) || '?';
+        const v   = calcValue(p);
+        html += `<div class="dsim-team-pick-row">
+          <span style="font-size:10px;font-weight:800;color:var(--text3);min-width:32px">R${pk.round}.${pk.pickInRound}</span>
+          <span class="pb pb-${pos}" style="font-size:9px;padding:1px 4px">${pos}</span>
+          <span style="flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(p.full_name || p.name || '?')}</span>
+          <span style="color:var(--primary-l);font-weight:700;min-width:44px;text-align:right">${fmtVal(v)}</span>
+        </div>`;
+      });
+    } else {
+      html += '<div style="color:var(--text3);font-size:12px;padding:4px 0">No picks recorded</div>';
+    }
+
+    html += '</div></div>';
+  });
+
+  el.innerHTML = html;
+}
+
+function dsimToggleAllTeams(btn) {
+  const el = document.getElementById('dsimAllTeams');
+  if (!el) return;
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  btn.textContent  = open ? '▼ Show All Teams\' Rosters' : '▲ Hide All Teams\' Rosters';
 }
 
 function _dsimCountSteals() {
