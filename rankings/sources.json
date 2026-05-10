@@ -12,6 +12,11 @@
     "sf":  "SF PPR Dynasty Rankings.csv"
   },
   {
+    "key": "tradeiq_dyn_idp",
+    "name": "TradeIQ Dynasty IDP",
+    "dynastyFile": "2026 Dynasty IDP Rankings.csv"
+  },
+  {
     "key": "tradeiq_rd",
     "name": "TradeIQ Redraft",
     "redraftFiles": [
@@ -28,6 +33,27 @@
     "name": "TradeIQ 2026 Rookies",
     "redraftFiles": [
       "2026 Redraft PPR Rookie Rankings.csv"
+    ]
+  },
+  {
+    "key": "tradeiq_rd_idp",
+    "name": "TradeIQ Redraft IDP",
+    "redraftFiles": [
+      "2026 Redraft IDP Rankings.csv"
+    ]
+  },
+  {
+    "key": "tradeiq_rd_k",
+    "name": "TradeIQ Redraft K",
+    "redraftFiles": [
+      "2026 Redraft K Rankings.csv"
+    ]
+  },
+  {
+    "key": "tradeiq_rd_dst",
+    "name": "TradeIQ Redraft DST",
+    "redraftFiles": [
+      "2026 Redraft DST Rankings.csv"
     ]
   }
 ]

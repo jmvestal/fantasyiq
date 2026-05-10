@@ -4501,8 +4501,8 @@ async function fetchDLFValues() {
 // Dynasty only — rv:0 so redraft values are never affected.
 // ═══════════════════════════════════════════════════════════
 const CUSTOM_BASE     = 'https://raw.githubusercontent.com/jmvestal/tradeiq/main/rankings/';
-const CUSTOM_CACHE_KEY = 'tradeiq_custom_v3';
-const CUSTOM_TS_KEY    = 'tradeiq_custom_ts_v3';
+const CUSTOM_CACHE_KEY = 'tradeiq_custom_v4';
+const CUSTOM_TS_KEY    = 'tradeiq_custom_ts_v4';
 const CUSTOM_TTL       = 24 * 60 * 60 * 1000; // 24 hours
 
 // ── Shared CSV parser for all creator sources ──────────────
@@ -4629,6 +4629,23 @@ async function fetchCustomRankings() {
         S.sourceMeta[src.key]   = { count: Object.keys(rdSource).length, loaded: Date.now(), file: label };
         bundle[src.key] = rdSource;
         console.log(`Rankings [${label}]: ${Object.keys(rdSource).length} redraft players loaded`);
+        return;
+      }
+
+      // ── DYNASTY single-file source (IDP / no QB-format split) ──
+      if (src.dynastyFile) {
+        const text = await fetchFile(src.dynastyFile);
+        const parsed = parseCreatorCSV(text);
+        const dynSource = {};
+        for (const [k, v] of Object.entries(parsed)) {
+          if (v.dv >= 100) dynSource[k] = { dv: v.dv, rv: 0 };
+        }
+        if (!Object.keys(dynSource).length) return;
+        S.sourceValues[src.key] = dynSource;
+        S.sourceStatus[src.key] = 'ok';
+        S.sourceMeta[src.key]   = { count: Object.keys(dynSource).length, loaded: Date.now(), file: label };
+        bundle[src.key] = dynSource;
+        console.log(`Rankings [${label}]: ${Object.keys(dynSource).length} dynasty players loaded`);
         return;
       }
 
@@ -4809,7 +4826,8 @@ async function fetchPlayers() {
     if (!res.ok) throw new Error('Sleeper fetch failed');
     const data = await res.json();
 
-    const VALID_POS = new Set(['QB','RB','WR','TE']);
+    const VALID_POS = new Set(['QB','RB','WR','TE','K','DEF','DST',
+      'DE','DT','LB','CB','S','FS','SS','DB','OLB','ILB','MLB','DL','IDP']);
     const players = Object.values(data)
       .filter(p =>
         p.full_name &&
