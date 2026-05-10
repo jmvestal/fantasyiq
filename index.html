@@ -198,6 +198,23 @@
     .anl-box.cons h4{color:var(--danger)}
     .anl-box.pros li::before{content:'✓';position:absolute;left:0;color:var(--success)}
     .anl-box.cons li::before{content:'✗';position:absolute;left:0;color:var(--danger)}
+    /* ── WIN NOW / DYNASTY TIMELINE ─────── */
+    .anl-timeline{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+    .anl-tl-card{background:var(--bg3);border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+    .anl-tl-hdr{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border)}
+    .anl-tl-icon{font-size:19px;flex-shrink:0;line-height:1}
+    .anl-tl-ttl{font-size:13px;font-weight:800;letter-spacing:-.2px}
+    .anl-tl-sub{font-size:10px;color:var(--text3);margin-top:1px}
+    .anl-tl-grade{margin-left:auto;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;flex-shrink:0;letter-spacing:.03em;text-transform:uppercase}
+    .anl-tl-grade.win{background:var(--success-d);color:var(--success);border:1px solid rgba(34,197,94,.25)}
+    .anl-tl-grade.push{background:var(--bg);color:var(--text3);border:1px solid var(--border)}
+    .anl-tl-grade.loss{background:var(--danger-d);color:var(--danger);border:1px solid rgba(239,68,68,.25)}
+    .anl-tl-body{padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.7}
+    .anl-tl-body strong{color:var(--text);font-weight:600}
+    .anl-tl-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+    .anl-tl-row-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em}
+    .anl-tl-row-val{font-size:12px;font-weight:700;color:var(--primary-l)}
+    @media(max-width:640px){.anl-timeline{grid-template-columns:1fr}}
 
     /* ── SUGGEST ────────────────────────── */
     .sug-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-top:18px}
@@ -245,10 +262,17 @@
     .ros-section-hdr::after{content:'';flex:1;height:1px;background:var(--border)}
     .ros-section-bench{border-top:2px dashed var(--border2);margin-top:6px;padding-top:2px}
     .ros-slot-lbl{font-size:9px;font-weight:800;letter-spacing:.05em;color:var(--text3);min-width:36px;text-align:center;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 3px;text-transform:uppercase;flex-shrink:0}
-    .ros-slot-lbl.is-starter{color:var(--primary-l);border-color:rgba(124,58,237,.3);background:rgba(124,58,237,.08)}
-    .ros-slot-lbl.is-flex{color:var(--warn);border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.07)}
-    .ros-slot-lbl.is-special{color:var(--text3)}
-    .ros-slot-lbl.is-bench{color:var(--text3)}
+    /* Per-position slot label colors */
+    .ros-slot-lbl.is-slot-QB  {color:#60a5fa;border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.1)}
+    .ros-slot-lbl.is-slot-RB  {color:#4ade80;border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.1)}
+    .ros-slot-lbl.is-slot-WR  {color:#c084fc;border-color:rgba(192,132,252,.35);background:rgba(192,132,252,.1)}
+    .ros-slot-lbl.is-slot-TE  {color:#fb923c;border-color:rgba(251,146,60,.35);background:rgba(251,146,60,.1)}
+    .ros-slot-lbl.is-flex     {color:#fbbf24;border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08)}
+    .ros-slot-lbl.is-special  {color:#67e8f9;border-color:rgba(103,232,249,.3);background:rgba(103,232,249,.07)}
+    .ros-slot-lbl.is-ir       {color:#f87171;border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.07)}
+    .ros-slot-lbl.is-bench    {color:var(--text3)}
+    /* legacy alias kept for safety */
+    .ros-slot-lbl.is-starter  {color:#60a5fa;border-color:rgba(96,165,250,.3);background:rgba(96,165,250,.08)}
     .ros-empty{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);opacity:.45}
     .ros-empty-name{font-size:12px;font-style:italic;color:var(--text3);flex:1}
     /* ── AI CHAT WIDGET ─────────────────────────────── */
@@ -906,6 +930,32 @@
           <div class="anl-box cons">
             <h4>⚠️ Reasons to Decline</h4>
             <ul id="anlCons"></ul>
+          </div>
+        </div>
+
+        <!-- Win Now vs Dynasty timeline -->
+        <div class="anl-timeline">
+          <div class="anl-tl-card">
+            <div class="anl-tl-hdr">
+              <span class="anl-tl-icon">⚡</span>
+              <div>
+                <div class="anl-tl-ttl">Win Now</div>
+                <div class="anl-tl-sub">Impact this season</div>
+              </div>
+              <div class="anl-tl-grade push" id="anlWinNowGrade">—</div>
+            </div>
+            <div class="anl-tl-body" id="anlWinNowBody">—</div>
+          </div>
+          <div class="anl-tl-card">
+            <div class="anl-tl-hdr">
+              <span class="anl-tl-icon">🌱</span>
+              <div>
+                <div class="anl-tl-ttl">Dynasty Long-Term</div>
+                <div class="anl-tl-sub">3–5 year outlook</div>
+              </div>
+              <div class="anl-tl-grade push" id="anlDynastyGrade">—</div>
+            </div>
+            <div class="anl-tl-body" id="anlDynastyBody">—</div>
           </div>
         </div>
       </div>
@@ -2439,7 +2489,128 @@ function generateAnalysis(sideA, sideB) {
   if (sideB.length >= 4) cons.push('Giving multiple assets is costly');
   if (cons.length === 0) cons.push('Acceptable deal, no major red flags');
 
-  return { txt, summary, pros, cons };
+  return { txt, summary, pros, cons, winNow: buildWinNow(sideA, sideB), dynasty: buildDynasty(sideA, sideB) };
+}
+
+// ── Win Now score: redraft value, age-penalized, picks excluded ──
+function buildWinNow(sideA, sideB) {
+  // sideA = You Receive, sideB = You Give
+  const wnScore = (players) => players.reduce((sum, p) => {
+    if (p.position === 'PICK') return sum; // picks don't help you win NOW
+    const rv = p.redraft_val || p.dynasty_val || 0;
+    const age = p.age || 26;
+    let f = 1;
+    if (age >= 34)      f = 0.45; // cliff
+    else if (age >= 32) f = 0.68;
+    else if (age >= 30) f = 0.85;
+    else if (age <= 21) f = 0.75; // not yet proven
+    else if (age <= 23) f = 0.88;
+    return sum + rv * f;
+  }, 0);
+
+  const get  = wnScore(sideA);
+  const give = wnScore(sideB);
+  const diff = get - give;
+  const base = Math.max(get, give);
+  const pct  = base > 0 ? Math.abs(diff) / base : 0;
+
+  const gradeStr = pct < 0.06  ? 'push'
+                 : diff > 0    ? 'win'
+                 :               'loss';
+  const gradeLabel = pct < 0.06  ? 'Push'
+                   : diff > 0    ? (pct >= 0.15 ? 'Big Win' : 'Slight Win')
+                   :               (pct >= 0.15 ? 'Hurts' : 'Slight Loss');
+
+  // Key contributors
+  const topGet  = sideA.filter(p => p.position !== 'PICK').sort((a,b) => (b.redraft_val||0)-(a.redraft_val||0)).slice(0,2);
+  const topGive = sideB.filter(p => p.position !== 'PICK').sort((a,b) => (b.redraft_val||0)-(a.redraft_val||0)).slice(0,2);
+  const picksGiven    = sideB.filter(p => p.position === 'PICK').length;
+  const picksReceived = sideA.filter(p => p.position === 'PICK').length;
+  const oldOnGet      = sideA.filter(p => p.age && p.age >= 30 && p.position !== 'PICK');
+
+  let body = '';
+  if (pct < 0.06) {
+    body = `Both sides contribute similar win-now value. This trade is roughly neutral for your current-season ceiling.`;
+  } else if (diff > 0) {
+    const stars = topGet.map(p => `<strong>${p.full_name.split(' ').pop()}</strong>`).join(' & ');
+    body = `${stars ? stars + (topGet.length ? ' boost' : '') : 'The return'} your win-now outlook. `;
+    body += pct >= 0.15 ? `This is a meaningful upgrade for a contending team.` : `Slight edge if you're in a championship window.`;
+  } else {
+    const stars = topGive.map(p => `<strong>${p.full_name.split(' ').pop()}</strong>`).join(' & ');
+    body = `Giving up ${stars || 'production'} costs you win-now equity. `;
+    body += pct >= 0.15 ? `Hard to justify unless you're deliberately rebuilding.` : `Acceptable if you're getting back dynasty upside.`;
+  }
+  if (picksGiven > 0)    body += ` Picks you're sending have <strong>zero win-now value</strong> — you're trading future for present.`;
+  if (picksReceived > 0) body += ` Picks you're receiving don't help this season.`;
+  if (oldOnGet.length)   body += ` Note: ${oldOnGet.map(p=>`<strong>${p.full_name.split(' ').pop()}</strong>`).join('/')} ${oldOnGet.length>1?'are':'is'} 30+ — factor in durability.`;
+
+  body += `<div class="anl-tl-row"><span class="anl-tl-row-lbl">You Receive</span><span class="anl-tl-row-val">${fmtVal(Math.round(get))}</span><span class="anl-tl-row-lbl">You Give</span><span class="anl-tl-row-val">${fmtVal(Math.round(give))}</span></div>`;
+
+  return { gradeStr, gradeLabel, body };
+}
+
+// ── Dynasty score: dynasty value, age-curve adjusted, picks included ──
+function buildDynasty(sideA, sideB) {
+  const dynScore = (players) => players.reduce((sum, p) => {
+    const dv = p.dynasty_val || 0;
+    const age = p.age || 26;
+    let f = 1;
+    if (age <= 21)      f = 1.15; // elite dynasty premium
+    else if (age <= 23) f = 1.08;
+    else if (age <= 25) f = 1.03;
+    else if (age >= 33) f = 0.72;
+    else if (age >= 31) f = 0.85;
+    else if (age >= 29) f = 0.94;
+    return sum + dv * f;
+  }, 0);
+
+  const get  = dynScore(sideA);
+  const give = dynScore(sideB);
+  const diff = get - give;
+  const base = Math.max(get, give);
+  const pct  = base > 0 ? Math.abs(diff) / base : 0;
+
+  const gradeStr = pct < 0.06  ? 'push'
+                 : diff > 0    ? 'win'
+                 :               'loss';
+  const gradeLabel = pct < 0.06  ? 'Push'
+                   : diff > 0    ? (pct >= 0.15 ? 'Dynasty Win' : 'Slight Win')
+                   :               (pct >= 0.15 ? 'Dynasty Loss' : 'Slight Loss');
+
+  // Key factors
+  const youngOnGet  = sideA.filter(p => p.age && p.age <= 24 && p.position !== 'PICK');
+  const youngOnGive = sideB.filter(p => p.age && p.age <= 24 && p.position !== 'PICK');
+  const picksGet    = sideA.filter(p => p.position === 'PICK');
+  const picksGive   = sideB.filter(p => p.position === 'PICK');
+  const agingGive   = sideB.filter(p => p.age && p.age >= 30 && p.position !== 'PICK');
+
+  let body = '';
+  if (pct < 0.06) {
+    body = `Dynasty values are roughly balanced. Whether this helps long-term depends on your roster construction and where you are in your competitive window.`;
+  } else if (diff > 0) {
+    if (youngOnGet.length) {
+      body = `You're adding ${youngOnGet.map(p=>`<strong>${p.full_name.split(' ').pop()}</strong>`).join(' & ')} — young players are the engine of dynasty rosters.`;
+    } else if (picksGet.length) {
+      body = `Draft picks carry meaningful dynasty upside, especially in the ${S.settings.rookieOpt > 60 ? 'strong' : 'mixed'} rookie class ahead.`;
+    } else {
+      body = `The dynasty value in this return is real. You come out ahead in long-term equity.`;
+    }
+    body += pct >= 0.15 ? ` This is a meaningful dynasty win.` : ` Slight dynasty advantage for you.`;
+  } else {
+    if (youngOnGive.length) {
+      body = `Giving away ${youngOnGive.map(p=>`<strong>${p.full_name.split(' ').pop()}</strong>`).join(' & ')} hurts your dynasty ceiling — youth costs you here.`;
+    } else if (picksGive.length) {
+      body = `Sending ${picksGive.length > 1 ? 'picks' : 'a pick'} away sacrifices future upside. Only do this if you're in a genuine win-now window.`;
+    } else {
+      body = `You're giving up more long-term value than you're getting back.`;
+    }
+    body += pct >= 0.15 ? ` This is a significant dynasty cost.` : ` Manageable if the win-now return is worth it.`;
+  }
+  if (agingGive.length) body += ` Trading away ${agingGive.map(p=>`<strong>${p.full_name.split(' ').pop()}</strong>`).join('/')} (30+) can be a smart dynasty move — capitalize before they decline.`;
+
+  body += `<div class="anl-tl-row"><span class="anl-tl-row-lbl">You Receive</span><span class="anl-tl-row-val">${fmtVal(Math.round(get))}</span><span class="anl-tl-row-lbl">You Give</span><span class="anl-tl-row-val">${fmtVal(Math.round(give))}</span></div>`;
+
+  return { gradeStr, gradeLabel, body };
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2722,11 +2893,24 @@ function runAnalysis() {
   const { grade } = calcGrade(vA, vB);
   trackEvent('trade_analyzed', { sideA: S.tradeA.length, sideB: S.tradeB.length, mode: S.settings.mode });
   logTradeToFirestore(S.tradeA, S.tradeB, vA, vB, grade);
-  const { txt, summary, pros, cons } = generateAnalysis(S.tradeA, S.tradeB);
+  const { txt, summary, pros, cons, winNow, dynasty } = generateAnalysis(S.tradeA, S.tradeB);
   document.getElementById('anlTxt').innerHTML = txt;
   document.getElementById('anlSummary').textContent = summary;
   document.getElementById('anlPros').innerHTML = pros.map(t=>`<li>${t}</li>`).join('');
   document.getElementById('anlCons').innerHTML = cons.map(t=>`<li>${t}</li>`).join('');
+
+  // Win Now panel
+  const wnGrade = document.getElementById('anlWinNowGrade');
+  wnGrade.textContent = winNow.gradeLabel;
+  wnGrade.className = `anl-tl-grade ${winNow.gradeStr}`;
+  document.getElementById('anlWinNowBody').innerHTML = winNow.body;
+
+  // Dynasty panel
+  const dynGrade = document.getElementById('anlDynastyGrade');
+  dynGrade.textContent = dynasty.gradeLabel;
+  dynGrade.className = `anl-tl-grade ${dynasty.gradeStr}`;
+  document.getElementById('anlDynastyBody').innerHTML = dynasty.body;
+
   document.getElementById('analysisCard').style.display = 'block';
   document.getElementById('analysisCard').scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
