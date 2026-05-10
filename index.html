@@ -90,18 +90,28 @@
     .tab.active{display:block}
 
     /* ── HOMEPAGE ──────────────────────── */
-    /* Option A — Feature Hub */
-    .home-hero{text-align:center;padding:52px 20px 36px;max-width:600px;margin:0 auto}
-    .home-hero-logo{font-size:48px;font-weight:900;letter-spacing:-2px;margin-bottom:12px}
-    .home-hero-logo em{color:var(--primary-l);font-style:normal}
-    .home-hero-tag{font-size:16px;color:var(--text2);line-height:1.6;margin-bottom:28px}
-    .home-hero-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-    .home-feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;max-width:960px;margin:0 auto;padding:0 0 40px}
-    .home-feat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px 18px;cursor:pointer;transition:border-color .15s,transform .1s;display:flex;flex-direction:column;gap:8px}
+    /* Full-screen landing mode (Option A) */
+    body.landing-mode .hdr,
+    body.landing-mode .sidebar,
+    body.landing-mode .mob-tab-bar { display:none !important }
+    body.landing-mode .layout { display:block }
+    body.landing-mode .main { padding:0 }
+    body.landing-mode #tab-home { display:block }
+    /* Option A — Full-screen centered landing */
+    .home-landing{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;background:var(--bg)}
+    .home-landing-logo{font-size:64px;font-weight:900;letter-spacing:-3px;margin-bottom:10px;line-height:1}
+    .home-landing-logo em{color:var(--primary-l);font-style:normal}
+    .home-landing-tag{font-size:15px;color:var(--text2);margin-bottom:32px;text-align:center;max-width:440px;line-height:1.6}
+    .home-feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:700px;width:100%;margin-bottom:32px}
+    .home-feat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px 18px;cursor:pointer;transition:border-color .15s,transform .1s;display:flex;flex-direction:column;gap:8px;text-align:left}
     .home-feat-card:hover{border-color:var(--primary);transform:translateY(-2px)}
-    .home-feat-icon{font-size:28px}
-    .home-feat-name{font-size:14px;font-weight:700;color:var(--text)}
-    .home-feat-desc{font-size:12px;color:var(--text3);line-height:1.5}
+    .home-feat-icon{font-size:26px}
+    .home-feat-name{font-size:13px;font-weight:700;color:var(--text)}
+    .home-feat-desc{font-size:11px;color:var(--text3);line-height:1.5}
+    @media(max-width:600px){
+      .home-landing-logo{font-size:48px}
+      .home-feat-grid{grid-template-columns:repeat(2,1fr);max-width:420px}
+    }
     /* Option C — Smart Dashboard */
     .home-dash{max-width:1100px;margin:0 auto;padding-bottom:40px}
     .home-dash-hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px}
@@ -911,47 +921,44 @@
 
     <!-- ══ TAB: HOME ══ -->
     <div id="tab-home" class="tab active">
-      <!-- Option A: no league / not logged in -->
+      <!-- Option A: not logged in — full-screen landing -->
       <div id="homeOptionA">
-        <div class="home-hero">
-          <div class="home-hero-logo"><em>Trade</em>IQ</div>
-          <div class="home-hero-tag">The free NFL fantasy trade analyzer built for serious players.<br>Consensus rankings, waiver wire, buy/sell intel, and draft tools — all in one place.</div>
-          <div class="home-hero-btns">
-            <button class="btn btn-p" onclick="openModal('connectModal')">🔗 Import League</button>
-            <button class="btn btn-s" onclick="openModal('authModal')">Sign In</button>
+        <div class="home-landing">
+          <div class="home-landing-logo"><em>Trade</em>IQ</div>
+          <div class="home-landing-tag">The free NFL fantasy trade analyzer built for serious players.</div>
+          <div class="home-feat-grid">
+            <div class="home-feat-card" onclick="switchTab('analyzer')">
+              <div class="home-feat-icon">⚖️</div>
+              <div class="home-feat-name">Trade Analyzer</div>
+              <div class="home-feat-desc">Evaluate any trade with multi-source consensus values.</div>
+            </div>
+            <div class="home-feat-card" onclick="switchTab('values')">
+              <div class="home-feat-icon">📊</div>
+              <div class="home-feat-name">Player Values</div>
+              <div class="home-feat-desc">Full rankings for dynasty, redraft, IDP, K, and DST.</div>
+            </div>
+            <div class="home-feat-card" onclick="switchTab('wire')">
+              <div class="home-feat-icon">📋</div>
+              <div class="home-feat-name">Waiver Wire</div>
+              <div class="home-feat-desc">Weekly waiver targets ranked by upside and opportunity.</div>
+            </div>
+            <div class="home-feat-card" onclick="switchTab('buysell')">
+              <div class="home-feat-icon">📈</div>
+              <div class="home-feat-name">Buy / Sell</div>
+              <div class="home-feat-desc">Buy low, sell high alerts based on current value curves.</div>
+            </div>
+            <div class="home-feat-card" onclick="switchTab('draft')">
+              <div class="home-feat-icon">🎯</div>
+              <div class="home-feat-name">Draft Tools</div>
+              <div class="home-feat-desc">Big board, draft assistant, and a full draft simulator.</div>
+            </div>
+            <div class="home-feat-card" onclick="switchTab('roster')">
+              <div class="home-feat-icon">🏈</div>
+              <div class="home-feat-name">My Team</div>
+              <div class="home-feat-desc">Roster valuation and personalized team analysis.</div>
+            </div>
           </div>
-        </div>
-        <div class="home-feat-grid">
-          <div class="home-feat-card" onclick="switchTab('analyzer')">
-            <div class="home-feat-icon">⚖️</div>
-            <div class="home-feat-name">Trade Analyzer</div>
-            <div class="home-feat-desc">Evaluate any trade with multi-source consensus values that adjust to your exact league settings.</div>
-          </div>
-          <div class="home-feat-card" onclick="switchTab('values')">
-            <div class="home-feat-icon">📊</div>
-            <div class="home-feat-name">Player Values</div>
-            <div class="home-feat-desc">Full rankings for every player — dynasty, redraft, IDP, K, and DST — filtered by mode and scoring.</div>
-          </div>
-          <div class="home-feat-card" onclick="switchTab('wire')">
-            <div class="home-feat-icon">📋</div>
-            <div class="home-feat-name">Waiver Wire</div>
-            <div class="home-feat-desc">Weekly waiver targets ranked by opportunity, upside, and snap share trends.</div>
-          </div>
-          <div class="home-feat-card" onclick="switchTab('buysell')">
-            <div class="home-feat-icon">📈</div>
-            <div class="home-feat-name">Buy / Sell</div>
-            <div class="home-feat-desc">See which players on your roster to buy low, sell high, or hold based on current value curves.</div>
-          </div>
-          <div class="home-feat-card" onclick="switchTab('draft')">
-            <div class="home-feat-icon">🎯</div>
-            <div class="home-feat-name">Draft Tools</div>
-            <div class="home-feat-desc">Live draft assistant, big board rankings, and a full draft simulator for rookie and redraft leagues.</div>
-          </div>
-          <div class="home-feat-card" onclick="switchTab('roster')">
-            <div class="home-feat-icon">🏈</div>
-            <div class="home-feat-name">My Team</div>
-            <div class="home-feat-desc">Import your roster from Sleeper and get a personalized valuation of your entire team.</div>
-          </div>
+          <button class="btn btn-p" style="font-size:15px;padding:12px 40px;border-radius:10px" onclick="openModal('authModal')">Sign In</button>
         </div>
       </div>
       <!-- Option C: logged in + league imported -->
@@ -3888,7 +3895,8 @@ function switchTab(name) {
   document.getElementById('tab-'+name)?.classList.add('active');
   document.querySelector(`.nav-btn[data-tab="${name}"]`)?.classList.add('active');
   document.querySelector(`.mob-tab[data-tab="${name}"]`)?.classList.add('active');
-  if (name === 'home')   renderHome();
+  if (name === 'home') { renderHome(); }
+  else { document.body.classList.remove('landing-mode'); }
   if (name === 'league') renderLeagueAnalyzer();
   if (name === 'draft') initDraftTab();
   if (name === 'wire') renderWireTab();
@@ -3903,6 +3911,9 @@ function renderHome() {
   const loggedIn    = !!S.auth;
   const hasLeague   = !!(S.connectedLeague?.leagueId);
   const showDash    = loggedIn && hasLeague;
+
+  // Full-screen landing mode when not logged in / no league
+  document.body.classList.toggle('landing-mode', !showDash);
 
   document.getElementById('homeOptionA').style.display = showDash ? 'none' : '';
   document.getElementById('homeOptionC').style.display = showDash ? ''     : 'none';
