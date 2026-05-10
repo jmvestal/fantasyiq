@@ -2194,16 +2194,15 @@ const VALUE_DB = {
   'Tyrod Taylor':           {dv:375, rv:500, trend:'flat'},  // KTC SF: 521
   'Derek Carr':             {dv:300, rv:500, trend:'down'},
   // ── RBs ──────────────────────────────────────
-  // dv = dynasty (KTC SF baseline) | rv = redraft PPR
-  // Updated from April 2026 consensus rankings (DLF/FantasyCalc/KTC composite)
-  'Bijan Robinson':         {dv:9800,rv:9200,trend:'flat'},
-  'Jahmyr Gibbs':           {dv:9500,rv:9000,trend:'up'},
-  'Ashton Jeanty':          {dv:8500,rv:8500,trend:'up'},
-  'Omarion Hampton':        {dv:7800,rv:7000,trend:'up'},
-  "De'Von Achane":          {dv:7200,rv:7500,trend:'up'},
-  'Jonathan Taylor':        {dv:6500,rv:7500,trend:'flat'},
-  'Quinshon Judkins':       {dv:6200,rv:6000,trend:'up'},
-  'James Cook':             {dv:5800,rv:7000,trend:'flat'},
+  // dv = KTC SF Half PPR dynasty value (May 10 2026, live KTC) | rv = redraft PPR
+  'Bijan Robinson':         {dv:9998,rv:9500,trend:'flat'},  // KTC: 9998 RB1
+  'Jahmyr Gibbs':           {dv:9559,rv:9200,trend:'up'},    // KTC: 9559 RB2
+  'Ashton Jeanty':          {dv:7559,rv:8500,trend:'up'},    // KTC: 7559 RB4
+  'Omarion Hampton':        {dv:6712,rv:7000,trend:'up'},    // KTC: 6712 RB6
+  "De'Von Achane":          {dv:6871,rv:7500,trend:'up'},    // KTC: 6871 RB5
+  'Jonathan Taylor':        {dv:6060,rv:7500,trend:'flat'},  // KTC: 6060 RB7
+  'Quinshon Judkins':       {dv:5800,rv:6000,trend:'up'},
+  'James Cook':             {dv:6052,rv:7000,trend:'flat'},  // KTC: 6052 RB8
   'TreVeyon Henderson':     {dv:5500,rv:5500,trend:'up'},
   'Kenneth Walker III':     {dv:5200,rv:5500,trend:'up'},
   'Breece Hall':            {dv:4900,rv:5800,trend:'flat'},
@@ -2213,12 +2212,12 @@ const VALUE_DB = {
   'Christian McCaffrey':    {dv:3800,rv:5500,trend:'flat'},
   'Jacory Croskey-Merritt': {dv:3900,rv:3600,trend:'up'},
   'Trey Benson':            {dv:3800,rv:3800,trend:'up'},
-  'Josh Jacobs':            {dv:3500,rv:4500,trend:'flat'},
+  'Josh Jacobs':            {dv:4477,rv:5000,trend:'flat'},  // KTC: 4477 RB20
   'Braelon Allen':          {dv:3600,rv:3800,trend:'up'},
   'Isiah Pacheco':          {dv:3400,rv:4000,trend:'flat'},
   'Bhayshul Tuten':         {dv:3200,rv:3400,trend:'up'},
   'Tyjae Spears':           {dv:3000,rv:3400,trend:'up'},
-  'Cam Skattebo':           {dv:2700,rv:3500,trend:'flat'},
+  'Cam Skattebo':           {dv:4553,rv:4000,trend:'flat'},  // KTC: 4553 RB19
   'Jaylen Wright':          {dv:2600,rv:3000,trend:'up'},
   'Ollie Gordon II':        {dv:2500,rv:2800,trend:'up'},
   'Saquon Barkley':         {dv:2300,rv:7800,trend:'flat'},
@@ -2265,36 +2264,53 @@ const VALUE_DB = {
   'Kareem Hunt':            {dv:900, rv:1800,trend:'down'},
   'Austin Ekeler':          {dv:600, rv:1500,trend:'down'},
   'Rashaad Penny':          {dv:400, rv:1000,trend:'flat'},
-  // 2026 RB Rookies — post-draft calibrated values
-  'Jeremiyah Love':         {dv:7670,rv:6000,trend:'up'},   // #3 overall, ARI — elite talent
-  'Jadarian Price':         {dv:5500,rv:4200,trend:'up'},   // Round 2, SEA — great landing spot
-  'Darius Taylor':          {dv:4200,rv:3200,trend:'up'},   // MIN — committee upside
-  'Jaydn Ott':              {dv:3600,rv:2800,trend:'up'},   // SF
-  'Nicholas Singleton':     {dv:3200,rv:3000,trend:'up'},   // TEN
-  'Jonah Coleman':          {dv:3800,rv:3000,trend:'up'},   // DEN — improved landing
-  'Demond Claiborne':       {dv:3200,rv:2800,trend:'up'},   // MIN
-  'Emmett Johnson':         {dv:3200,rv:2600,trend:'up'},   // KC
-  'DJ Giddens':             {dv:3500,rv:2800,trend:'up'},   // IND
-  'Devin Neal':             {dv:2800,rv:2400,trend:'up'},   // NO
-  'Kaelon Black':           {dv:2600,rv:2200,trend:'up'},   // SF
-  'Mike Washington Jr.':    {dv:2800,rv:2200,trend:'up'},   // LV
-  // 2026 WR Rookies — post-draft calibrated values
-  'Carnell Tate':           {dv:5800,rv:4500,trend:'up'},   // #4, TEN — elite prospect
-  'Jordyn Tyson':           {dv:5400,rv:4200,trend:'up'},   // NO
-  'Makai Lemon':            {dv:5000,rv:4000,trend:'up'},   // PHI — Biletnikoff winner
-  'KC Concepcion':          {dv:4500,rv:3200,trend:'up'},   // CLE
-  'Omar Cooper Jr.':        {dv:3900,rv:2800,trend:'up'},   // HOU
-  'Antonio Williams':       {dv:3800,rv:3000,trend:'up'},   // WAS
-  'Zachariah Branch':       {dv:3600,rv:2800,trend:'up'},   // ATL
-  'Chris Bell':             {dv:3400,rv:2800,trend:'up'},   // MIA
-  'Germie Bernard':         {dv:3000,rv:2400,trend:'up'},   // PIT
-  'Malachi Fields':         {dv:2800,rv:2200,trend:'up'},   // NYG
-  'Ted Hurst':              {dv:2800,rv:2200,trend:'up'},   // TB
-  'Elijah Sarratt':         {dv:2400,rv:1800,trend:'up'},   // BAL
-  // 2026 TE Rookies — post-draft calibrated values
-  'Max Klare':              {dv:4500,rv:3200,trend:'up'},   // LAR
-  'Eli Raridon':            {dv:3800,rv:2800,trend:'up'},   // NE
-  'Oscar Delp':             {dv:3200,rv:2400,trend:'up'},   // NO
+  // 2026 RB Rookies — KTC live values May 10 2026
+  'Jeremiyah Love':         {dv:7650,rv:6000,trend:'up'},   // KTC RB3: 7650 — ARI
+  'Jadarian Price':         {dv:4714,rv:4000,trend:'up'},   // KTC RB18: 4714 — SEA
+  'Darius Taylor':          {dv:4000,rv:3200,trend:'up'},   // MIN — consensus estimate
+  'Jaydn Ott':              {dv:3600,rv:2800,trend:'up'},   // SF — consensus estimate
+  'Nicholas Singleton':     {dv:2910,rv:2600,trend:'up'},   // KTC RB39: 2910 — TEN
+  'Jonah Coleman':          {dv:3031,rv:2600,trend:'up'},   // KTC RB35: 3031 — DEN
+  'Demond Claiborne':       {dv:1585,rv:1400,trend:'up'},   // KTC RB83: 1585 — MIN
+  'Emmett Johnson':         {dv:2461,rv:2200,trend:'up'},   // KTC RB52: 2461 — KC
+  'DJ Giddens':             {dv:3200,rv:2800,trend:'up'},   // IND — consensus estimate
+  'Devin Neal':             {dv:2600,rv:2200,trend:'up'},   // NO — consensus estimate
+  'Kaelon Black':           {dv:1145,rv:1000,trend:'up'},   // KTC RB103: 1145 — SF
+  'Mike Washington Jr.':    {dv:2444,rv:2000,trend:'up'},   // KTC RB53: 2444 — LV
+  'Kaytron Allen':          {dv:2423,rv:2000,trend:'up'},   // KTC RB54: 2423 — WAS
+  'Le\'Veon Moss':          {dv:997, rv:900, trend:'up'},   // KTC RB110: 997
+  'Eli Heidenreich':        {dv:861, rv:800, trend:'up'},   // KTC RB118: 861
+  'Adam Randall':           {dv:803, rv:750, trend:'up'},   // KTC RB122: 803
+  'Seth McGowan':           {dv:774, rv:700, trend:'up'},   // KTC RB124: 774
+  'Jam Miller':             {dv:762, rv:700, trend:'up'},   // KTC RB125: 762
+  // 2026 WR Rookies — KTC live values May 10 2026
+  'Carnell Tate':           {dv:5825,rv:4500,trend:'up'},   // KTC WR12: 5825 — TEN
+  'Jordyn Tyson':           {dv:5336,rv:4200,trend:'up'},   // KTC WR18: 5336 — NO
+  'Makai Lemon':            {dv:5015,rv:4000,trend:'up'},   // KTC WR23: 5015 — PHI
+  'KC Concepcion':          {dv:4479,rv:3200,trend:'up'},   // KTC WR30: 4479 — CLE
+  'Omar Cooper Jr.':        {dv:3864,rv:2800,trend:'up'},   // KTC WR33: 3864 — HOU
+  'Denzel Boston':          {dv:3450,rv:2600,trend:'up'},   // KTC WR45: 3450
+  'Chris Bell':             {dv:2987,rv:2400,trend:'up'},   // KTC WR59: 2987 — MIA
+  'Germie Bernard':         {dv:2909,rv:2400,trend:'up'},   // KTC WR62: 2909 — PIT
+  'Elijah Sarratt':         {dv:2783,rv:2000,trend:'up'},   // KTC WR65: 2783 — BAL
+  'Chris Brazzell II':      {dv:2638,rv:2000,trend:'up'},   // KTC WR73: 2638
+  'Antonio Williams':       {dv:2635,rv:2200,trend:'up'},   // KTC WR74: 2635 — WAS
+  'Zachariah Branch':       {dv:2605,rv:2000,trend:'up'},   // KTC WR76: 2605 — ATL
+  'Malachi Fields':         {dv:2596,rv:1800,trend:'up'},   // KTC WR77: 2596 — NYG
+  'Skyler Bell':            {dv:2432,rv:1800,trend:'up'},   // KTC WR85: 2432
+  "Ja'Kobi Lane":           {dv:2336,rv:1800,trend:'up'},   // KTC WR89: 2336
+  'Ted Hurst':              {dv:1966,rv:1600,trend:'up'},   // KTC WR104: 1966 — TB
+  "De'Zhaun Stribling":     {dv:1851,rv:1400,trend:'up'},   // KTC WR108: 1851
+  'Kevin Coleman':          {dv:1679,rv:1200,trend:'up'},   // KTC WR118: 1679
+  'Brenen Thompson':        {dv:1219,rv:1000,trend:'up'},   // KTC WR147: 1219
+  'Zavion Thomas':          {dv:1151,rv:900, trend:'up'},   // KTC WR151: 1151
+  'Bryce Lance':            {dv:1043,rv:800, trend:'up'},   // KTC WR158: 1043
+  'Deion Burks':            {dv:1008,rv:800, trend:'up'},   // KTC WR163: 1008
+  'Caleb Douglas':          {dv:814, rv:600, trend:'up'},   // KTC WR176: 814
+  'CJ Daniels':             {dv:577, rv:400, trend:'up'},   // KTC WR178: 577
+  // 2026 TE Rookies — KTC live values May 10 2026 (already in TE section above)
+  'Justin Joly':            {dv:1290,rv:1500,trend:'up'},   // KTC TE54: 1290
+  'Michael Trigg':          {dv:1185,rv:1200,trend:'up'},   // KTC TE57: 1185
   // Depth RBs — commonly traded/streamed
   'Dameon Pierce':          {dv:1800,rv:2200,trend:'flat'},
   'Samaje Perine':          {dv:1400,rv:2000,trend:'flat'},
@@ -2305,19 +2321,18 @@ const VALUE_DB = {
   'Elijah Mitchell':        {dv:1500,rv:1800,trend:'flat'},
   'Jerome Ford':            {dv:1600,rv:2000,trend:'flat'},
   // ── WRs ──────────────────────────────────────
-  // dv = dynasty (KTC SF baseline) | rv = redraft PPR
-  // Updated from April 2026 consensus rankings (DLF/FantasyCalc/KTC composite)
-  'Jaxon Smith-Njigba':     {dv:9900,rv:9000,trend:'up'},
-  "Ja'Marr Chase":          {dv:9700,rv:9500,trend:'flat'},
-  'Puka Nacua':             {dv:9000,rv:8200,trend:'up'},
-  'Justin Jefferson':       {dv:8600,rv:8500,trend:'flat'},
-  'CeeDee Lamb':            {dv:8400,rv:8800,trend:'flat'},
-  'Malik Nabers':           {dv:7900,rv:8000,trend:'up'},
-  'Amon-Ra St. Brown':      {dv:7700,rv:8000,trend:'flat'},
-  'Tetairoa McMillan':      {dv:7400,rv:6800,trend:'up'},
-  'Emeka Egbuka':           {dv:7000,rv:6800,trend:'up'},
-  'Garrett Wilson':         {dv:6400,rv:7000,trend:'flat'},
-  'Drake London':           {dv:6200,rv:6800,trend:'up'},
+  // dv = KTC SF Half PPR dynasty value (May 10 2026, live KTC) | rv = redraft PPR
+  "Ja'Marr Chase":          {dv:9991,rv:9500,trend:'flat'},  // KTC WR1: 9991
+  'Jaxon Smith-Njigba':     {dv:9899,rv:9000,trend:'up'},    // KTC WR2: 9899
+  'Puka Nacua':             {dv:8629,rv:8200,trend:'up'},     // KTC WR3: 8629
+  'Malik Nabers':           {dv:7859,rv:8000,trend:'up'},     // KTC WR4: 7859
+  'Justin Jefferson':       {dv:7808,rv:8500,trend:'flat'},   // KTC WR5: 7808
+  'Amon-Ra St. Brown':      {dv:7717,rv:8000,trend:'flat'},   // KTC WR6: 7717
+  'CeeDee Lamb':            {dv:7305,rv:8800,trend:'flat'},   // KTC WR7: 7305
+  'Drake London':           {dv:6883,rv:6800,trend:'up'},     // KTC WR8: 6883
+  'Tetairoa McMillan':      {dv:6559,rv:6800,trend:'up'},     // KTC WR9: 6559
+  'Emeka Egbuka':           {dv:6210,rv:6000,trend:'up'},     // KTC WR10: 6210
+  'Garrett Wilson':         {dv:5900,rv:7000,trend:'flat'},   // WR11 estimate
   'Rashee Rice':            {dv:5800,rv:6200,trend:'up'},
   'Nico Collins':           {dv:5700,rv:6800,trend:'flat'},
   'George Pickens':         {dv:5700,rv:6000,trend:'up'},
@@ -2325,7 +2340,7 @@ const VALUE_DB = {
   'Luther Burden III':      {dv:5300,rv:5500,trend:'up'},
   'Tee Higgins':            {dv:5200,rv:6000,trend:'flat'},
   'Ladd McConkey':          {dv:5100,rv:6500,trend:'up'},
-  'Travis Hunter':          {dv:5000,rv:5200,trend:'up'},
+  'Travis Hunter':          {dv:3325,rv:4500,trend:'up'},     // KTC WR?: 3325
   'Chris Olave':            {dv:4900,rv:5500,trend:'flat'},
   'Rome Odunze':            {dv:4800,rv:5800,trend:'up'},
   'Brian Thomas Jr.':       {dv:4700,rv:6200,trend:'up'},
@@ -2407,49 +2422,75 @@ const VALUE_DB = {
   'Deontay Burnett':        {dv:2000,rv:1800,trend:'up'},
   'Tre Tucker':             {dv:1800,rv:2000,trend:'up'},
   // ── TEs ──────────────────────────────────────
-  // dv = dynasty (KTC SF baseline) | rv = redraft PPR
-  // Updated from April 2026 consensus rankings (DLF/FantasyCalc/KTC composite)
-  // McBride & Bowers tied TE1; Warren/Loveland/Kraft breakout class
-  'Brock Bowers':           {dv:8100,rv:8000,trend:'up'},
-  'Trey McBride':           {dv:8000,rv:8000,trend:'flat'},
-  'Tyler Warren':           {dv:7500,rv:6500,trend:'up'},
-  'Colston Loveland':       {dv:7300,rv:6000,trend:'up'},
-  'Tucker Kraft':           {dv:6700,rv:5800,trend:'up'},
-  'Harold Fannin Jr.':      {dv:6200,rv:5500,trend:'up'},
-  'Kyle Pitts':             {dv:5900,rv:5200,trend:'up'},
-  'Sam LaPorta':            {dv:5600,rv:5500,trend:'up'},
-  'Oronde Gadsden II':      {dv:5400,rv:5000,trend:'up'},
-  'Kenyon Sadiq':           {dv:5100,rv:4200,trend:'up'},
-  'Jake Ferguson':          {dv:4400,rv:4800,trend:'flat'},
-  'Theo Johnson':           {dv:4200,rv:4000,trend:'up'},
-  'Isaiah Likely':          {dv:4000,rv:3800,trend:'up'},
-  'Elijah Arroyo':          {dv:3800,rv:3400,trend:'up'},
-  'Ben Sinnott':            {dv:3600,rv:3400,trend:'up'},
-  'Terrance Ferguson':      {dv:3200,rv:3000,trend:'up'},
-  'Dalton Kincaid':         {dv:2900,rv:3200,trend:'flat'},
-  'Brenton Strange':        {dv:3000,rv:2800,trend:'up'},
-  'George Kittle':          {dv:3000,rv:5000,trend:'down'},
-  'AJ Barner':              {dv:3200,rv:3000,trend:'up'},
-  'Chig Okonkwo':           {dv:2800,rv:2800,trend:'flat'},
-  'Michael Mayer':          {dv:2600,rv:2500,trend:'up'},
-  'Mark Andrews':           {dv:2600,rv:3500,trend:'flat'},
-  'David Njoku':            {dv:2600,rv:3200,trend:'flat'},
-  'Cade Otton':             {dv:2400,rv:2800,trend:'flat'},
-  'Pat Freiermuth':         {dv:2400,rv:2800,trend:'flat'},
-  'Eli Stowers':            {dv:2800,rv:2000,trend:'up'},
-  'Dallas Goedert':         {dv:2200,rv:3500,trend:'down'},
-  'Gunnar Helm':            {dv:2800,rv:2000,trend:'up'},
-  'Cole Kmet':              {dv:2000,rv:2500,trend:'flat'},
-  'Noah Fant':              {dv:1800,rv:2200,trend:'flat'},
-  'Evan Engram':            {dv:1800,rv:2500,trend:'down'},
-  'Mason Taylor':           {dv:2800,rv:2600,trend:'up'},
-  'Dalton Schultz':         {dv:1600,rv:2200,trend:'flat'},
-  'Jonnu Smith':            {dv:1600,rv:2200,trend:'flat'},
-  'T.J. Hockenson':         {dv:1500,rv:2500,trend:'flat'},
-  'Hunter Henry':           {dv:1400,rv:2200,trend:'flat'},
-  'Juwan Johnson':          {dv:1400,rv:1800,trend:'flat'},
-  'Travis Kelce':           {dv:800, rv:2000,trend:'down'},
-  'Zach Ertz':              {dv:600, rv:1200,trend:'down'},
+  // dv = KTC Half PPR Non-TE-Premium dynasty value (May 10 2026, live KTC)
+  // rv = 2026 redraft PPR estimated value
+  'Brock Bowers':           {dv:7948,rv:8000,trend:'up'},
+  'Trey McBride':           {dv:7524,rv:7800,trend:'flat'},
+  'Colston Loveland':       {dv:6017,rv:5500,trend:'up'},
+  'Tyler Warren':           {dv:5684,rv:5000,trend:'up'},
+  'Harold Fannin':          {dv:4866,rv:4500,trend:'up'},
+  'Harold Fannin Jr.':      {dv:4866,rv:4500,trend:'up'},
+  'Tucker Kraft':           {dv:4776,rv:4200,trend:'up'},
+  'Sam LaPorta':            {dv:4516,rv:4000,trend:'up'},
+  'Kyle Pitts':             {dv:4391,rv:4200,trend:'up'},
+  'Kenyon Sadiq':           {dv:4123,rv:3500,trend:'up'},
+  'Oronde Gadsden':         {dv:3873,rv:3500,trend:'up'},
+  'Oronde Gadsden II':      {dv:3873,rv:3500,trend:'up'},
+  'Eli Stowers':            {dv:3526,rv:2500,trend:'up'},
+  'Isaiah Likely':          {dv:3297,rv:3200,trend:'up'},
+  'George Kittle':          {dv:3261,rv:4800,trend:'down'},
+  'Jake Ferguson':          {dv:3251,rv:3800,trend:'flat'},
+  'Dalton Kincaid':         {dv:3233,rv:3200,trend:'flat'},
+  'Brenton Strange':        {dv:3035,rv:2800,trend:'up'},
+  'T.J. Hockenson':         {dv:2815,rv:3000,trend:'flat'},
+  'AJ Barner':              {dv:2810,rv:2500,trend:'up'},
+  'Mark Andrews':           {dv:2734,rv:3500,trend:'flat'},
+  'Terrance Ferguson':      {dv:2708,rv:2500,trend:'up'},
+  'Chigoziem Okonkwo':      {dv:2700,rv:2800,trend:'flat'},
+  'Chig Okonkwo':           {dv:2700,rv:2800,trend:'flat'},
+  'Gunnar Helm':            {dv:2618,rv:2200,trend:'up'},
+  'Dallas Goedert':         {dv:2572,rv:3500,trend:'down'},
+  'Elijah Arroyo':          {dv:2507,rv:2000,trend:'up'},
+  'Mason Taylor':           {dv:2417,rv:2500,trend:'up'},
+  'David Njoku':            {dv:2411,rv:3000,trend:'flat'},
+  'Travis Kelce':           {dv:2387,rv:2500,trend:'down'},
+  'Juwan Johnson':          {dv:2371,rv:2000,trend:'flat'},
+  'Cade Otton':             {dv:2341,rv:2500,trend:'flat'},
+  'Theo Johnson':           {dv:2337,rv:2800,trend:'up'},
+  'Jake Tonges':            {dv:2301,rv:2000,trend:'up'},
+  'Hunter Henry':           {dv:2274,rv:2200,trend:'flat'},
+  'Dalton Schultz':         {dv:2269,rv:2200,trend:'flat'},
+  'Pat Freiermuth':         {dv:2194,rv:2500,trend:'flat'},
+  'Michael Mayer':          {dv:2135,rv:2000,trend:'up'},
+  "Ja'Tavion Sanders":      {dv:2091,rv:2000,trend:'up'},
+  'Max Klare':              {dv:2022,rv:2200,trend:'up'},
+  'Cole Kmet':              {dv:2000,rv:2200,trend:'flat'},
+  'Colby Parkinson':        {dv:1956,rv:1800,trend:'flat'},
+  'Evan Engram':            {dv:1905,rv:2200,trend:'down'},
+  'Luke Musgrave':          {dv:1896,rv:1800,trend:'up'},
+  'Darnell Washington':     {dv:1857,rv:1800,trend:'up'},
+  'Ben Sinnott':            {dv:1798,rv:1800,trend:'up'},
+  'Dawson Knox':            {dv:1761,rv:1800,trend:'flat'},
+  'Greg Dulcich':           {dv:1717,rv:1500,trend:'up'},
+  'Noah Gray':              {dv:1591,rv:1400,trend:'flat'},
+  'Daniel Bellinger':       {dv:1470,rv:1400,trend:'flat'},
+  'Cade Stover':            {dv:1424,rv:1200,trend:'flat'},
+  'Noah Fant':              {dv:1423,rv:1800,trend:'flat'},
+  'Tommy Tremble':          {dv:1357,rv:1200,trend:'flat'},
+  'Mike Gesicki':           {dv:1356,rv:1400,trend:'flat'},
+  'Tyler Higbee':           {dv:1353,rv:1400,trend:'flat'},
+  'Erick All':              {dv:1295,rv:1200,trend:'up'},
+  'Justin Joly':            {dv:1290,rv:1500,trend:'up'},
+  'Elijah Higgins':         {dv:1267,rv:1200,trend:'flat'},
+  'Luke Schoonmaker':       {dv:1234,rv:1200,trend:'flat'},
+  'Michael Trigg':          {dv:1185,rv:1200,trend:'up'},
+  'Mitchell Evans':         {dv:1162,rv:1000,trend:'flat'},
+  'Jonnu Smith':            {dv:1128,rv:1200,trend:'flat'},
+  'Zach Ertz':              {dv:1095,rv:1200,trend:'down'},
+  'Eli Raridon':            {dv:1053,rv:1000,trend:'up'},
+  'Oscar Delp':             {dv:1003,rv:1000,trend:'up'},
+  'Jack Endries':           {dv:535, rv:600, trend:'up'},
+  'Taysom Hill':            {dv:520, rv:600, trend:'flat'},
   // ── Near-zero / washed / cut players — set explicitly so they don't get 500 default ──
   'Trey Lance':             {dv:100, rv:50,  trend:'down'},
   'Carson Wentz':           {dv:100, rv:50,  trend:'down'},
@@ -2646,48 +2687,66 @@ const ROOKIES_2026 = [
   {id:'r26-3',  full_name:'Carson Beck',           position:'QB', team:'CIN', age:23, dynasty_val:900,  redraft_val:800,  rookie:true, trend:'up'},   // KTC SF:1242
   {id:'r26-4',  full_name:'Garrett Nussmeier',     position:'QB', team:'KC',  age:22, dynasty_val:1250, redraft_val:700,  rookie:true, trend:'up'},   // KTC SF:1710
   {id:'r26-5',  full_name:'Drew Allar',            position:'QB', team:'PIT', age:22, dynasty_val:850,  redraft_val:800,  rookie:true, trend:'up'},   // KTC SF:1181
-  // RBs
-  {id:'r26-6',  full_name:'Jeremiyah Love',        position:'RB', team:'ARI', age:21, dynasty_val:7670, redraft_val:6000, rookie:true, trend:'up'},
-  {id:'r26-7',  full_name:'Nicholas Singleton',    position:'RB', team:'TEN', age:22, dynasty_val:3200, redraft_val:3000, rookie:true, trend:'up'},
-  {id:'r26-8',  full_name:'Darius Taylor',         position:'RB', team:'MIN', age:21, dynasty_val:4200, redraft_val:3200, rookie:true, trend:'up'},
-  {id:'r26-9',  full_name:'Jaydn Ott',             position:'RB', team:'SF',  age:22, dynasty_val:3600, redraft_val:2800, rookie:true, trend:'up'},
-  {id:'r26-10', full_name:'Jonah Coleman',         position:'RB', team:'DEN', age:22, dynasty_val:3800, redraft_val:3000, rookie:true, trend:'up'},  // DEN — better landing
-  {id:'r26-11', full_name:'Jadarian Price',        position:'RB', team:'SEA', age:22, dynasty_val:5500, redraft_val:4200, rookie:true, trend:'up'},  // SEA — RB2 post-draft
-  {id:'r26-12', full_name:'Demond Claiborne',      position:'RB', team:'MIN', age:22, dynasty_val:3200, redraft_val:2800, rookie:true, trend:'up'},
-  {id:'r26-12b',full_name:'Kaytron Allen',         position:'RB', team:'WAS', age:22, dynasty_val:2500, redraft_val:2200, rookie:true, trend:'up'},  // WAS
-  {id:'r26-rb1', full_name:'DJ Giddens',           position:'RB', team:'IND', age:22, dynasty_val:3500, redraft_val:2800, rookie:true, trend:'up'},
-  {id:'r26-rb2', full_name:'Emmett Johnson',       position:'RB', team:'KC',  age:22, dynasty_val:3200, redraft_val:2600, rookie:true, trend:'up'},
-  {id:'r26-rb3', full_name:'Devin Neal',           position:'RB', team:'NO',  age:22, dynasty_val:2800, redraft_val:2400, rookie:true, trend:'up'},
-  {id:'r26-rb4', full_name:'Kaelon Black',         position:'RB', team:'SF',  age:22, dynasty_val:2600, redraft_val:2200, rookie:true, trend:'up'},
-  {id:'r26-rb5', full_name:'Mike Washington Jr.',  position:'RB', team:'LV',  age:22, dynasty_val:2800, redraft_val:2200, rookie:true, trend:'up'},
-  // WRs
-  {id:'r26-13', full_name:'Carnell Tate',          position:'WR', team:'TEN', age:21, dynasty_val:5800, redraft_val:4500, rookie:true, trend:'up'},
-  {id:'r26-14', full_name:'Jordyn Tyson',          position:'WR', team:'NO',  age:22, dynasty_val:5400, redraft_val:4200, rookie:true, trend:'up'},
-  {id:'r26-15', full_name:'Makai Lemon',           position:'WR', team:'PHI', age:21, dynasty_val:5000, redraft_val:4000, rookie:true, trend:'up'},
-  {id:'r26-16', full_name:'KC Concepcion',         position:'WR', team:'CLE', age:21, dynasty_val:4500, redraft_val:3200, rookie:true, trend:'up'},
-  {id:'r26-17', full_name:'Omar Cooper Jr.',       position:'WR', team:'HOU', age:22, dynasty_val:3900, redraft_val:2800, rookie:true, trend:'up'},
-  {id:'r26-18', full_name:'Darien Porter',         position:'WR', team:'IND', age:23, dynasty_val:3200, redraft_val:2500, rookie:true, trend:'up'},
-  {id:'r26-19', full_name:"Dont'e Thornton Jr.",   position:'WR', team:'LV',  age:23, dynasty_val:3200, redraft_val:2500, rookie:true, trend:'flat'},
-  {id:'r26-20', full_name:'Savion Williams',       position:'WR', team:'GB',  age:21, dynasty_val:3200, redraft_val:2500, rookie:true, trend:'up'},
-  {id:'r26-21', full_name:'Jack Bech',             position:'WR', team:'LV',  age:22, dynasty_val:3600, redraft_val:3000, rookie:true, trend:'up'},
-  {id:'r26-22', full_name:'Pat Bryant',            position:'WR', team:'DEN', age:22, dynasty_val:3800, redraft_val:3200, rookie:true, trend:'up'},
-  {id:'r26-23', full_name:'Kyle Williams',         position:'WR', team:'NE',  age:23, dynasty_val:3800, redraft_val:3200, rookie:true, trend:'up'},
-  {id:'r26-wr1', full_name:'Antonio Williams',     position:'WR', team:'WAS', age:22, dynasty_val:3800, redraft_val:3000, rookie:true, trend:'up'},
-  {id:'r26-wr2', full_name:'Zachariah Branch',     position:'WR', team:'ATL', age:21, dynasty_val:3600, redraft_val:2800, rookie:true, trend:'up'},
-  {id:'r26-wr3', full_name:'Chris Bell',           position:'WR', team:'MIA', age:22, dynasty_val:3400, redraft_val:2800, rookie:true, trend:'up'},
-  {id:'r26-wr4', full_name:'De\'Zhaun Stribling',  position:'WR', team:'SF',  age:22, dynasty_val:3000, redraft_val:2400, rookie:true, trend:'up'},
-  {id:'r26-wr5', full_name:'Germie Bernard',       position:'WR', team:'PIT', age:22, dynasty_val:3000, redraft_val:2400, rookie:true, trend:'up'},
-  {id:'r26-wr6', full_name:'Malachi Fields',       position:'WR', team:'NYG', age:22, dynasty_val:2800, redraft_val:2200, rookie:true, trend:'up'},
-  {id:'r26-wr7', full_name:'Ted Hurst',            position:'WR', team:'TB',  age:22, dynasty_val:2800, redraft_val:2200, rookie:true, trend:'up'},
-  {id:'r26-wr8', full_name:'Chris Brazzell II',    position:'WR', team:'CAR', age:22, dynasty_val:2600, redraft_val:2000, rookie:true, trend:'up'},
-  {id:'r26-wr9', full_name:'Elijah Sarratt',       position:'WR', team:'BAL', age:22, dynasty_val:2400, redraft_val:1800, rookie:true, trend:'up'},
-  // TEs
-  {id:'r26-24', full_name:'Kenyon Sadiq',          position:'TE', team:'NYJ', age:21, dynasty_val:5100, redraft_val:4000, rookie:true, trend:'up'},
-  {id:'r26-25', full_name:'Eli Stowers',           position:'TE', team:'PHI', age:22, dynasty_val:3200, redraft_val:2500, rookie:true, trend:'up'},
-  {id:'r26-26', full_name:'Gunnar Helm',           position:'TE', team:'TEN', age:22, dynasty_val:2800, redraft_val:2000, rookie:true, trend:'up'},
-  {id:'r26-te1', full_name:'Max Klare',            position:'TE', team:'LAR', age:22, dynasty_val:4500, redraft_val:3200, rookie:true, trend:'up'},
-  {id:'r26-te2', full_name:'Eli Raridon',          position:'TE', team:'NE',  age:22, dynasty_val:3800, redraft_val:2800, rookie:true, trend:'up'},
-  {id:'r26-te3', full_name:'Oscar Delp',           position:'TE', team:'NO',  age:22, dynasty_val:3200, redraft_val:2400, rookie:true, trend:'up'},
+  // RBs — KTC live values May 10 2026
+  {id:'r26-6',   full_name:'Jeremiyah Love',       position:'RB', team:'ARI', age:21, dynasty_val:7650, redraft_val:6000, rookie:true, trend:'up'},  // KTC RB3: 7650
+  {id:'r26-11',  full_name:'Jadarian Price',       position:'RB', team:'SEA', age:22, dynasty_val:4714, redraft_val:4000, rookie:true, trend:'up'},  // KTC RB18: 4714
+  {id:'r26-8',   full_name:'Darius Taylor',        position:'RB', team:'MIN', age:21, dynasty_val:4000, redraft_val:3200, rookie:true, trend:'up'},  // MIN estimate
+  {id:'r26-9',   full_name:'Jaydn Ott',            position:'RB', team:'SF',  age:22, dynasty_val:3600, redraft_val:2800, rookie:true, trend:'up'},  // SF estimate
+  {id:'r26-10',  full_name:'Jonah Coleman',        position:'RB', team:'DEN', age:22, dynasty_val:3031, redraft_val:2600, rookie:true, trend:'up'},  // KTC RB35: 3031
+  {id:'r26-7',   full_name:'Nicholas Singleton',   position:'RB', team:'TEN', age:22, dynasty_val:2910, redraft_val:2600, rookie:true, trend:'up'},  // KTC RB39: 2910
+  {id:'r26-rb1', full_name:'DJ Giddens',           position:'RB', team:'IND', age:22, dynasty_val:3200, redraft_val:2800, rookie:true, trend:'up'},  // IND estimate
+  {id:'r26-rb2', full_name:'Emmett Johnson',       position:'RB', team:'KC',  age:22, dynasty_val:2461, redraft_val:2200, rookie:true, trend:'up'},  // KTC RB52: 2461
+  {id:'r26-rb3', full_name:'Mike Washington Jr.',  position:'RB', team:'LV',  age:22, dynasty_val:2444, redraft_val:2000, rookie:true, trend:'up'},  // KTC RB53: 2444
+  {id:'r26-12b', full_name:'Kaytron Allen',        position:'RB', team:'WAS', age:22, dynasty_val:2423, redraft_val:2000, rookie:true, trend:'up'},  // KTC RB54: 2423
+  {id:'r26-rb4', full_name:'Devin Neal',           position:'RB', team:'NO',  age:22, dynasty_val:2600, redraft_val:2200, rookie:true, trend:'up'},  // NO estimate
+  {id:'r26-12',  full_name:'Demond Claiborne',     position:'RB', team:'MIN', age:22, dynasty_val:1585, redraft_val:1400, rookie:true, trend:'up'},  // KTC RB83: 1585
+  {id:'r26-rb5', full_name:'Kaelon Black',         position:'RB', team:'SF',  age:22, dynasty_val:1145, redraft_val:1000, rookie:true, trend:'up'},  // KTC RB103: 1145
+  {id:'r26-rb6', full_name:"Le'Veon Moss",         position:'RB', team:'GB',  age:22, dynasty_val:997,  redraft_val:900,  rookie:true, trend:'up'},  // KTC RB110: 997
+  {id:'r26-rb7', full_name:'Eli Heidenreich',      position:'RB', team:'BUF', age:22, dynasty_val:861,  redraft_val:800,  rookie:true, trend:'up'},  // KTC RB118: 861
+  {id:'r26-rb8', full_name:'Adam Randall',         position:'RB', team:'PHI', age:22, dynasty_val:803,  redraft_val:750,  rookie:true, trend:'up'},  // KTC RB122: 803
+  {id:'r26-rb9', full_name:'Seth McGowan',         position:'RB', team:'MIA', age:22, dynasty_val:774,  redraft_val:700,  rookie:true, trend:'up'},  // KTC RB124: 774
+  {id:'r26-rb10',full_name:'Jam Miller',           position:'RB', team:'ATL', age:22, dynasty_val:762,  redraft_val:700,  rookie:true, trend:'up'},  // KTC RB125: 762
+  // WRs — KTC live values May 10 2026
+  {id:'r26-13',  full_name:'Carnell Tate',         position:'WR', team:'TEN', age:21, dynasty_val:5825, redraft_val:4500, rookie:true, trend:'up'},  // KTC WR12: 5825
+  {id:'r26-14',  full_name:'Jordyn Tyson',         position:'WR', team:'NO',  age:22, dynasty_val:5336, redraft_val:4200, rookie:true, trend:'up'},  // KTC WR18: 5336
+  {id:'r26-15',  full_name:'Makai Lemon',          position:'WR', team:'PHI', age:21, dynasty_val:5015, redraft_val:4000, rookie:true, trend:'up'},  // KTC WR23: 5015
+  {id:'r26-16',  full_name:'KC Concepcion',        position:'WR', team:'CLE', age:21, dynasty_val:4479, redraft_val:3200, rookie:true, trend:'up'},  // KTC WR30: 4479
+  {id:'r26-17',  full_name:'Omar Cooper Jr.',      position:'WR', team:'HOU', age:22, dynasty_val:3864, redraft_val:2800, rookie:true, trend:'up'},  // KTC WR33: 3864
+  {id:'r26-wr10',full_name:'Denzel Boston',        position:'WR', team:'SF',  age:22, dynasty_val:3450, redraft_val:2600, rookie:true, trend:'up'},  // KTC WR45: 3450
+  {id:'r26-18',  full_name:'Darien Porter',        position:'WR', team:'IND', age:23, dynasty_val:2900, redraft_val:2200, rookie:true, trend:'up'},  // estimate
+  {id:'r26-21',  full_name:'Jack Bech',            position:'WR', team:'LV',  age:22, dynasty_val:3200, redraft_val:2800, rookie:true, trend:'up'},  // estimate
+  {id:'r26-22',  full_name:'Pat Bryant',           position:'WR', team:'DEN', age:22, dynasty_val:3200, redraft_val:2800, rookie:true, trend:'up'},  // estimate
+  {id:'r26-23',  full_name:'Kyle Williams',        position:'WR', team:'NE',  age:23, dynasty_val:3200, redraft_val:2800, rookie:true, trend:'up'},  // estimate
+  {id:'r26-19',  full_name:"Dont'e Thornton Jr.",  position:'WR', team:'LV',  age:23, dynasty_val:3000, redraft_val:2200, rookie:true, trend:'flat'}, // estimate
+  {id:'r26-20',  full_name:'Savion Williams',      position:'WR', team:'GB',  age:21, dynasty_val:3000, redraft_val:2200, rookie:true, trend:'up'},  // estimate
+  {id:'r26-wr3', full_name:'Chris Bell',           position:'WR', team:'MIA', age:22, dynasty_val:2987, redraft_val:2400, rookie:true, trend:'up'},  // KTC WR59: 2987
+  {id:'r26-wr5', full_name:'Germie Bernard',       position:'WR', team:'PIT', age:22, dynasty_val:2909, redraft_val:2400, rookie:true, trend:'up'},  // KTC WR62: 2909
+  {id:'r26-wr9', full_name:'Elijah Sarratt',       position:'WR', team:'BAL', age:22, dynasty_val:2783, redraft_val:2000, rookie:true, trend:'up'},  // KTC WR65: 2783
+  {id:'r26-wr8', full_name:'Chris Brazzell II',    position:'WR', team:'CAR', age:22, dynasty_val:2638, redraft_val:2000, rookie:true, trend:'up'},  // KTC WR73: 2638
+  {id:'r26-wr1', full_name:'Antonio Williams',     position:'WR', team:'WAS', age:22, dynasty_val:2635, redraft_val:2200, rookie:true, trend:'up'},  // KTC WR74: 2635
+  {id:'r26-wr2', full_name:'Zachariah Branch',     position:'WR', team:'ATL', age:21, dynasty_val:2605, redraft_val:2000, rookie:true, trend:'up'},  // KTC WR76: 2605
+  {id:'r26-wr6', full_name:'Malachi Fields',       position:'WR', team:'NYG', age:22, dynasty_val:2596, redraft_val:1800, rookie:true, trend:'up'},  // KTC WR77: 2596
+  {id:'r26-wr11',full_name:'Skyler Bell',          position:'WR', team:'CIN', age:22, dynasty_val:2432, redraft_val:1800, rookie:true, trend:'up'},  // KTC WR85: 2432
+  {id:'r26-wr12',full_name:"Ja'Kobi Lane",         position:'WR', team:'NO',  age:22, dynasty_val:2336, redraft_val:1800, rookie:true, trend:'up'},  // KTC WR89: 2336
+  {id:'r26-wr7', full_name:'Ted Hurst',            position:'WR', team:'TB',  age:22, dynasty_val:1966, redraft_val:1600, rookie:true, trend:'up'},  // KTC WR104: 1966
+  {id:'r26-wr4', full_name:"De'Zhaun Stribling",   position:'WR', team:'SF',  age:22, dynasty_val:1851, redraft_val:1400, rookie:true, trend:'up'},  // KTC WR108: 1851
+  {id:'r26-wr13',full_name:'Kevin Coleman',        position:'WR', team:'GB',  age:22, dynasty_val:1679, redraft_val:1200, rookie:true, trend:'up'},  // KTC WR118: 1679
+  {id:'r26-wr14',full_name:'Brenen Thompson',      position:'WR', team:'JAC', age:22, dynasty_val:1219, redraft_val:1000, rookie:true, trend:'up'},  // KTC WR147: 1219
+  {id:'r26-wr15',full_name:'Zavion Thomas',        position:'WR', team:'KC',  age:22, dynasty_val:1151, redraft_val:900,  rookie:true, trend:'up'},  // KTC WR151: 1151
+  {id:'r26-wr16',full_name:'Bryce Lance',          position:'WR', team:'NYG', age:22, dynasty_val:1043, redraft_val:800,  rookie:true, trend:'up'},  // KTC WR158: 1043
+  {id:'r26-wr17',full_name:'Deion Burks',          position:'WR', team:'LV',  age:22, dynasty_val:1008, redraft_val:800,  rookie:true, trend:'up'},  // KTC WR163: 1008
+  {id:'r26-wr18',full_name:'Caleb Douglas',        position:'WR', team:'NE',  age:22, dynasty_val:814,  redraft_val:600,  rookie:true, trend:'up'},  // KTC WR176: 814
+  {id:'r26-wr19',full_name:'CJ Daniels',           position:'WR', team:'TB',  age:22, dynasty_val:577,  redraft_val:400,  rookie:true, trend:'up'},  // KTC WR178: 577
+  // TEs — KTC live values May 10 2026 (Half PPR Non-TE-Premium)
+  {id:'r26-24',  full_name:'Kenyon Sadiq',         position:'TE', team:'NYJ', age:21, dynasty_val:4123, redraft_val:3500, rookie:true, trend:'up'},  // KTC TE9: 4123
+  {id:'r26-25',  full_name:'Eli Stowers',          position:'TE', team:'PHI', age:22, dynasty_val:3526, redraft_val:2500, rookie:true, trend:'up'},  // KTC TE11: 3526
+  {id:'r26-26',  full_name:'Gunnar Helm',          position:'TE', team:'TEN', age:22, dynasty_val:2618, redraft_val:2200, rookie:true, trend:'up'},  // KTC TE22: 2618
+  {id:'r26-te1', full_name:'Max Klare',            position:'TE', team:'LAR', age:22, dynasty_val:2022, redraft_val:2200, rookie:true, trend:'up'},  // KTC TE37: 2022
+  {id:'r26-te2', full_name:'Justin Joly',          position:'TE', team:'DET', age:22, dynasty_val:1290, redraft_val:1500, rookie:true, trend:'up'},  // KTC TE54: 1290
+  {id:'r26-te3', full_name:'Michael Trigg',        position:'TE', team:'IND', age:22, dynasty_val:1185, redraft_val:1200, rookie:true, trend:'up'},  // KTC TE57: 1185
+  {id:'r26-te4', full_name:'Eli Raridon',          position:'TE', team:'NE',  age:22, dynasty_val:1053, redraft_val:1000, rookie:true, trend:'up'},  // KTC TE61: 1053
+  {id:'r26-te5', full_name:'Oscar Delp',           position:'TE', team:'NO',  age:22, dynasty_val:1003, redraft_val:1000, rookie:true, trend:'up'},  // KTC TE63: 1003
+  {id:'r26-te6', full_name:'Jack Endries',         position:'TE', team:'CLE', age:22, dynasty_val:535,  redraft_val:600,  rookie:true, trend:'up'},  // KTC TE70: 535
 
   // ── TEAM DEFENSES (DST) — redraft value only ──────────────
   {id:'def-hou', full_name:'Houston Texans',        position:'DEF', team:'HOU', dynasty_val:0, redraft_val:5000, trend:'up'},
