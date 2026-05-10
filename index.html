@@ -2891,6 +2891,8 @@ function calcValue(p) {
   // ── BASE VALUE from consensus VALUE_DB ──
   // dynasty_val = 1QB PPR 12-team dynasty (age already reflected)
   // redraft_val = current-season PPR value
+  const IDP_POS = new Set(['DE','DT','LB','CB','S','FS','SS','DB','OLB','ILB','MLB','DL','IDP']);
+  const DST_POS = new Set(['DEF','DST','K']);
   let v;
   if (mode === 'dynasty') {
     v = p.dynasty_val || 500;
@@ -2899,6 +2901,11 @@ function calcValue(p) {
       const opt = rookieOpt / 50; // 0–2
       v = Math.round(v * (0.85 + opt * 0.15));
     }
+    // IDP: significantly discounted in dynasty — elite DEs/LBs rank around TE1/WR2,
+    // not elite QB level. They're valuable in IDP leagues but don't anchor teams.
+    if (IDP_POS.has(pos)) v = Math.round(v * 0.48);
+    // DST & K: minimal dynasty value
+    if (DST_POS.has(pos)) v = Math.min(v, 200);
   } else {
     v = (p.redraft_val > 0 ? p.redraft_val : p.dynasty_val) || 500;
   }
@@ -3624,12 +3631,23 @@ function renderValuesTable() {
   const idpBtn = document.querySelector('.pos-btn[data-pos="IDP"]');
   const defBtn = document.querySelector('.pos-btn[data-pos="DEF"]');
   const kBtn   = document.querySelector('.pos-btn[data-pos="K"]');
-  // In dynasty: DST has no value — show button but it will show 50-value entries
-  // In redraft: all buttons visible
+  // Dynasty: hide DST and K (no meaningful dynasty value); IDP stays (IDP dynasty leagues exist)
+  if (defBtn) defBtn.style.display = isDynasty ? 'none' : '';
+  if (kBtn)   kBtn.style.display   = isDynasty ? 'none' : '';
+  // If DEF or K was selected and we switched to dynasty, reset to ALL
+  if (isDynasty && (S.tablePos === 'DEF' || S.tablePos === 'K')) {
+    S.tablePos = 'ALL';
+    document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('on', b.dataset.pos === 'ALL'));
+  }
 
   let rows = S.players
     .filter(p => {
-      if (pos === 'ALL') return true;
+      if (pos === 'ALL') {
+        // In dynasty: hide DST/K (no dynasty value) unless explicitly filtering
+        if (isDynasty && DST_POSITIONS.has(p.position)) return false;
+        if (isDynasty && p.position === 'K') return false;
+        return true;
+      }
       if (pos === 'IDP') return IDP_POSITIONS.has(p.position);
       if (pos === 'DEF') return DST_POSITIONS.has(p.position);
       return p.position === pos;
