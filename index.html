@@ -224,6 +224,40 @@
     .ros-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
     .ros-row:last-child{border-bottom:none}
     .ros-row-info{flex:1;min-width:0}
+    /* ── ROSTER SLOT LAYOUT ─────────────────────────── */
+    .ros-section-hdr{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:10px 0 4px;margin-top:2px;display:flex;align-items:center;gap:8px}
+    .ros-section-hdr::after{content:'';flex:1;height:1px;background:var(--border)}
+    .ros-section-bench{border-top:2px dashed var(--border2);margin-top:6px;padding-top:2px}
+    .ros-slot-lbl{font-size:9px;font-weight:800;letter-spacing:.05em;color:var(--text3);min-width:36px;text-align:center;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 3px;text-transform:uppercase;flex-shrink:0}
+    .ros-slot-lbl.is-starter{color:var(--primary-l);border-color:rgba(124,58,237,.3);background:rgba(124,58,237,.08)}
+    .ros-slot-lbl.is-flex{color:var(--warn);border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.07)}
+    .ros-slot-lbl.is-special{color:var(--text3)}
+    .ros-slot-lbl.is-bench{color:var(--text3)}
+    .ros-empty{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);opacity:.45}
+    .ros-empty-name{font-size:12px;font-style:italic;color:var(--text3);flex:1}
+    /* ── AI CHAT WIDGET ─────────────────────────────── */
+    .tiq-chat-btn{position:fixed;bottom:72px;right:16px;width:50px;height:50px;border-radius:50%;background:var(--primary);border:2px solid rgba(157,90,240,.4);color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(124,58,237,.45);z-index:300;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s;line-height:1}
+    .tiq-chat-btn:hover{transform:scale(1.08);box-shadow:0 6px 24px rgba(124,58,237,.6)}
+    .tiq-chat-panel{position:fixed;bottom:134px;right:16px;width:330px;height:430px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.5);z-index:299;display:none;flex-direction:column;overflow:hidden;transition:opacity .2s}
+    .tiq-chat-panel.open{display:flex}
+    .tiq-chat-hdr{padding:12px 14px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+    .tiq-chat-hdr-title{font-weight:800;font-size:13px;display:flex;align-items:center;gap:7px}
+    .tiq-chat-hdr-title em{color:var(--primary-l);font-style:normal}
+    .tiq-chat-online{width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 5px var(--success)}
+    .tiq-chat-hdr button{background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px;line-height:1}
+    .tiq-chat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth}
+    .tiq-chat-msgs::-webkit-scrollbar{width:3px}
+    .tiq-chat-msgs::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+    .tiq-msg{max-width:88%;padding:9px 12px;border-radius:12px;font-size:12px;line-height:1.55}
+    .tiq-msg.ai{background:var(--bg3);border:1px solid var(--border);align-self:flex-start;border-radius:4px 12px 12px 12px}
+    .tiq-msg.user{background:var(--primary);color:#fff;align-self:flex-end;border-radius:12px 4px 12px 12px}
+    .tiq-msg.typing{opacity:.6}
+    .tiq-chat-footer{padding:10px;border-top:1px solid var(--border);display:flex;gap:7px;background:var(--bg3)}
+    .tiq-chat-footer input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 11px;color:var(--text);font-size:12px;font-family:inherit}
+    .tiq-chat-footer input:focus{outline:none;border-color:var(--primary)}
+    .tiq-chat-footer button{background:var(--primary);border:none;color:#fff;padding:8px 13px;border-radius:8px;cursor:pointer;font-size:15px;font-weight:700}
+    .tiq-chat-footer button:hover{background:var(--primary-l)}
+    @media(max-width:640px){.tiq-chat-panel{width:calc(100vw - 24px);right:12px;bottom:128px}}
     .bsh-stats{display:flex;gap:10px;margin-bottom:14px}
     .bsh-stat{flex:1;background:var(--bg3);border-radius:8px;padding:10px;text-align:center}
     .bsh-stat-num{font-size:22px;font-weight:900}
@@ -2591,8 +2625,30 @@ function sortTable(col) {
 // ═══════════════════════════════════════════════════════════
 // ROSTER / BUY-SELL-HOLD
 // ═══════════════════════════════════════════════════════════
+// ── Infer starting slot counts from connected league or settings ──────
+function getRosterSlots() {
+  const raw = S.connectedLeague?.rosterPositions || [];
+  if (raw.length) {
+    return {
+      QB:    raw.filter(p => p === 'QB').length,
+      RB:    raw.filter(p => p === 'RB').length,
+      WR:    raw.filter(p => p === 'WR').length,
+      TE:    raw.filter(p => p === 'TE').length,
+      FLEX:  raw.filter(p => ['FLEX','REC_FLEX','WRRB_FLEX'].includes(p)).length,
+      SFLEX: raw.filter(p => p === 'SUPER_FLEX').length,
+      K:     raw.filter(p => p === 'K').length,
+      DEF:   raw.filter(p => ['DEF','DST'].includes(p)).length,
+    };
+  }
+  // Fallback: infer from QB format setting
+  const qb = S.settings.qb;
+  if (qb === '2qb') return { QB:2, RB:2, WR:2, TE:1, FLEX:1, SFLEX:0, K:1, DEF:1 };
+  if (qb === 'sf')  return { QB:1, RB:2, WR:3, TE:1, FLEX:1, SFLEX:1, K:1, DEF:1 };
+  return                   { QB:1, RB:2, WR:3, TE:1, FLEX:2, SFLEX:0, K:1, DEF:1 };
+}
+
 function renderRosterList() {
-  const el = document.getElementById('rosterList');
+  const el  = document.getElementById('rosterList');
   const btn = document.getElementById('bshBtn');
   if (!S.roster.length) {
     el.innerHTML = '<div class="chip-empty">Your roster is empty — search for players above</div>';
@@ -2600,18 +2656,97 @@ function renderRosterList() {
     return;
   }
   btn.disabled = false;
-  el.innerHTML = S.roster.map(p => {
-    const v = calcValue(p);
+
+  const slots = getRosterSlots();
+  const used  = new Set();
+
+  // Sort all rostered players by dynasty value (best first)
+  const sorted = [...S.roster].sort((a,b) => (b.dynasty_val||0) - (a.dynasty_val||0));
+
+  // Pick best available players for a slot group
+  function pick(positions, count) {
+    const taken = [];
+    for (const p of sorted) {
+      if (taken.length >= count) break;
+      const pos = p.position === 'DST' ? 'DEF' : p.position;
+      if (!used.has(p.id) && positions.includes(pos)) {
+        taken.push(p);
+        used.add(p.id);
+      }
+    }
+    return taken;
+  }
+
+  // Assign starter slots in order
+  const qbStarters    = pick(['QB'], slots.QB);
+  const rbStarters    = pick(['RB'], slots.RB);
+  const wrStarters    = pick(['WR'], slots.WR);
+  const teStarters    = pick(['TE'], slots.TE);
+  const flexStarters  = pick(['RB','WR','TE'], slots.FLEX);
+  const sflexStarters = pick(['QB','RB','WR','TE'], slots.SFLEX);
+  const kStarters     = pick(['K'], slots.K);
+  const defStarters   = pick(['DEF','DST'], slots.DEF);
+  const bench         = sorted.filter(p => !used.has(p.id));
+
+  // Build one player row
+  function row(p, slotLabel, cls) {
+    const pos = p.position === 'DST' ? 'DEF' : p.position;
+    const v   = calcValue(p);
+    const dvDiff = (p.dynasty_val||0) - (p.redraft_val||0);
+    const badge  = dvDiff > 800  ? '<span style="font-size:9px;color:var(--success);margin-left:4px">+DYN</span>'
+                 : dvDiff < -800 ? '<span style="font-size:9px;color:var(--warn);margin-left:4px">+RDR</span>' : '';
     return `<div class="ros-row">
-      <span class="pb pb-${p.position}">${p.position}</span>
+      <span class="ros-slot-lbl ${cls}">${slotLabel}</span>
+      <span class="pb pb-${pos}" style="flex-shrink:0">${pos}</span>
       <div class="ros-row-info">
-        <div style="font-weight:600;font-size:13px">${p.full_name}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
-        <div style="font-size:11px;color:var(--text3)">${p.team||''}${p.age?' · '+p.age:''}</div>
+        <div style="font-weight:600;font-size:13px">${p.full_name}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}${badge}</div>
+        <div style="font-size:11px;color:var(--text3)">${p.team||'FA'}${p.age?' · Age '+p.age:''}</div>
       </div>
-      <div style="font-weight:700;font-size:13px;color:var(--primary-l)">${fmtVal(v)}</div>
+      <div style="font-weight:700;font-size:13px;color:var(--primary-l);flex-shrink:0">${fmtVal(v)}</div>
       <button class="chip-rm" onclick="removeFromRoster('${p.id}')">×</button>
     </div>`;
-  }).join('');
+  }
+
+  // Build an empty-slot placeholder
+  function emptySlot(slotLabel, cls) {
+    return `<div class="ros-empty">
+      <span class="ros-slot-lbl ${cls}" style="opacity:.6">${slotLabel}</span>
+      <span class="ros-empty-name">Empty slot</span>
+    </div>`;
+  }
+
+  // Build a group (slot label, players, slot count, css class)
+  function group(label, players, count, cls, showEmpty = true) {
+    if (!count && !players.length) return '';
+    return Array.from({ length: Math.max(count, players.length) }, (_, i) =>
+      players[i] ? row(players[i], label, cls) : (showEmpty ? emptySlot(label, cls) : '')
+    ).join('');
+  }
+
+  const isDynasty = S.settings.mode === 'dynasty';
+  const hasSpecial = kStarters.length || defStarters.length ||
+    (S.settings.mode === 'redraft' && (slots.K > 0 || slots.DEF > 0));
+
+  let html = '<div class="ros-section-hdr">Starters</div>';
+  html += group('QB',   qbStarters,    slots.QB,    'is-starter');
+  html += group('RB',   rbStarters,    slots.RB,    'is-starter');
+  html += group('WR',   wrStarters,    slots.WR,    'is-starter');
+  html += group('TE',   teStarters,    slots.TE,    'is-starter');
+  if (slots.FLEX  > 0) html += group('FLEX',  flexStarters,  slots.FLEX,  'is-flex');
+  if (slots.SFLEX > 0) html += group('SFLX',  sflexStarters, slots.SFLEX, 'is-flex');
+
+  if (hasSpecial) {
+    html += '<div class="ros-section-hdr" style="margin-top:4px">K / Defense</div>';
+    if (slots.K   > 0) html += group('K',   kStarters,   slots.K,   'is-special', !isDynasty);
+    if (slots.DEF > 0) html += group('DEF', defStarters, slots.DEF, 'is-special', !isDynasty);
+  }
+
+  if (bench.length) {
+    html += '<div class="ros-section-hdr ros-section-bench">Bench</div>';
+    bench.forEach(p => { html += row(p, 'BN', 'is-bench'); });
+  }
+
+  el.innerHTML = html;
 }
 
 function removeFromRoster(id) {
@@ -4809,15 +4944,16 @@ async function importSleeperLeague(leagueId) {
 
   // Build league data object
   const leagueData = {
-    platform:   'sleeper',
+    platform:        'sleeper',
     leagueId,
-    leagueName: leagueInfo.name || 'Sleeper League',
-    season:     leagueInfo.season,
-    settings:   detectedSettings,
-    rosterIds:  allIds,
+    leagueName:      leagueInfo.name || 'Sleeper League',
+    season:          leagueInfo.season,
+    settings:        detectedSettings,
+    rosterIds:       allIds,
+    rosterPositions: leagueInfo.roster_positions || [],
     allTeams,
-    totalTeams: leagueInfo.settings?.num_teams || 12,
-    connectedAt: Date.now()
+    totalTeams:      leagueInfo.settings?.num_teams || 12,
+    connectedAt:     Date.now()
   };
 
   S.connectedLeague = leagueData;
@@ -6730,6 +6866,172 @@ function loadSampleDraft() {
   document.getElementById('draftImportTeams').value = '12';
   openModal('draftImportModal');
 }
+
+// ═══════════════════════════════════════════════════════════
+// TIQ AI CHAT — client-side trade/value assistant
+// Uses existing VALUE_DB + consensus data + current settings
+// ═══════════════════════════════════════════════════════════
+function toggleTiqChat() {
+  const panel = document.getElementById('tiqChatPanel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    setTimeout(() => document.getElementById('tiqChatInput').focus(), 100);
+    scrollChatToBottom();
+  }
+}
+
+function scrollChatToBottom() {
+  const el = document.getElementById('tiqChatMsgs');
+  if (el) el.scrollTop = el.scrollHeight;
+}
+
+function addChatMsg(text, role) {
+  const el = document.getElementById('tiqChatMsgs');
+  const div = document.createElement('div');
+  div.className = `tiq-msg ${role}`;
+  div.innerHTML = text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+  el.appendChild(div);
+  scrollChatToBottom();
+  return div;
+}
+
+function sendTiqChat() {
+  const inp = document.getElementById('tiqChatInput');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = '';
+  addChatMsg(msg, 'user');
+
+  // Brief typing indicator
+  const typing = addChatMsg('…', 'ai typing');
+  setTimeout(() => {
+    const reply = tiqChatReply(msg);
+    typing.remove();
+    addChatMsg(reply, 'ai');
+  }, 380);
+}
+
+function tiqChatReply(msg) {
+  const lc = msg.toLowerCase();
+  const qb = S.settings.qb.toUpperCase();
+  const sz = S.settings.size;
+  const mode = S.settings.mode;
+  const modeLabel = mode === 'dynasty' ? 'dynasty' : 'redraft';
+
+  // ── Find all player mentions ──────────────────────────
+  const mentioned = [];
+  for (const p of (S.players || [])) {
+    const fn = (p.full_name || '').toLowerCase();
+    const parts = fn.split(' ');
+    const last = parts[parts.length - 1];
+    if (fn.length > 3 && lc.includes(fn)) { mentioned.push(p); continue; }
+    if (last.length >= 4 && lc.includes(last) && !mentioned.find(x => x.id === p.id)) mentioned.push(p);
+  }
+  // Deduplicate & sort by value
+  const players = [...new Map(mentioned.map(p => [p.id, p])).values()]
+    .sort((a,b) => (b.dynasty_val||0) - (a.dynasty_val||0))
+    .slice(0, 5);
+
+  const settings = `${sz}-team ${qb} ${modeLabel}`;
+
+  // ── TRADE query ───────────────────────────────────────
+  if (players.length >= 2 && (lc.includes('trade') || lc.includes('for') || lc.includes('swap') || lc.includes('deal'))) {
+    // Split: player[0] is "giving", rest is "getting" (or detect "for" keyword split)
+    let give = [players[0]], get = players.slice(1);
+    const forIdx = lc.indexOf(' for ');
+    if (forIdx > -1) {
+      const beforeFor = lc.slice(0, forIdx);
+      const afterFor  = lc.slice(forIdx + 5);
+      give = players.filter(p => beforeFor.includes((p.full_name||'').toLowerCase()) || beforeFor.includes((p.full_name||'').toLowerCase().split(' ').pop()));
+      get  = players.filter(p => afterFor.includes((p.full_name||'').toLowerCase())  || afterFor.includes((p.full_name||'').toLowerCase().split(' ').pop()));
+      if (!give.length) give = [players[0]];
+      if (!get.length)  get  = players.slice(1);
+    }
+    const vGive = give.reduce((s,p) => s + calcValue(p), 0);
+    const vGet  = get.reduce((s,p)  => s + calcValue(p), 0);
+    const diff  = vGet - vGive;
+    const pct   = Math.max(vGive, vGet) > 0 ? Math.round(Math.abs(diff) / Math.max(vGive, vGet) * 100) : 0;
+    const giveStr = give.map(p => `**${p.full_name}** (${fmtVal(calcValue(p))})`).join(' + ');
+    const getStr  = get.map(p  => `**${p.full_name}** (${fmtVal(calcValue(p))})`).join(' + ');
+
+    if (pct < 7) return `📊 This trade is essentially **even** in your ${settings} league.\n\nYou give: ${giveStr}\nYou get: ${getStr}\n\nNeither side has a clear edge (${pct}% difference). If the player you're getting fits your roster needs better, lean toward accepting.`;
+
+    const youWin = diff > 0;
+    const winSide = youWin ? getStr : giveStr;
+    const grade   = pct >= 25 ? (youWin ? '✅ Strong win' : '❌ Bad deal') : (youWin ? '✅ Slight win' : '⚠️ Slight loss');
+    return `${grade} in your ${settings} league.\n\nYou give: ${giveStr}\nYou get: ${getStr}\n\n${youWin ? 'You come out **ahead by ' + pct + '%**. I\'d take this trade.' : 'You\'re giving up **' + pct + '% more value**. Push back for a better offer.'}`;
+  }
+
+  // ── SINGLE PLAYER VALUE / PROFILE ─────────────────────
+  if (players.length === 1) {
+    const p = players[0];
+    const v  = calcValue(p);
+    const dv = p.dynasty_val || 0;
+    const rv = p.redraft_val || 0;
+    const tier = getTier(v);
+    const age  = p.age || '?';
+    const trendStr = p.trend === 'up' ? '📈 Rising' : p.trend === 'down' ? '📉 Falling' : '➡️ Stable';
+
+    // BSH recommendation
+    let rec = '';
+    if (mode === 'dynasty' && p.position === 'RB') {
+      rec = (age !== '?' && age >= 29) ? '\n\n**Recommendation: SELL** — RBs decline fast after 28.' :
+            (age !== '?' && age <= 22) ? '\n\n**Recommendation: BUY** — Young RB with dynasty upside.' : '';
+    } else if (mode === 'dynasty' && p.position === 'WR') {
+      rec = (age !== '?' && age >= 32) ? '\n\n**Recommendation: SELL** — WR value fades at 32+.' :
+            (age !== '?' && age <= 23) ? '\n\n**Recommendation: BUY** — Under 24 with upside ahead.' : '';
+    }
+
+    return `**${p.full_name}** · ${p.position} · ${p.team||'FA'} · Age ${age}\n\nValue in your ${settings} league: **${fmtVal(v)}** (${tier.label})\nDynasty: ${fmtVal(dv)} · Redraft: ${fmtVal(rv)}\nTrend: ${trendStr}${rec}`;
+  }
+
+  // ── MULTI-PLAYER COMPARISON (no trade keyword) ────────
+  if (players.length >= 2) {
+    const lines = players.map(p => `• **${p.full_name}** (${p.position}) — ${fmtVal(calcValue(p))} in ${mode}`).join('\n');
+    return `Here's how those players compare in your ${settings} league:\n\n${lines}`;
+  }
+
+  // ── TOP PLAYERS BY POSITION ───────────────────────────
+  for (const pos of ['QB','RB','WR','TE']) {
+    if (lc.includes('best ' + pos.toLowerCase()) || lc.includes('top ' + pos.toLowerCase()) ||
+        lc.includes(pos.toLowerCase() + 's ') || lc === pos.toLowerCase()) {
+      const top = (S.players||[]).filter(p => p.position === pos)
+        .map(p => ({ ...p, _v: calcValue(p) }))
+        .sort((a,b) => b._v - a._v).slice(0, 8);
+      return `**Top ${pos}s** in your ${settings} league:\n\n` + top.map((p,i) => `${i+1}. ${p.full_name} (${p.team||'FA'}) — **${fmtVal(p._v)}**`).join('\n');
+    }
+  }
+
+  // ── BUY/SELL/HOLD ────────────────────────────────────
+  if (lc.includes('waiver') || lc.includes('wire') || lc.includes('add')) {
+    return `For waiver wire advice, check the **📋 Waiver Wire** tab! It's updated weekly with streaming and dynasty targets based on usage, opportunity, and value gaps.`;
+  }
+  if (lc.includes('buy') || lc.includes('sell')) {
+    return `For dynasty buy/sell advice, head to the **📈 Buy/Sell** tab! It analyzes every player on your roster and flags the best sell-high and buy-low targets right now.`;
+  }
+
+  // ── HELP / CATCH-ALL ─────────────────────────────────
+  return `I can help with:\n\n• **Trade eval** — "Should I trade Puka Nacua for Bijan Robinson?"\n• **Player value** — "What is Brock Bowers worth?"\n• **Position rankings** — "Top WRs" or "Best TEs"\n• **Comparisons** — "Compare JSN and Malik Nabers"\n\nTry mentioning player names and I'll pull their current values from your ${settings} settings!`;
+}
 </script>
+
+<!-- ══ FLOATING AI CHAT ══ -->
+<button class="tiq-chat-btn" id="tiqChatBtn" onclick="toggleTiqChat()" title="Ask TradeIQ AI">💬</button>
+<div class="tiq-chat-panel" id="tiqChatPanel">
+  <div class="tiq-chat-hdr">
+    <div class="tiq-chat-hdr-title">
+      <div class="tiq-chat-online"></div>
+      <em>Trade</em><span style="color:var(--text)">IQ</span> Assistant
+    </div>
+    <button onclick="toggleTiqChat()">✕</button>
+  </div>
+  <div class="tiq-chat-msgs" id="tiqChatMsgs">
+    <div class="tiq-msg ai">Hey! Ask me about any player's value, trade evaluations, buy/sell advice, or position rankings — I'll answer based on your current league settings. Try <em style="color:var(--primary-l)">"Should I trade Puka Nacua for Bijan Robinson?"</em></div>
+  </div>
+  <div class="tiq-chat-footer">
+    <input id="tiqChatInput" placeholder="Ask about a trade or player…" onkeydown="if(event.key==='Enter')sendTiqChat()" maxlength="200">
+    <button onclick="sendTiqChat()">↑</button>
+  </div>
+</div>
 </body>
 </html>
