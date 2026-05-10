@@ -996,6 +996,14 @@
         </div>
       </div>
 
+      <!-- Dynasty / Win Now toggle — shown only when league connected -->
+      <div id="myTeamModeBar" style="display:none;margin-bottom:14px">
+        <div class="league-view-toggle">
+          <button class="lvt-btn on" data-mtm="dynasty" onclick="setMyTeamMode('dynasty')">🏆 Dynasty Value</button>
+          <button class="lvt-btn" data-mtm="winnow" onclick="setMyTeamMode('winnow')">⚡ Win Now Starters</button>
+        </div>
+      </div>
+
       <!-- Connect prompt (shown when no league) -->
       <div class="connect-prompt" id="connectPrompt">
         <div style="font-size:40px;margin-bottom:10px">🏈</div>
@@ -1682,6 +1690,7 @@ const S = {
   tablePos: 'ALL',
   tableSort: { col:'value', dir:'desc' },
   wireMode: 'dynasty',
+  myTeamMode: 'dynasty',
   bshData: [],
   ready: false,
   // Auth & league
@@ -2682,7 +2691,10 @@ function clearTrade() {
 
 function runAnalysis() {
   if (!S.tradeA.length && !S.tradeB.length) { showToast('Add players to both sides first', 'err'); return; }
+  const vA = adjustedTotal(S.tradeA), vB = adjustedTotal(S.tradeB);
+  const { grade } = calcGrade(vA, vB);
   trackEvent('trade_analyzed', { sideA: S.tradeA.length, sideB: S.tradeB.length, mode: S.settings.mode });
+  logTradeToFirestore(S.tradeA, S.tradeB, vA, vB, grade);
   const { txt, summary, pros, cons } = generateAnalysis(S.tradeA, S.tradeB);
   document.getElementById('anlTxt').innerHTML = txt;
   document.getElementById('anlSummary').textContent = summary;
@@ -2690,6 +2702,31 @@ function runAnalysis() {
   document.getElementById('anlCons').innerHTML = cons.map(t=>`<li>${t}</li>`).join('');
   document.getElementById('analysisCard').style.display = 'block';
   document.getElementById('analysisCard').scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+async function logTradeToFirestore(receive, give, vReceive, vGive, grade) {
+  if (!fbDb) return;
+  try {
+    const total = vReceive + vGive;
+    await fbDb.collection('trades').add({
+      ts:        Date.now(),
+      date:      new Date().toISOString().slice(0,10),
+      mode:      S.settings.mode,
+      qb:        S.settings.qb,
+      scoring:   S.settings.scoring,
+      size:      S.settings.size,
+      te:        S.settings.te,
+      grade,
+      vReceive,
+      vGive,
+      fairPct:   total ? Math.round(vReceive / total * 100) : 50,
+      receive:   receive.map(p => ({ id:p.id, name:p.full_name, pos:p.position, team:p.team||'' })),
+      give:      give.map(p    => ({ id:p.id, name:p.full_name, pos:p.position, team:p.team||'' })),
+      uid:       S.auth?.uid || null,
+      // most-traded players (for future trend analysis)
+      allNames:  [...receive, ...give].map(p => p.full_name),
+    });
+  } catch(e) {} // never break the UI for logging
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -5425,9 +5462,11 @@ function updateLeagueBar() {
   const bar    = document.getElementById('leagueConnectedBar');
   const prompt = document.getElementById('connectPrompt');
   if (!bar || !prompt) return;
+  const mtmBar = document.getElementById('myTeamModeBar');
   if (lg) {
     bar.style.display    = 'flex';
     prompt.style.display = 'none';
+    if (mtmBar) mtmBar.style.display = 'block';
     document.getElementById('lcbName').textContent = lg.leagueName || '—';
     const s = lg.settings || {};
     document.getElementById('lcbMeta').textContent =
@@ -5448,6 +5487,7 @@ function updateLeagueBar() {
   } else {
     bar.style.display    = 'none';
     prompt.style.display = 'block';
+    if (mtmBar) mtmBar.style.display = 'none';
   }
   updateTradeModeBar();
 }
@@ -5457,8 +5497,31 @@ function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
 // ═══════════════════════════════════════════════════════════
 // TEAM ANALYSIS
 // ═══════════════════════════════════════════════════════════
+function setMyTeamMode(mode) {
+  S.myTeamMode = mode;
+  document.querySelectorAll('[data-mtm]').forEach(b => b.classList.toggle('on', b.dataset.mtm === mode));
+  if (S.roster.length) runTeamAnalysis();
+}
+
+// Compute value for a player in a specific mode without mutating global state
+function calcValueForMode(p, forMode) {
+  const saved = S.settings.mode;
+  S.settings.mode = forMode;
+  const v = calcValue(p);
+  S.settings.mode = saved;
+  return v;
+}
+
 function runTeamAnalysis() {
   if (!S.roster.length) { showToast('No roster loaded — connect a league first', 'err'); return; }
+
+  // ── Win Now view ──────────────────────────────────────────
+  if (S.myTeamMode === 'winnow') {
+    renderWinNowView();
+    return;
+  }
+
+  // ── Dynasty view (default) ────────────────────────────────
   const graded = S.roster.map(p => ({ ...p, val: calcValue(p) })).sort((a,b) => b.val - a.val);
   const byPos  = { QB:[], RB:[], WR:[], TE:[], FLEX:[] };
   graded.forEach(p => { if (byPos[p.position]) byPos[p.position].push(p); });
@@ -5549,6 +5612,120 @@ function runTeamAnalysis() {
             <div class="bsh-card-reason">${p.reason} · Value: ${p.val.toLocaleString()}</div>
           </div>
         </div>`).join('')}
+    </div>` : ''}
+  `;
+}
+
+// ── Win Now view: fill roster slots by redraft value ─────────────────
+function renderWinNowView() {
+  const el = document.getElementById('teamAnalysisResults');
+  if (!el) return;
+  const slots = getRosterSlots();
+
+  // Score every player by redraft/win-now value
+  const graded = S.roster
+    .map(p => ({ ...p, wnVal: calcValueForMode(p, 'redraft'), dynVal: calcValueForMode(p, 'dynasty') }))
+    .sort((a,b) => b.wnVal - a.wnVal);
+
+  const used = new Set();
+  function pick(positions, count) {
+    const out = [];
+    for (const p of graded) {
+      if (out.length >= count) break;
+      if (!used.has(p.id) && positions.includes(p.position)) { out.push(p); used.add(p.id); }
+    }
+    return out;
+  }
+
+  const lineup = [
+    ...pick(['QB'], slots.QB).map(p=>({...p, slot:'QB'})),
+    ...pick(['RB'], slots.RB).map(p=>({...p, slot:'RB'})),
+    ...pick(['WR'], slots.WR).map(p=>({...p, slot:'WR'})),
+    ...pick(['TE'], slots.TE).map(p=>({...p, slot:'TE'})),
+    ...pick(['RB','WR','TE'], slots.FLEX).map(p=>({...p, slot:'FLEX'})),
+    ...pick(['QB','RB','WR','TE'], slots.SFLEX).map(p=>({...p, slot:'SFLEX'})),
+  ];
+  const bench = graded.filter(p => !used.has(p.id));
+
+  const totalStarterWN  = lineup.reduce((s,p)=>s+p.wnVal, 0);
+  const totalRosterWN   = graded.reduce((s,p)=>s+p.wnVal, 0);
+  const winNowScore     = Math.min(100, Math.round((totalStarterWN / (lineup.length * 8000)) * 100));
+  const winNowGrade     = scoreToLetterGrade(winNowScore);
+
+  // Weakest & strongest starter slots
+  const posGroups = {};
+  lineup.forEach(p => {
+    const key = p.slot === 'SFLEX' ? 'SF' : p.slot;
+    posGroups[key] = posGroups[key] || [];
+    posGroups[key].push(p);
+  });
+  const weakSlots   = Object.entries(posGroups).filter(([,ps])=>ps.every(p=>p.wnVal<3500)).map(([k])=>k);
+  const strongSlots = Object.entries(posGroups).filter(([,ps])=>ps.some(p=>p.wnVal>=6000)).map(([k])=>k);
+
+  const rowHtml = p => {
+    const pct = Math.min(100, Math.round(p.wnVal / 10000 * 100));
+    const cls  = p.wnVal >= 6000 ? 'var(--success)' : p.wnVal >= 3500 ? 'var(--warn)' : 'var(--danger)';
+    const dynDiff = p.dynVal - p.wnVal;
+    const badge = dynDiff > 1500
+      ? `<span style="font-size:9px;color:var(--primary-l);margin-left:4px" title="Dynasty value much higher">+DYN</span>`
+      : dynDiff < -1500
+      ? `<span style="font-size:9px;color:var(--warn);margin-left:4px" title="Redraft value much higher">+RDR</span>` : '';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
+      <span style="font-size:10px;font-weight:700;color:var(--text3);min-width:38px;text-align:center">${p.slot}</span>
+      <span class="pb pb-${p.position}">${p.position}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600">${escHtml(p.full_name||'')}${badge}</div>
+        <div style="font-size:11px;color:var(--text3)">${p.team||''}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:13px;font-weight:700;color:${cls}">${p.wnVal.toLocaleString()}</div>
+        <div style="font-size:10px;color:var(--text3)">Win Now</div>
+      </div>
+    </div>`;
+  };
+
+  el.innerHTML = `
+    <div class="stat-row" style="margin-bottom:14px">
+      <div class="stat-card" style="border-color:${gradeClr(winNowGrade)};text-align:center">
+        <div class="stat-card-val" style="color:${gradeClr(winNowGrade)};font-size:38px;letter-spacing:-2px">${winNowGrade}</div>
+        <div class="stat-card-lbl">Win Now Grade</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-val">${lineup.length}</div>
+        <div class="stat-card-lbl">Starters</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-val">${(totalStarterWN/1000).toFixed(1)}k</div>
+        <div class="stat-card-lbl">Starter Value</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-val">${bench.length}</div>
+        <div class="stat-card-lbl">Bench Players</div>
+      </div>
+    </div>
+
+    ${weakSlots.length || strongSlots.length ? `
+    <div class="anl-grid" style="margin-bottom:14px">
+      ${strongSlots.length ? `<div class="anl-box pros"><h4>💪 Starter Strengths</h4><ul>${strongSlots.map(s=>`<li>${s} — elite win-now production</li>`).join('')}</ul></div>` : ''}
+      ${weakSlots.length ? `<div class="anl-box cons"><h4>⚠️ Weak Starter Spots</h4><ul>${weakSlots.map(s=>`<li>${s} — below starter threshold</li>`).join('')}</ul></div>` : ''}
+    </div>` : ''}
+
+    <div class="panel" style="margin-bottom:16px">
+      <h3 style="margin-bottom:12px">⚡ Win Now Starting Lineup</h3>
+      ${lineup.length ? lineup.map(rowHtml).join('') : '<div class="chip-empty">No starters found — add players to roster</div>'}
+    </div>
+
+    ${bench.length ? `
+    <div class="panel" style="margin-bottom:16px">
+      <h3 style="margin-bottom:12px;color:var(--text2)">📋 Bench</h3>
+      ${bench.map(p => {
+        const cls = p.wnVal >= 4000 ? 'var(--success)' : p.wnVal >= 2000 ? 'var(--text2)' : 'var(--text3)';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid var(--border)">
+          <span class="pb pb-${p.position}">${p.position}</span>
+          <div style="flex:1;font-size:13px;font-weight:500">${escHtml(p.full_name||'')}</div>
+          <span style="font-size:12px;font-weight:600;color:${cls}">${p.wnVal.toLocaleString()}</span>
+        </div>`;
+      }).join('')}
     </div>` : ''}
   `;
 }
