@@ -55,5 +55,17 @@
     "redraftFiles": [
       "2026 Redraft DST Rankings.csv"
     ]
+  },
+  {
+    "key": "tradeiq_rd_ds",
+    "name": "DS Redraft 2026",
+    "draftsharkFiles": [
+      "1qb Redraft 2026 PPR rankings.csv",
+      "1qb Redraft 2026 Half PPR rankings.csv",
+      "1qb Redraft 2026 Non PPR rankings.csv",
+      "SF Redraft 2026 PPR rankings.csv",
+      "SF Redraft 2026 Half PPR rankings.csv",
+      "SF Redraft 2026 Non PPR rankings.csv"
+    ]
   }
 ]
