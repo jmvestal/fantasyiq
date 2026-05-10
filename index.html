@@ -1373,6 +1373,10 @@
             <div style="font-size:11px;color:var(--text2)">Rankings auto-update when you change league settings (Dynasty/Redraft, SF, scoring). Mark picks as they happen — Fantasy IQ highlights best value each round.</div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0">
+            <select id="wizDraftType" class="trade-partner-sel" style="max-width:130px" onchange="initWizard()">
+              <option value="redraft">Full Redraft</option>
+              <option value="rookie">Rookie Draft</option>
+            </select>
             <select id="wizTotalTeams" class="trade-partner-sel" style="max-width:110px" onchange="initWizard()">
               <option value="8">8 Teams</option>
               <option value="10">10 Teams</option>
@@ -1388,6 +1392,20 @@
               <option value="15">15 Rounds</option>
               <option value="20" selected>20 Rounds</option>
               <option value="25">25 Rounds</option>
+            </select>
+            <select id="wizQB" class="trade-partner-sel" style="max-width:100px" onchange="initWizard()">
+              <option value="1qb" selected>1 QB</option>
+              <option value="sf">Superflex</option>
+              <option value="2qb">2 QB</option>
+            </select>
+            <select id="wizScoring" class="trade-partner-sel" style="max-width:100px" onchange="initWizard()">
+              <option value="ppr" selected>PPR</option>
+              <option value="half">Half PPR</option>
+              <option value="std">Non-PPR</option>
+            </select>
+            <select id="wizTE" class="trade-partner-sel" style="max-width:110px" onchange="initWizard()">
+              <option value="off" selected>Std TE</option>
+              <option value="on">TE Premium</option>
             </select>
             <button class="btn btn-p btn-sm" onclick="resetWizard()">↺ Reset</button>
           </div>
@@ -7978,6 +7996,7 @@ const DS = {
     myPicks: [],          // player objects I drafted
     skips: [],            // recommended but skipped
     posFilter: 'ALL',
+    _savedSettings: null, // S.settings snapshot taken when wizard session starts
   },
   anlState: {
     picks: [],            // [{player, round, pickInRound, overallPick, team, grade, diff}]
@@ -8008,6 +8027,10 @@ function initDraftTab() {
 function initWizard() {
   const total = parseInt(document.getElementById('wizTotalTeams')?.value || 12);
   const rounds = parseInt(document.getElementById('wizRounds')?.value || 20);
+  const draftType = document.getElementById('wizDraftType')?.value || 'redraft';
+  const wizQB      = document.getElementById('wizQB')?.value || '1qb';
+  const wizScoring = document.getElementById('wizScoring')?.value || 'ppr';
+  const wizTE      = document.getElementById('wizTE')?.value || 'off';
   // Rebuild pick dropdown
   const sel = document.getElementById('wizMyPick');
   if (sel) {
@@ -8024,16 +8047,27 @@ function initWizard() {
   DS.wizState.myPick = parseInt(sel?.value || 1);
   DS.wizState.rounds = rounds;
   resetWizard();
+  // Apply format settings so calcValue() reflects the chosen draft format
+  DS.wizState._savedSettings = { ...S.settings };
+  const mode = draftType === 'rookie' ? 'dynasty' : 'redraft';
+  S.settings = { ...S.settings, mode, qb: wizQB, scoring: wizScoring, te: wizTE };
+  _wizRankCache = null; // bust rank cache so new settings take effect
+  renderWizAvail();
+  updateWizRec();
 }
 
 function resetWizard() {
+  // Restore global settings that were overridden for this wizard session
+  if (DS.wizState._savedSettings) { S.settings = DS.wizState._savedSettings; DS.wizState._savedSettings = null; }
   DS.wizState.totalTeams = parseInt(document.getElementById('wizTotalTeams')?.value || 12);
   DS.wizState.myPick = parseInt(document.getElementById('wizMyPick')?.value || 1);
   DS.wizState.rounds = parseInt(document.getElementById('wizRounds')?.value || 20);
   DS.wizState.currentPick = 1;
   DS.wizState.drafted = [];
   DS.wizState.myPicks = [];
+  DS.wizState.skips  = [];
   DS.wizState.posFilter = 'ALL';
+  _wizRankCache = null;
   renderWizAvail();
   renderWizRoster();
   updateWizRec();
@@ -8063,8 +8097,10 @@ function isMyTurn() {
 // Returns sorted available players using current settings-aware calcValue
 function getWizAvailPlayers() {
   const draftedIds = new Set(DS.wizState.drafted.map(d => d.player.id));
+  const isRookie = (document.getElementById('wizDraftType')?.value || 'redraft') === 'rookie';
   return (S.players || [])
-    .filter(p => p.position !== 'PICK' && !draftedIds.has(p.id) && calcValue(p) > 0)
+    .filter(p => p.position !== 'PICK' && !draftedIds.has(p.id) && calcValue(p) > 0
+                 && (!isRookie || p.rookie))
     .sort((a,b) => calcValue(b) - calcValue(a));
 }
 
