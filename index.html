@@ -5747,7 +5747,7 @@ async function fetchKTCValues() {
 
   // Try direct KTC API, then fall back to corsproxy if CORS blocks it
   const KTC_URL = 'https://keeptradecut.com/fantasy-api/queue?format=1&filters=QB|WR|RB|TE|RDP&page=0&perPage=500&dynasty=1';
-  const PROXY   = 'https://corsproxy.io/?url=';
+  const PROXY   = 'https://api.allorigins.win/raw?url=';
 
   let data = null;
   for (const url of [KTC_URL, PROXY + encodeURIComponent(KTC_URL)]) {
@@ -5813,7 +5813,7 @@ async function fetchFFCValues() {
     } catch(e) {}
   }
   try {
-    const PROXY = 'https://corsproxy.io/?url=';
+    const PROXY = 'https://api.allorigins.win/raw?url=';
     const DYN_URL = 'https://fantasyfootballcalculator.com/api/v1/adp/dynasty?teams=12&year=2026&position=all';
     const PPR_URL = 'https://fantasyfootballcalculator.com/api/v1/adp/ppr?teams=12&year=2026&position=all';
 
