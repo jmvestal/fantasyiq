@@ -5179,20 +5179,15 @@ function buildConsensus(p) {
     if (entry.trend) trends.push(entry.trend);
   }
 
-  // Always include VALUE_DB as an anchor.
-  // Give it 2 votes when no live API is present so it grounds the consensus strongly.
+  // VALUE_DB always gets 2 votes — it's calibrated to KTC market values and must
+  // outweigh FFC/DLF ADP-based sources that inflate speculative dynasty QBs.
+  // Example: JJ McCarthy rank 80 in FFC dynasty ADP → rankToValue gives ~6,200,
+  // but KTC has him at ~342 and VDB at 2,100. With VDB(2×) + KTC, the median
+  // stays at 2,100 instead of being pulled to ~3,500 by FFC/DLF outliers.
   const vdb = VALUE_DB[p.full_name];
-  const hasApiSource = (S.sourceValues?.fc?.[pid]?.dv > 0) ||
-                       (S.sourceValues?.ktc?.[pid]?.dv > 0) ||
-                       (S.sourceValues?.ffc?.[pid]?.dv > 0);
   if (vdb) {
-    if (!hasApiSource) {
-      dvArr.push(vdb.dv); dvArr.push(vdb.dv);
-      rvArr.push(vdb.rv || vdb.dv); rvArr.push(vdb.rv || vdb.dv);
-    } else {
-      dvArr.push(vdb.dv);
-      rvArr.push(vdb.rv || vdb.dv);
-    }
+    dvArr.push(vdb.dv); dvArr.push(vdb.dv);
+    rvArr.push(vdb.rv || vdb.dv); rvArr.push(vdb.rv || vdb.dv);
     if (vdb.trend) trends.push(vdb.trend);
   } else if (dvArr.length === 0) {
     return { dv: p.dynasty_val || 500, rv: p.redraft_val || 500, trend: 'flat', sources: 0 };
@@ -5913,7 +5908,7 @@ async function fetchDLFValues() {
 // Dynasty only — rv:0 so redraft values are never affected.
 // ═══════════════════════════════════════════════════════════
 const CUSTOM_BASE     = 'https://raw.githubusercontent.com/jmvestal/fantasyiq/main/rankings/';
-const CUSTOM_CACHE_KEY = 'tradeiq_custom_v11';
+const CUSTOM_CACHE_KEY = 'tradeiq_custom_v12';
 const CUSTOM_TS_KEY    = 'tradeiq_custom_ts_v5';
 const CUSTOM_TTL       = 24 * 60 * 60 * 1000; // 24 hours
 
