@@ -97,6 +97,16 @@
     input[type=range]{width:100%;accent-color:var(--primary);height:4px}
     .slider-val{text-align:center;font-size:11px;color:var(--primary-l);font-weight:700;margin-top:3px}
     .s-divider{height:1px;background:var(--border);margin:6px 0}
+    /* ── PREMIUM SETTINGS LOCK ────────── */
+    .settings-lockable{position:relative}
+    .settings-lock-overlay{position:absolute;inset:-6px;background:rgba(14,14,20,.88);backdrop-filter:blur(3px);border-radius:10px;display:flex;align-items:center;justify-content:center;z-index:20;cursor:pointer;transition:background .15s}
+    .settings-lock-overlay:hover{background:rgba(14,14,20,.82)}
+    body.premium .settings-lock-overlay{display:none}
+    .settings-lock-content{text-align:center;padding:16px 12px}
+    .settings-lock-icon{font-size:22px;margin-bottom:8px}
+    .settings-lock-title{font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px}
+    .settings-lock-sub{font-size:10px;color:var(--text3);line-height:1.5;margin-bottom:12px}
+    .settings-lock-btn{display:inline-block;padding:7px 16px;background:var(--primary);border-radius:8px;font-size:11px;font-weight:700;color:#fff;letter-spacing:.02em}
 
     /* ── TABS ───────────────────────────── */
     .tab{display:none}
@@ -1076,61 +1086,75 @@
       </div>
     </div>
 
-    <div class="s-section">
-      <div class="s-label">League Size</div>
-      <div class="tog-row">
-        <button class="tog" data-s="size" data-v="8">8</button>
-        <button class="tog" data-s="size" data-v="10">10</button>
-        <button class="tog on" data-s="size" data-v="12">12</button>
-        <button class="tog" data-s="size" data-v="14">14</button>
-        <button class="tog" data-s="size" data-v="16">16</button>
+    <!-- ── PREMIUM-LOCKED SETTINGS ── -->
+    <div class="settings-lockable" id="settingsLockable">
+
+      <div class="s-section">
+        <div class="s-label">League Size</div>
+        <div class="tog-row">
+          <button class="tog" data-s="size" data-v="8">8</button>
+          <button class="tog" data-s="size" data-v="10">10</button>
+          <button class="tog on" data-s="size" data-v="12">12</button>
+          <button class="tog" data-s="size" data-v="14">14</button>
+          <button class="tog" data-s="size" data-v="16">16</button>
+        </div>
       </div>
-    </div>
 
-    <div class="s-section">
-      <div class="s-label">QB Format</div>
-      <div class="tog-row">
-        <button class="tog on" data-s="qb" data-v="1qb">1-QB</button>
-        <button class="tog" data-s="qb" data-v="sf">SF</button>
-        <button class="tog" data-s="qb" data-v="2qb">2-QB</button>
+      <div class="s-section">
+        <div class="s-label">QB Format</div>
+        <div class="tog-row">
+          <button class="tog" data-s="qb" data-v="1qb">1-QB</button>
+          <button class="tog on" data-s="qb" data-v="sf">SF</button>
+          <button class="tog" data-s="qb" data-v="2qb">2-QB</button>
+        </div>
       </div>
-    </div>
 
-    <div class="s-section">
-      <div class="s-label">Scoring</div>
-      <div class="tog-row">
-        <button class="tog on" data-s="scoring" data-v="ppr">PPR</button>
-        <button class="tog" data-s="scoring" data-v="half">Half</button>
-        <button class="tog" data-s="scoring" data-v="std">Std</button>
+      <div class="s-section">
+        <div class="s-label">Scoring</div>
+        <div class="tog-row">
+          <button class="tog on" data-s="scoring" data-v="ppr">PPR</button>
+          <button class="tog" data-s="scoring" data-v="half">Half</button>
+          <button class="tog" data-s="scoring" data-v="std">Std</button>
+        </div>
       </div>
-    </div>
 
-    <div class="s-section">
-      <div class="s-label">TE Premium</div>
-      <div class="tog-row">
-        <button class="tog on" data-s="te" data-v="off">Off</button>
-        <button class="tog" data-s="te" data-v="on">On</button>
+      <div class="s-section">
+        <div class="s-label">TE Premium</div>
+        <div class="tog-row">
+          <button class="tog on" data-s="te" data-v="off">Off</button>
+          <button class="tog" data-s="te" data-v="on">On</button>
+        </div>
       </div>
-    </div>
 
-    <div class="s-divider"></div>
+      <div class="s-divider"></div>
 
-    <div class="s-section">
-      <div class="s-label">Rookie Optimism</div>
-      <div class="slider-wrap">
-        <div class="slider-lbl"><span>Pessimist</span><span>Optimist</span></div>
-        <input type="range" id="rookieSlider" min="0" max="100" value="50">
-        <div class="slider-val" id="rookieSliderVal">Neutral</div>
+      <div class="s-section">
+        <div class="s-label">Rookie Optimism</div>
+        <div class="slider-wrap">
+          <div class="slider-lbl"><span>Pessimist</span><span>Optimist</span></div>
+          <input type="range" id="rookieSlider" min="0" max="100" value="50">
+          <div class="slider-val" id="rookieSliderVal">Neutral</div>
+        </div>
       </div>
-    </div>
 
-    <div class="s-section">
-      <label class="checkbox-row">
-        <input type="checkbox" id="pkgAdj" checked>
-        <span>Package Adj.</span>
-      </label>
-      <div style="font-size:10px;color:var(--text3);margin-top:5px;line-height:1.5">Single elite player gets a premium over equal-value depth</div>
-    </div>
+      <div class="s-section">
+        <label class="checkbox-row">
+          <input type="checkbox" id="pkgAdj" checked>
+          <span>Package Adj.</span>
+        </label>
+        <div style="font-size:10px;color:var(--text3);margin-top:5px;line-height:1.5">Single elite player gets a premium over equal-value depth</div>
+      </div>
+
+      <!-- Lock overlay — hidden for premium users via body.premium CSS -->
+      <div class="settings-lock-overlay" id="settingsLockOverlay" onclick="openModal('proModal')">
+        <div class="settings-lock-content">
+          <div class="settings-lock-icon">🔒</div>
+          <div class="settings-lock-title">Premium Settings</div>
+          <div class="settings-lock-sub">Customize league size, QB format, scoring & more</div>
+          <div class="settings-lock-btn">Upgrade to Pro →</div>
+        </div>
+      </div>
+    </div><!-- /settings-lockable -->
   </aside>
 
   <!-- MAIN -->
@@ -2080,8 +2104,8 @@
       <div class="mob-s-section" id="mob-s-qb">
         <div class="mob-s-label">QB Format</div>
         <div class="mob-tog-row">
-          <button class="mob-tog on" data-s="qb" data-v="1qb" onclick="setSetting('qb','1qb');syncMobToggles()">1-QB</button>
-          <button class="mob-tog" data-s="qb" data-v="sf" onclick="setSetting('qb','sf');syncMobToggles()">SF</button>
+          <button class="mob-tog" data-s="qb" data-v="1qb" onclick="setSetting('qb','1qb');syncMobToggles()">1-QB</button>
+          <button class="mob-tog on" data-s="qb" data-v="sf" onclick="setSetting('qb','sf');syncMobToggles()">SF</button>
           <button class="mob-tog" data-s="qb" data-v="2qb" onclick="setSetting('qb','2qb');syncMobToggles()">2QB</button>
         </div>
       </div>
@@ -4185,16 +4209,16 @@ function renderValuesTable() {
 
   // Non-signed-in users: lock Player HQ to default 12T/1QB/PPR settings.
   // Mode (dynasty/redraft) stays free. Only size/qb/scoring/te are gated.
-  const isLoggedIn = !!S.auth;
-  const vtSettings = isLoggedIn ? S.settings : {
-    ...S.settings, size: 12, qb: '1qb', scoring: 'ppr', te: 'off'
+  const isPremium = S.isPremium;
+  const vtSettings = isPremium ? S.settings : {
+    ...S.settings, size: 12, qb: 'sf', scoring: 'ppr', te: 'off'
   };
 
   // Update sign-in banner description dynamically
   const bannerDesc = document.getElementById('valBannerDesc');
-  if (bannerDesc && !isLoggedIn) {
+  if (bannerDesc && !isPremium) {
     const mLbl = S.settings.mode === 'dynasty' ? 'Dynasty' : 'Redraft';
-    bannerDesc.textContent = `Showing default ${mLbl} rankings · 12-Team · 1-QB · PPR`;
+    bannerDesc.textContent = `Showing default ${mLbl} rankings · 12-Team · SF · PPR`;
   }
 
   const { mode, size, qb, scoring } = vtSettings;
@@ -4756,6 +4780,13 @@ function removeSugGive(id) {
 // SETTINGS
 // ═══════════════════════════════════════════════════════════
 function setSetting(key, val) {
+  // All settings except dynasty/redraft mode toggle require a premium account
+  if (key !== 'mode' && !S.isPremium) {
+    const el = document.getElementById('proModalFeatureText');
+    if (el) el.textContent = 'Upgrade to Pro to customize league size, QB format, scoring, and more.';
+    openModal('proModal');
+    return;
+  }
   if (key === 'size') val = parseInt(val);
   S.settings[key] = val;
 
@@ -4813,11 +4844,12 @@ function requirePro(tabName) {
 }
 
 async function checkPremiumStatus(user) {
-  if (!user || !fbDb) { S.isPremium = false; return; }
+  if (!user || !fbDb) { S.isPremium = false; document.body.classList.remove('premium'); return; }
   try {
     const doc = await fbDb.collection('users').doc(user.uid).get();
     S.isPremium = doc.exists && doc.data()?.plan === 'pro';
   } catch(e) { S.isPremium = false; }
+  document.body.classList.toggle('premium', S.isPremium);
 }
 
 function switchTab(name) {
@@ -7107,7 +7139,7 @@ function handleAuthStateChange(user) {
   } else {
     btn.style.display  = 'block';
     pill.style.display = 'none';
-    document.body.classList.remove('logged-in');
+    document.body.classList.remove('logged-in', 'premium');
     S.isPremium = false;
     updateChatVisibility();
     if (document.getElementById('tab-home')?.classList.contains('active')) renderHome();
