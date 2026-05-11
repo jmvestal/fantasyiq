@@ -5690,8 +5690,8 @@ async function fetchKTCValues() {
 // FANTASY FOOTBALL CALCULATOR AUTO-FETCH — free public ADP API
 // https://fantasyfootballcalculator.com/api/v1/adp/...
 // ═══════════════════════════════════════════════════════════
-const FFC_CACHE_KEY = 'tradeiq_ffc_values_v2';
-const FFC_TS_KEY    = 'tradeiq_ffc_ts_v2';
+const FFC_CACHE_KEY = 'tradeiq_ffc_values_v3';
+const FFC_TS_KEY    = 'tradeiq_ffc_ts_v3';
 const FFC_TTL       = 23 * 60 * 60 * 1000;
 
 async function fetchFFCValues() {
@@ -5762,17 +5762,12 @@ async function fetchFFCValues() {
     const pprTotal = Object.keys(pprMap).length || 200;
 
     allNames.forEach(name => {
-      const dEntry = dynMap[name];
       const rEntry = pprMap[name];
-      let dv = dEntry ? rankToValue(Math.round(dEntry.adp), dynTotal) : 0;
+      // FFC dynasty ADP is SuperFlex format — QB values are inflated and unreliable.
+      // Exclude all FFC dynasty values (dv:0). FFC only contributes rv (redraft PPR ADP).
       const rv = rEntry ? rankToValue(Math.round(rEntry.adp), pprTotal) : 0;
-      // FFC dynasty is SF-format: normalize QB dynasty values to 1QB baseline
-      // by dividing by the same SF multiplier used in calcValue() (1.38)
-      if (dv > 0 && dEntry?.pos === 'QB') {
-        dv = Math.round(dv / 1.38);
-      }
-      if (dv > 0 || rv > 0) {
-        ffcSource[name] = { dv, rv };
+      if (rv > 0) {
+        ffcSource[name] = { dv: 0, rv };
       }
     });
 
@@ -5799,6 +5794,10 @@ const DLF_TS_KEY    = 'tradeiq_dlf_ts_v2';
 const DLF_TTL       = 7 * 24 * 60 * 60 * 1000; // 7 days (static files, update manually)
 
 async function fetchDLFValues() {
+  // DLF excluded from dynasty consensus — CSV ranking format adds noise.
+  // Keeping the function stub so the UI source list doesn't break.
+  S.sourceStatus['dlf'] = 'none';
+  return;
   const ts = parseInt(localStorage.getItem(DLF_TS_KEY) || '0');
   if (Date.now() - ts < DLF_TTL) {
     try {
@@ -5922,7 +5921,7 @@ async function fetchDLFValues() {
 // Dynasty only — rv:0 so redraft values are never affected.
 // ═══════════════════════════════════════════════════════════
 const CUSTOM_BASE     = 'https://raw.githubusercontent.com/jmvestal/fantasyiq/main/rankings/';
-const CUSTOM_CACHE_KEY = 'tradeiq_custom_v13';
+const CUSTOM_CACHE_KEY = 'tradeiq_custom_v14';
 const CUSTOM_TS_KEY    = 'tradeiq_custom_ts_v5';
 const CUSTOM_TTL       = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -6212,6 +6211,10 @@ const DP_TS_KEY    = 'tradeiq_dp_ts';
 const DP_TTL       = 23 * 60 * 60 * 1000;
 
 async function fetchDynastyProcessValues() {
+  // DP uses FantasyPros dynasty ECR which is SuperFlex-weighted — excluded from dynasty consensus.
+  // Keeping the function stub so the UI source list doesn't break.
+  S.sourceStatus['dp'] = 'none';
+  return;
   const ts = parseInt(localStorage.getItem(DP_TS_KEY) || '0');
   if (Date.now() - ts < DP_TTL) {
     try {
