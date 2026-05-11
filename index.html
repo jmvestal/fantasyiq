@@ -114,7 +114,7 @@
     .global-ticker-bar{background:var(--bg3);border-bottom:1px solid var(--border);overflow:hidden;height:0;transition:height .2s}
     .global-ticker-bar.ready{height:30px}
     body.landing-mode .global-ticker-bar{display:none}
-    .global-ticker-inner{display:flex;white-space:nowrap;animation:global-ticker-scroll 28s linear infinite;will-change:transform;height:100%;align-items:center}
+    .global-ticker-inner{display:flex;white-space:nowrap;animation:global-ticker-scroll 12s linear infinite;will-change:transform;height:100%;align-items:center}
     .global-ticker-inner:hover{animation-play-state:paused}
     @keyframes global-ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
     .global-ticker-item{display:inline-flex;align-items:center;gap:5px;padding:0 14px;font-size:11px;font-weight:600;cursor:pointer;transition:color .15s;flex-shrink:0}
@@ -138,7 +138,7 @@
     .home-ticker-wrap::before,.home-ticker-wrap::after{content:'';position:absolute;top:0;bottom:0;width:36px;z-index:2;pointer-events:none}
     .home-ticker-wrap::before{left:0;background:linear-gradient(to right,var(--bg3),transparent)}
     .home-ticker-wrap::after{right:0;background:linear-gradient(to left,var(--bg3),transparent)}
-    .home-ticker{display:flex;white-space:nowrap;animation:home-ticker-scroll 28s linear infinite;will-change:transform}
+    .home-ticker{display:flex;white-space:nowrap;animation:home-ticker-scroll 12s linear infinite;will-change:transform}
     .home-ticker:hover{animation-play-state:paused}
     @keyframes home-ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
     .home-ticker-item{display:inline-flex;align-items:center;gap:5px;padding:9px 18px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;transition:color .15s;flex-shrink:0}
