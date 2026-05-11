@@ -2641,7 +2641,7 @@ const VALUE_DB = {
   'Caleb Douglas':          {dv:814, rv:600, trend:'up'},   // KTC WR176: 814
   'CJ Daniels':             {dv:577, rv:400, trend:'up'},   // KTC WR178: 577
   // 2026 TE Rookies — KTC live values May 10 2026 (already in TE section above)
-  'Justin Joly':            {dv:1290,rv:500, trend:'up'},   // KTC TE54: 1290 — DS: neg (floor)
+  'Justin Joly':            {dv:450, rv:200, trend:'flat'}, // 5th round pick, unproven
   'Michael Trigg':          {dv:1185,rv:500, trend:'up'},   // KTC TE57: 1185 — DS: neg (floor)
   // Depth RBs — commonly traded/streamed
   'Dameon Pierce':          {dv:1800,rv:500, trend:'flat'},
@@ -2813,7 +2813,7 @@ const VALUE_DB = {
   'Mike Gesicki':           {dv:1356,rv:1400,trend:'flat'},
   'Tyler Higbee':           {dv:1353,rv:1400,trend:'flat'},
   'Erick All':              {dv:1295,rv:1200,trend:'up'},
-  'Justin Joly':            {dv:1290,rv:1500,trend:'up'},
+  'Justin Joly':            {dv:450, rv:200, trend:'flat'},
   'Elijah Higgins':         {dv:1267,rv:1200,trend:'flat'},
   'Luke Schoonmaker':       {dv:1234,rv:1200,trend:'flat'},
   'Michael Trigg':          {dv:1185,rv:1200,trend:'up'},
@@ -3115,7 +3115,7 @@ const ROOKIES_2026 = [
   {id:'r26-25',  full_name:'Eli Stowers',          position:'TE', team:'PHI', age:22, dynasty_val:3526, redraft_val:500,  rookie:true, trend:'up'},  // DS: -32.6 (floor)
   {id:'r26-26',  full_name:'Gunnar Helm',          position:'TE', team:'TEN', age:22, dynasty_val:2618, redraft_val:500,  rookie:true, trend:'up'},  // DS: -11.9 (floor)
   {id:'r26-te1', full_name:'Max Klare',            position:'TE', team:'LAR', age:22, dynasty_val:2022, redraft_val:500,  rookie:true, trend:'up'},  // DS: -41.7 (floor)
-  {id:'r26-te2', full_name:'Justin Joly',          position:'TE', team:'DET', age:22, dynasty_val:1290, redraft_val:500,  rookie:true, trend:'up'},  // DS: -49 (floor)
+  {id:'r26-te2', full_name:'Justin Joly',          position:'TE', team:'DEN', age:22, dynasty_val:450,  redraft_val:200,  rookie:true, trend:'flat'},  // 5th round pick, unproven
   {id:'r26-te3', full_name:'Michael Trigg',        position:'TE', team:'IND', age:22, dynasty_val:1185, redraft_val:500,  rookie:true, trend:'up'},  // DS: -72.2 (floor)
   {id:'r26-te4', full_name:'Eli Raridon',          position:'TE', team:'NE',  age:22, dynasty_val:1053, redraft_val:500,  rookie:true, trend:'up'},  // DS: -48.1 (floor)
   {id:'r26-te5', full_name:'Oscar Delp',           position:'TE', team:'NO',  age:22, dynasty_val:1003, redraft_val:500,  rookie:true, trend:'up'},  // DS: -47.8 (floor)
@@ -7030,34 +7030,36 @@ async function init() {
   restoreBookmarkletSources();
 
   // ── 2. INSTANT BOOTSTRAP — render in <100ms from built-in data ───
-  // Use the hardcoded VALUE_DB player list so the page shows content immediately.
-  // External sources load in the background and update values progressively.
-  const FA_BOOT = new Set(['FA','Free Agent','','N/A']);
-  const _seenBoot = new Set();
-  S.players = [...FALLBACK_PLAYERS, ...ROOKIES_2026, ...PICKS]
-    .filter(p => {
-      if (p.position !== 'PICK') {
-        const key = normName(p.full_name || '');
-        if (_seenBoot.has(key)) return false;
-        _seenBoot.add(key);
-      }
-      return !RETIRED_PLAYERS.has(p.full_name) &&
-        (p.position === 'PICK' || (p.team && !FA_BOOT.has(p.team)));
-    });
+  try {
+    const FA_BOOT = new Set(['FA','Free Agent','','N/A']);
+    const _seenBoot = new Set();
+    S.players = [...FALLBACK_PLAYERS, ...ROOKIES_2026, ...PICKS]
+      .filter(p => {
+        if (p.position !== 'PICK') {
+          const key = normName(p.full_name || '');
+          if (_seenBoot.has(key)) return false;
+          _seenBoot.add(key);
+        }
+        return !RETIRED_PLAYERS.has(p.full_name) &&
+          (p.position === 'PICK' || (p.team && !FA_BOOT.has(p.team)));
+      });
+  } catch(e) {
+    console.error('Bootstrap player build failed:', e);
+    S.players = [...FALLBACK_PLAYERS];
+  }
   S.ready = true;
-  renderHome();
+  try { renderHome(); } catch(e) { console.error('renderHome failed:', e); }
   handleBookmarkletImport();
-  rebuildPlayerValues();
+  try { rebuildPlayerValues(); } catch(e) { console.error('rebuildPlayerValues failed:', e); }
   buildSearch('srchA',       'ddA',       null, null);
   buildSearch('srchB',       'ddB',       null, null);
   buildSearch('srchSugGive', 'ddSugGive', null, null);
   buildSearch('srchRoster',  'ddRoster',  null, null);
-  renderValuesTable();
-  updateModeChip();
-  renderTrade();
+  try { renderValuesTable(); } catch(e) {}
+  try { updateModeChip(); }    catch(e) {}
+  try { renderTrade(); }       catch(e) {}
   if (location.search.includes('a=') || location.search.includes('b=')) loadFromUrl();
-  renderGlobalTicker();
-  renderLandingWidgets();
+  try { renderGlobalTicker(); renderLandingWidgets(); } catch(e) {}
   document.getElementById('pcBadge').innerHTML =
     `${S.players.length.toLocaleString()} players <span class="spin" style="display:inline-block;width:10px;height:10px;border-width:2px;vertical-align:middle;margin-left:3px"></span>`;
 
