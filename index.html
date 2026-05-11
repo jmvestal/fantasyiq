@@ -6838,16 +6838,21 @@ async function fetchPlayers() {
   // Served from GitHub Pages CDN — fastest for every user on every visit.
   // Updated daily by the GitHub Action (update-players.yml).
   try {
+    console.log('fetchPlayers: trying /players.json…');
     const res = await fetch('/players.json', { signal: AbortSignal.timeout(8000) });
+    console.log('fetchPlayers: /players.json status', res.status);
     if (res.ok) {
-      const { players, updated, count } = await res.json();
+      const json = await res.json();
+      const { players, updated, count } = json;
+      console.log('fetchPlayers: parsed players.json, count=', count, 'array length=', players?.length);
       if (players && players.length > 100) {
-        console.log(`players.json: ${count} players (updated ${updated})`);
-        return players.map(p => applyValueDB(p));
+        const result = players.map(p => applyValueDB(p));
+        console.log('fetchPlayers: returning', result.length, 'players from players.json');
+        return result;
       }
     }
   } catch(e) {
-    console.warn('players.json unavailable, falling back to Sleeper cache:', e.message);
+    console.warn('players.json failed:', e.message, e);
   }
 
   // ── 2. STALE-WHILE-REVALIDATE from localStorage ────────
@@ -7111,51 +7116,55 @@ async function init() {
     `${S.players.length.toLocaleString()} players <span class="spin" style="display:inline-block;width:10px;height:10px;border-width:2px;vertical-align:middle;margin-left:3px"></span>`;
 
   // ── 3. LOAD FULL PLAYER LIST ──────────────────────────────────────
-  // Fetch players.json FIRST with zero competition — it's a fast CDN hit.
-  // Ranking sources fire AFTER so they don't clog the connection pool.
-  const sleeperPlayers = await fetchPlayers().catch(e => {
-    console.warn('fetchPlayers failed:', e);
-    return FALLBACK_PLAYERS;
-  });
-
-  // ── 4. MERGE + FINAL RENDER ───────────────────────────────────────
-  const FA_VALS = new Set(['FA','Free Agent','','N/A']);
-  const sleeperNorms = new Set(sleeperPlayers.map(p => normName(p.full_name || '')));
-  const freshRookies = ROOKIES_2026.filter(p => !sleeperNorms.has(normName(p.full_name || '')));
-  const _seen = new Set();
-  S.players = [...sleeperPlayers, ...freshRookies, ...PICKS]
-    .filter(p => {
-      if (p.position !== 'PICK') {
-        const key = normName(p.full_name || '');
-        if (_seen.has(key)) return false;
-        _seen.add(key);
-      }
-      return !RETIRED_PLAYERS.has(p.full_name) &&
-        (p.position === 'PICK' || (p.team && !FA_VALS.has(p.team)));
-    });
-
-  FALLBACK_PLAYERS.forEach(p=>{ p.rookie = false; });
-
-  if (S._pendingLeagueLoad) {
-    S._pendingLeagueLoad = false;
-    loadConnectedLeagues();
+  // Fetch players.json FIRST with zero competition — fast CDN hit.
+  // Ranking sources fire AFTER to avoid clogging the connection pool.
+  let sleeperPlayers = FALLBACK_PLAYERS;
+  try {
+    sleeperPlayers = await fetchPlayers();
+    console.log('fetchPlayers returned', sleeperPlayers.length, 'players');
+  } catch(e) {
+    console.warn('fetchPlayers threw:', e);
   }
 
-  rebuildPlayerValues();
-  try { renderValuesTable(); } catch(e) {}
-  renderSourcesUI();
+  // ── 4. MERGE ─────────────────────────────────────────────────────
+  try {
+    const FA_VALS = new Set(['FA','Free Agent','','N/A']);
+    const sleeperNorms = new Set(sleeperPlayers.map(p => normName(p.full_name || '')));
+    const freshRookies = ROOKIES_2026.filter(p => !sleeperNorms.has(normName(p.full_name || '')));
+    const _seen = new Set();
+    S.players = [...sleeperPlayers, ...freshRookies, ...PICKS]
+      .filter(p => {
+        if (p.position !== 'PICK') {
+          const key = normName(p.full_name || '');
+          if (_seen.has(key)) return false;
+          _seen.add(key);
+        }
+        return !RETIRED_PLAYERS.has(p.full_name) &&
+          (p.position === 'PICK' || (p.team && !FA_VALS.has(p.team)));
+      });
+    FALLBACK_PLAYERS.forEach(p=>{ p.rookie = false; });
+    console.log('Merge complete:', S.players.length, 'total players');
+  } catch(e) {
+    console.error('Merge failed:', e);
+  }
 
-  const srcCount  = Object.values(S.sourceStatus).filter(s=>s==='ok').length;
+  // ── 5. UPDATE BADGE — do this before any render that could throw ──
   const isOffline = sleeperPlayers === FALLBACK_PLAYERS;
   const offlineBadge = isOffline
     ? ` <span class="fc-badge" style="background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.3);color:var(--warn)">⚠ Offline</span>`
     : '';
-  document.getElementById('pcBadge').innerHTML = `${S.players.length.toLocaleString()} players${offlineBadge}`;
-  trackEvent('app_loaded', { sources: srcCount, players: S.players.length, offline: isOffline });
+  try { document.getElementById('pcBadge').innerHTML = `${S.players.length.toLocaleString()} players${offlineBadge}`; } catch(e) {}
 
-  // ── 5. BACKGROUND RANKING SOURCES ─────────────────────────────────
+  // ── 6. RENDERS (each independently guarded) ───────────────────────
+  if (S._pendingLeagueLoad) { S._pendingLeagueLoad = false; try { loadConnectedLeagues(); } catch(e) { console.error('loadConnectedLeagues:', e); } }
+  try { rebuildPlayerValues(); }  catch(e) { console.error('rebuildPlayerValues:', e); }
+  try { renderValuesTable(); }    catch(e) { console.error('renderValuesTable:', e); }
+  try { renderSourcesUI(); }      catch(e) { console.error('renderSourcesUI:', e); }
+  try { trackEvent('app_loaded', { players: S.players.length, offline: isOffline }); } catch(e) {}
+
+  // ── 7. BACKGROUND RANKING SOURCES ─────────────────────────────────
   // Fire after S.players is fully populated — each calls rebuildPlayerValues()
-  // on its own when done, updating values progressively.
+  // on completion, updating values progressively in the background.
   fetchFantasyCalcValues();
   fetchKTCValues();
   fetchFFCValues();
