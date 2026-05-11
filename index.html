@@ -6976,14 +6976,14 @@ const FALLBACK_PLAYERS = [
 // INIT
 // ═══════════════════════════════════════════════════════════
 async function init() {
-  // Load saved settings
+  // ── 1. SYNC SETUP ────────────────────────────────────────────────
   try {
     const saved = JSON.parse(localStorage.getItem('fantasyiq_settings')||'{}');
-    if (saved.mode)    setSetting('mode',    saved.mode);
-    if (saved.size)    setSetting('size',    saved.size);
-    if (saved.qb)      setSetting('qb',      saved.qb);
-    if (saved.scoring) setSetting('scoring', saved.scoring);
-    if (saved.te)      setSetting('te',      saved.te);
+    if (saved.mode)    S.settings.mode    = saved.mode;
+    if (saved.size)    S.settings.size    = parseInt(saved.size);
+    if (saved.qb)      S.settings.qb      = saved.qb;
+    if (saved.scoring) S.settings.scoring = saved.scoring;
+    if (saved.te)      S.settings.te      = saved.te;
     if (typeof saved.rookieOpt === 'number') {
       S.settings.rookieOpt = saved.rookieOpt;
       document.getElementById('rookieSlider').value = saved.rookieOpt;
@@ -6992,87 +6992,89 @@ async function init() {
       S.settings.pkgAdj = saved.pkgAdj;
       document.getElementById('pkgAdj').checked = saved.pkgAdj;
     }
+    // Sync toggle buttons to loaded settings (skip setSetting to avoid no-op renders)
+    ['mode','size','qb','scoring','te'].forEach(k => {
+      document.querySelectorAll(`[data-s="${k}"]`).forEach(btn => {
+        btn.classList.toggle('on', String(btn.dataset.v) === String(S.settings[k]));
+      });
+    });
   } catch(e){}
 
-  // Init source tracking
   S.sourceValues = {};
   S.sourceStatus = {};
   S.sourceMeta   = {};
-  // TradeIQ baseline always active
   S.sourceStatus['tiq'] = 'ok';
   S.sourceMeta['tiq'] = { count: Object.keys(VALUE_DB).length, loaded: Date.now() };
   restoreCSVSources();
   restoreBookmarkletSources();
 
-  // Fetch players (FantasyCalc live values first, then Sleeper roster)
-  document.getElementById('pcBadge').innerHTML = '<span class="spin" style="display:inline-block;width:12px;height:12px;border-width:2px;margin-right:4px"></span> Loading…';
+  // ── 2. INSTANT BOOTSTRAP — render in <100ms from built-in data ───
+  // Use the hardcoded VALUE_DB player list so the page shows content immediately.
+  // External sources load in the background and update values progressively.
+  const FA_BOOT = new Set(['FA','Free Agent','','N/A']);
+  S.players = [...FALLBACK_PLAYERS, ...ROOKIES_2026, ...PICKS]
+    .filter(p => !RETIRED_PLAYERS.has(p.full_name) &&
+      (p.position === 'PICK' || (p.team && !FA_BOOT.has(p.team))));
+  S.ready = true;
+  renderHome();
+  handleBookmarkletImport();
+  rebuildPlayerValues();
+  buildSearch('srchA',       'ddA',       null, null);
+  buildSearch('srchB',       'ddB',       null, null);
+  buildSearch('srchSugGive', 'ddSugGive', null, null);
+  buildSearch('srchRoster',  'ddRoster',  null, null);
+  renderValuesTable();
+  updateModeChip();
+  renderTrade();
+  if (location.search.includes('a=') || location.search.includes('b=')) loadFromUrl();
+  renderGlobalTicker();
+  renderLandingWidgets();
+  document.getElementById('pcBadge').innerHTML =
+    `${S.players.length.toLocaleString()} players <span class="spin" style="display:inline-block;width:10px;height:10px;border-width:2px;vertical-align:middle;margin-left:3px"></span>`;
 
-  // Fetch all auto-sources in parallel
-  await Promise.allSettled([
-    fetchFantasyCalcValues(),
-    fetchKTCValues(),
-    fetchFFCValues(),
-    fetchDynastyProcessValues(),
-    fetchDLFValues(),
-    fetchCustomRankings(),
+  // ── 3. BACKGROUND FETCH — all sources + Sleeper in parallel ──────
+  // Rankings sources already call rebuildPlayerValues() when each one loads,
+  // so values update progressively as data arrives — no extra wiring needed.
+  const [, sleeperResult] = await Promise.allSettled([
+    Promise.allSettled([
+      fetchFantasyCalcValues(),
+      fetchKTCValues(),
+      fetchFFCValues(),
+      fetchDynastyProcessValues(),
+      fetchDLFValues(),
+      fetchCustomRankings(),
+    ]),
+    fetchPlayers(),
   ]);
-  const sleeperPlayers = await fetchPlayers();
-  // Merge: Sleeper players take priority; VALUE_DB/ROOKIES fill gaps for players
-  // not yet in Sleeper (unannounced signings, rookies pre-loaded, etc.)
+
+  // ── 4. MERGE SLEEPER + FINAL RENDER ──────────────────────────────
+  const sleeperPlayers = sleeperResult.status === 'fulfilled' ? sleeperResult.value : FALLBACK_PLAYERS;
+  const FA_VALS = new Set(['FA','Free Agent','','N/A']);
   const sleeperNorms = new Set(sleeperPlayers.map(p => normName(p.full_name || '')));
   const freshRookies = ROOKIES_2026.filter(p => !sleeperNorms.has(normName(p.full_name || '')));
-  // Final assembly — only rostered players make it through, regardless of source
-  const FA_VALS = new Set(['FA','Free Agent','','N/A']);
   S.players = [...sleeperPlayers, ...freshRookies, ...PICKS]
     .filter(p =>
       !RETIRED_PLAYERS.has(p.full_name) &&
       (p.position === 'PICK' || (p.team && !FA_VALS.has(p.team)))
     );
 
-  // Mark fallback rookies
   FALLBACK_PLAYERS.forEach(p=>{ p.rookie = false; });
 
-  S.ready = true;
-  // Auth fired before players loaded — restore league now that players exist
   if (S._pendingLeagueLoad) {
     S._pendingLeagueLoad = false;
     loadConnectedLeagues();
   }
-  // Render home tab (it's now the default landing page)
-  renderHome();
-  // Handle bookmarklet import from URL hash (e.g. opened by bookmarklet on partner site)
-  handleBookmarkletImport();
-  // Rebuild player values from all loaded sources (also runs engine scores)
+
   rebuildPlayerValues();
-  const srcCount = Object.values(S.sourceStatus).filter(s=>s==='ok').length;
-  const isOffline = sleeperPlayers === FALLBACK_PLAYERS;
-  // Badge shows player count only — source count is internal
-  const offlineBadge = isOffline ? ` <span class="fc-badge" style="background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.3);color:var(--warn)">⚠ Offline</span>` : '';
-  document.getElementById('pcBadge').innerHTML = `${S.players.length.toLocaleString()} players${offlineBadge}`;
   renderSourcesUI();
-  // Fire analytics
+
+  const srcCount  = Object.values(S.sourceStatus).filter(s=>s==='ok').length;
+  const isOffline = sleeperPlayers === FALLBACK_PLAYERS;
+  const offlineBadge = isOffline
+    ? ` <span class="fc-badge" style="background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.3);color:var(--warn)">⚠ Offline</span>`
+    : '';
+  document.getElementById('pcBadge').innerHTML = `${S.players.length.toLocaleString()} players${offlineBadge}`;
   trackEvent('app_loaded', { sources: srcCount, players: S.players.length, offline: isOffline });
-
-  // Setup searches
-  buildSearch('srchA',       'ddA',       null, null);
-  buildSearch('srchB',       'ddB',       null, null);
-  buildSearch('srchSugGive', 'ddSugGive', null, null);
-  buildSearch('srchRoster',  'ddRoster',  null, null);
-
-  // Render initial table
-  renderValuesTable();
-  updateModeChip();
-  renderTrade();
-
-  // Load URL params if present
-  if (location.search.includes('a=') || location.search.includes('b=')) {
-    loadFromUrl();
-  }
-
-  // Final render of landing widgets — called here to guarantee they fire
-  // after ALL data (players + consensus values) is fully ready.
-  renderGlobalTicker();
-  renderLandingWidgets();
 }
 
 // ═══════════════════════════════════════════════════════════
