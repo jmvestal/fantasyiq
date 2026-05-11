@@ -123,7 +123,7 @@
     .home-feat-desc{font-size:11px;color:var(--text3);line-height:1.5}
     @media(max-width:600px){
       .home-landing-logo{font-size:48px}
-      .home-feat-grid{grid-template-columns:1fr;max-width:340px}
+      .home-feat-grid{grid-template-columns:repeat(2,1fr);max-width:420px}
     }
     /* Option C — Smart Dashboard */
     .home-dash{max-width:1100px;margin:0 auto;padding-bottom:40px}
@@ -147,17 +147,6 @@
     .home-intel-buy{background:var(--success-d);color:var(--success)}
     .home-intel-add{background:var(--blue-d);color:var(--blue)}
     .home-empty-msg{padding:18px 0;color:var(--text3);font-size:13px;text-align:center}
-    /* Landing page tool strip */
-    .home-landing-cta{margin-bottom:32px;text-align:center}
-    .home-tool-strip{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;max-width:500px;margin-top:16px}
-    .home-tool-chip{display:flex;align-items:center;gap:6px;padding:8px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s}
-    .home-tool-chip:hover{border-color:var(--primary);color:var(--text)}
-    /* Quick actions bar */
-    .home-actions-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
-    .home-action-btn{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text2);transition:border-color .15s,color .15s,background .15s}
-    .home-action-btn:hover{border-color:var(--primary);color:var(--text);background:var(--primary-d)}
-    .home-action-icon{font-size:22px;line-height:1}
-    @media(max-width:768px){.home-actions-bar{grid-template-columns:repeat(3,1fr)}.home-feat-grid{grid-template-columns:repeat(1,1fr);max-width:400px}}
     .home-quick-btns{display:flex;gap:10px;flex-wrap:wrap}
     .home-quick-btn{display:flex;align-items:center;gap:7px;padding:10px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s;text-decoration:none}
     .home-quick-btn:hover{border-color:var(--primary);color:var(--text);background:var(--primary-d)}
@@ -1096,35 +1085,39 @@
       <div id="homeOptionA">
         <div class="home-landing">
           <div class="home-landing-logo"><em>Fantasy</em>HQ</div>
-          <div class="home-landing-tag">Your NFL fantasy command center. Free forever.</div>
-          <div class="home-landing-cta">
-            <button class="btn btn-p" style="font-size:15px;padding:13px 48px;border-radius:12px" onclick="openModal('authModal')">Get Started Free</button>
-            <div style="margin-top:12px;font-size:12px;color:var(--text3)">No account? <span style="color:var(--primary-l);cursor:pointer;text-decoration:underline" onclick="switchTab('values')">Explore Player HQ →</span></div>
-          </div>
-          <!-- 3 primary tools -->
+          <div class="home-landing-tag">The free NFL fantasy analyzer built for serious players.</div>
+          <button class="btn btn-p" style="font-size:15px;padding:12px 40px;border-radius:10px;margin-bottom:20px" onclick="openModal('authModal')">Sign In</button>
           <div class="home-feat-grid">
             <div class="home-feat-card" onclick="switchTab('analyzer')">
               <div class="home-feat-icon">⚖️</div>
               <div class="home-feat-name">Trade HQ</div>
-              <div class="home-feat-desc">Analyze any trade with multi-source consensus values — dynasty &amp; redraft.</div>
+              <div class="home-feat-desc">Evaluate any trade with multi-source consensus values.</div>
             </div>
             <div class="home-feat-card" onclick="switchTab('values')">
               <div class="home-feat-icon">📊</div>
               <div class="home-feat-name">Player HQ</div>
-              <div class="home-feat-desc">Full rankings for dynasty, redraft, IDP, kickers, and DST.</div>
+              <div class="home-feat-desc">Full rankings for dynasty, redraft, IDP, K, and DST.</div>
             </div>
             <div class="home-feat-card" onclick="switchTab('wire')">
               <div class="home-feat-icon">📋</div>
               <div class="home-feat-name">Waiver HQ</div>
-              <div class="home-feat-desc">Weekly waiver targets ranked by opportunity and upside.</div>
+              <div class="home-feat-desc">Weekly waiver targets ranked by upside and opportunity.</div>
             </div>
-          </div>
-          <!-- 4 secondary tools as a simple icon strip -->
-          <div class="home-tool-strip">
-            <div class="home-tool-chip" onclick="switchTab('buysell')"><span>📈</span> Value HQ</div>
-            <div class="home-tool-chip" onclick="switchTab('draft')"><span>🎯</span> Draft HQ</div>
-            <div class="home-tool-chip" onclick="switchTab('roster')"><span>🏈</span> Team HQ</div>
-            <div class="home-tool-chip" onclick="switchTab('league')"><span>🏆</span> League HQ</div>
+            <div class="home-feat-card" onclick="switchTab('buysell')">
+              <div class="home-feat-icon">📈</div>
+              <div class="home-feat-name">Value HQ</div>
+              <div class="home-feat-desc">Buy low, sell high alerts based on current value curves.</div>
+            </div>
+            <div class="home-feat-card" onclick="switchTab('draft')">
+              <div class="home-feat-icon">🎯</div>
+              <div class="home-feat-name">Draft HQ</div>
+              <div class="home-feat-desc">Big board, draft assistant, and a full draft simulator.</div>
+            </div>
+            <div class="home-feat-card" onclick="switchTab('roster')">
+              <div class="home-feat-icon">🏈</div>
+              <div class="home-feat-name">Team HQ</div>
+              <div class="home-feat-desc">Roster valuation and personalized team analysis.</div>
+            </div>
           </div>
         </div>
       </div>
@@ -4800,29 +4793,27 @@ function renderHome() {
     `${league.leagueName || 'Your League'} · ${league.settings?.mode === 'dynasty' ? 'Dynasty' : 'Redraft'} · ${S.settings.size}-Team · ${S.settings.qb === 'sf' ? 'SF' : S.settings.qb === '2qb' ? '2-QB' : '1-QB'} · ${S.settings.scoring.toUpperCase()}`;
 
   // ── Stats ──────────────────────────────────────────────
-  const roster   = S.roster || [];
-  const totalVal = roster.reduce((s, p) => s + calcValue(p), 0);
-  const topAsset = roster.length ? [...roster].sort((a,b) => calcValue(b) - calcValue(a))[0] : null;
-  const allTeams = league.allTeams || [];
+  const roster      = S.roster || [];
+  const totalVal    = roster.reduce((s, p) => s + calcValue(p), 0);
+  const topAsset    = roster.length ? [...roster].sort((a,b) => calcValue(b) - calcValue(a))[0] : null;
+  const rosterCount = roster.length;
+  const allTeams    = league.allTeams || [];
 
-  // Power rank + league avg
-  let powerRankHtml = `<div class="home-stat-val" style="color:var(--text3)">—</div><div class="home-stat-sub">connect full league</div>`;
+  // League avg (if available)
   let leagueAvgHtml = '';
   if (allTeams.length > 1) {
-    const teamVals = allTeams.filter(t => t.rosterIds?.length).map(t => ({
-      isMe: t.isMe || t.rosterIds.some(id => roster.find(r => String(r.player_id||r.id) === String(id))),
-      val:  t.rosterIds.reduce((s,id) => { const p = S.players.find(x=>String(x.player_id||x.id)===String(id)); return s+(p?calcValue(p):0); }, 0),
-    })).sort((a,b) => b.val - a.val);
-    const myRank = teamVals.findIndex(t => t.isMe) + 1;
-    const total  = teamVals.length;
-    if (myRank > 0) {
-      const suffix = myRank===1?'st':myRank===2?'nd':myRank===3?'rd':'th';
-      const col    = myRank <= Math.ceil(total/3) ? 'var(--success)' : myRank <= Math.ceil(total*2/3) ? '#fbbf24' : 'var(--danger)';
-      powerRankHtml = `<div class="home-stat-val" style="color:${col}">${myRank}<span style="font-size:14px;font-weight:700">${suffix}</span></div><div class="home-stat-sub">of ${total} teams</div>`;
+    const allVals = allTeams
+      .filter(t => t.rosterIds?.length)
+      .map(t => t.rosterIds.reduce((s,id) => {
+        const p = S.players.find(x => String(x.player_id||x.id) === String(id));
+        return s + (p ? calcValue(p) : 0);
+      }, 0));
+    if (allVals.length) {
+      const avg = allVals.reduce((a,b)=>a+b,0) / allVals.length;
+      const diff = totalVal - avg;
+      const sign = diff >= 0 ? '+' : '';
+      leagueAvgHtml = `<div style="font-size:11px;color:${diff>=0?'var(--success)':'var(--danger)'};margin-top:3px">${sign}${fmtVal(Math.abs(diff))} vs league avg</div>`;
     }
-    const avg  = teamVals.reduce((s,t)=>s+t.val,0) / teamVals.length;
-    const diff = totalVal - avg;
-    leagueAvgHtml = `<div style="font-size:11px;color:${diff>=0?'var(--success)':'var(--danger)'};margin-top:3px">${diff>=0?'+':''}${fmtVal(Math.abs(diff))} vs avg</div>`;
   }
 
   document.getElementById('homeDashStats').innerHTML = `
@@ -4832,68 +4823,178 @@ function renderHome() {
       ${leagueAvgHtml}
     </div>
     <div class="home-stat-card">
-      <div class="home-stat-label">Power Rank</div>
-      ${powerRankHtml}
+      <div class="home-stat-label">Players on Roster</div>
+      <div class="home-stat-val">${rosterCount}</div>
+      <div class="home-stat-sub">${league.settings?.mode === 'dynasty' ? 'Dynasty roster' : 'Active + bench'}</div>
     </div>
     <div class="home-stat-card">
       <div class="home-stat-label">Top Asset</div>
-      <div class="home-stat-val" style="font-size:14px;letter-spacing:0;line-height:1.25">${topAsset ? topAsset.full_name : '—'}</div>
+      <div class="home-stat-val" style="font-size:15px;letter-spacing:0">${topAsset ? topAsset.full_name : '—'}</div>
       <div class="home-stat-sub">${topAsset ? fmtVal(calcValue(topAsset)) : ''}</div>
+    </div>
+    <div class="home-stat-card" style="cursor:pointer" onclick="switchTab('analyzer')">
+      <div class="home-stat-label">Quick Trade</div>
+      <div class="home-stat-val" style="font-size:24px">⚖️</div>
+      <div class="home-stat-sub">Tap to analyze a trade</div>
     </div>
   `;
 
-  // ── Intel: Team Alerts + Trade Targets ─────────────────
+  // ── Intel panels ───────────────────────────────────────
   const isDynasty = S.settings.mode === 'dynasty';
 
-  const alerts = roster.map(p => {
-    const v  = calcValue(p);
-    const rv = p.redraft_val || 0, dv = p.dynasty_val || 0;
-    let label = '', reason = '';
-    if (isDynasty && rv > 0 && dv > 0 && rv > dv * 1.2) { label='SELL'; reason='Peak sell window'; }
-    else if (p.age && p.age >= 30 && v > 3000)            { label='SELL'; reason=`Age ${p.age} · sell high`; }
-    else if (p.trend === 'down' && v > 2000)               { label='SELL'; reason='Value declining'; }
-    return { p, v, label, reason };
-  }).filter(x => x.label).sort((a,b) => b.v - a.v).slice(0, 5);
+  // Sell high
+  const sellCandidates = roster.length >= 2
+    ? [...roster]
+        .map(p => ({ p, v: calcValue(p) }))
+        .sort((a,b) => b.v - a.v)
+        .slice(0, 6)
+        .filter(({p,v}) => {
+          const rv = p.redraft_val || 0, dv = p.dynasty_val || 0;
+          if (isDynasty && rv > 0 && dv > 0 && rv > dv * 1.2) return true;
+          if (p.age && p.age >= 30 && v > 3000) return true;
+          if (p.trend === 'down' && v > 2000) return true;
+          return false;
+        })
+        .slice(0, 4)
+    : [];
 
-  const targets = [...S.players]
-    .filter(p => ['QB','RB','WR','TE'].includes(p.position) && !roster.find(r=>String(r.player_id||r.id)===String(p.player_id||p.id)))
+  // Buy low
+  const buyCandidates = [...S.players]
+    .filter(p => !roster.find(r => String(r.player_id||r.id) === String(p.player_id||p.id)))
     .map(p => ({ p, v: calcValue(p) }))
-    .filter(({v}) => v >= 2500 && v <= 8000)
+    .filter(({v}) => v >= 2000 && v <= 7000)
     .filter(({p}) => p.trend === 'up' || (p.age && p.age <= 25))
-    .sort((a,b) => b.v - a.v).slice(0, 5);
+    .sort((a,b) => b.v - a.v)
+    .slice(0, 4);
 
-  const rowHtml = (p, v, tag, tagCls, sub) => `
-    <div class="home-intel-row">
+  // Waiver adds
+  const wireTargets = [...S.players]
+    .filter(p => {
+      const val = calcValue(p);
+      if (val < 500) return false;
+      const onRoster = roster.find(r => String(r.player_id||r.id) === String(p.player_id||p.id));
+      return !onRoster && ['RB','WR','TE','QB'].includes(p.position);
+    })
+    .map(p => ({ p, v: calcValue(p) }))
+    .sort((a,b) => b.v - a.v)
+    .slice(0, 4);
+
+  const mkRow = (p, v, tag, tagCls) =>
+    `<div class="home-intel-row">
       <span class="pb pb-${p.position}" style="font-size:10px">${p.position}</span>
-      <div class="home-intel-name"><span class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="_openPc(event)">${escHtml(p.full_name)}</span></div>
+      <div class="home-intel-name">${p.full_name}</div>
       <span class="home-intel-tag ${tagCls}">${tag}</span>
       <div class="home-intel-val">${fmtVal(v)}</div>
     </div>`;
 
+  const sellHtml = sellCandidates.length
+    ? sellCandidates.map(({p,v}) => mkRow(p,v,'SELL','home-intel-sell')).join('')
+    : `<div style="padding:12px 0;color:var(--text3);font-size:13px">No obvious sell candidates</div>`;
+  const buyHtml = buyCandidates.length
+    ? buyCandidates.map(({p,v}) => mkRow(p,v,'BUY','home-intel-buy')).join('')
+    : `<div style="padding:12px 0;color:var(--text3);font-size:13px">No buy targets identified</div>`;
+  const wireHtml = wireTargets.length
+    ? wireTargets.map(({p,v}) => mkRow(p,v,'ADD','home-intel-add')).join('')
+    : `<div style="padding:12px 0;color:var(--text3);font-size:13px">Waiver targets not available</div>`;
+
   document.getElementById('homeDashIntel').innerHTML = `
     <div class="home-intel-card">
-      <div class="home-intel-ttl">🔴 Team Alerts
-        <span style="margin-left:auto;font-weight:400;font-size:10px;cursor:pointer;color:var(--primary-l)" onclick="switchTab('buysell')">Full analysis →</span>
-      </div>
-      ${alerts.length ? alerts.map(({p,v,label})=>rowHtml(p,v,label,'home-intel-sell')).join('') : '<div class="home-empty-msg">No sell alerts — roster looks solid 💪</div>'}
+      <div class="home-intel-ttl">🔴 Sell High <span style="margin-left:auto;font-weight:400;font-size:10px;cursor:pointer;color:var(--primary-l)" onclick="switchTab('buysell')">See all →</span></div>
+      ${sellHtml}
     </div>
     <div class="home-intel-card">
-      <div class="home-intel-ttl">🎯 Trade Targets
-        <span style="margin-left:auto;font-weight:400;font-size:10px;cursor:pointer;color:var(--primary-l)" onclick="switchTab('analyzer')">Trade HQ →</span>
-      </div>
-      ${targets.length ? targets.map(({p,v})=>rowHtml(p,v,p.trend==='up'?'▲ UP':'YOUNG','home-intel-buy')).join('') : '<div class="home-empty-msg">Load rankings for trade targets</div>'}
+      <div class="home-intel-ttl">🟢 Buy Low <span style="margin-left:auto;font-weight:400;font-size:10px;cursor:pointer;color:var(--primary-l)" onclick="switchTab('buysell')">See all →</span></div>
+      ${buyHtml}
+    </div>
+    <div class="home-intel-card">
+      <div class="home-intel-ttl">📋 Waiver Targets <span style="margin-left:auto;font-weight:400;font-size:10px;cursor:pointer;color:var(--primary-l)" onclick="switchTab('wire')">See all →</span></div>
+      ${wireHtml}
     </div>
   `;
 
-  // ── Quick Actions bar ──────────────────────────────────
+  // ── Bottom row: Trending + Roster Breakdown + Power Ranking ──
+  const trending = [...S.players]
+    .filter(p => p.trend === 'up' && ['QB','RB','WR','TE'].includes(p.position))
+    .filter(p => !roster.find(r => String(r.player_id||r.id) === String(p.player_id||p.id)))
+    .map(p => ({ p, v: calcValue(p) }))
+    .filter(({v}) => v >= 2500)
+    .sort((a,b) => b.v - a.v)
+    .slice(0, 5);
+
+  const trendHtml = trending.length
+    ? trending.map(({p,v}) =>
+        `<div class="home-intel-row" style="cursor:pointer" onclick="switchTab('analyzer')">
+          <span class="pb pb-${p.position}" style="font-size:10px">${p.position}</span>
+          <div class="home-intel-name">${p.full_name}</div>
+          <span style="font-size:10px;color:var(--success);font-weight:700">▲</span>
+          <div class="home-intel-val">${fmtVal(v)}</div>
+        </div>`).join('')
+    : `<div style="padding:12px 0;color:var(--text3);font-size:13px">No trending targets found</div>`;
+
+  // Roster Breakdown
+  const posList   = ['QB','RB','WR','TE'];
+  const posColors = { QB:'#a78bfa', RB:'#34d399', WR:'#60a5fa', TE:'#fb923c' };
+  const posBars   = posList.map(pos => {
+    const posVal = roster.filter(p=>p.position===pos).reduce((s,p)=>s+calcValue(p),0);
+    const pct    = totalVal > 0 ? Math.round((posVal/totalVal)*100) : 0;
+    return `<div style="margin-bottom:9px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+        <span style="font-weight:600;color:${posColors[pos]}">${pos}</span>
+        <span style="color:var(--text2)">${roster.filter(p=>p.position===pos).length} players · ${pct}%</span>
+      </div>
+      <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${posColors[pos]};border-radius:3px;transition:width .4s"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Power Ranking
+  let powerHtml = '';
+  if (allTeams.length > 1) {
+    const teamVals = allTeams
+      .filter(t => t.rosterIds?.length)
+      .map(t => ({
+        name:  t.displayName || t.teamName || `Team ${t.rosterId}`,
+        val:   t.rosterIds.reduce((s,id) => { const p2=S.players.find(x=>String(x.player_id||x.id)===String(id)); return s+(p2?calcValue(p2):0); },0),
+        isMe:  t.rosterIds.some(id => roster.find(r=>String(r.player_id||r.id)===String(id)))
+      }))
+      .sort((a,b) => b.val - a.val);
+    const myRank   = teamVals.findIndex(t => t.isMe) + 1;
+    const total    = teamVals.length;
+    const suffix   = myRank===1?'st':myRank===2?'nd':myRank===3?'rd':'th';
+    const rankColor = myRank <= Math.ceil(total/3) ? 'var(--success)' : myRank <= Math.ceil(total*2/3) ? 'var(--warning)' : 'var(--danger)';
+    powerHtml = `
+      <div style="text-align:center;padding:12px 0 8px">
+        <div style="font-size:36px;font-weight:800;color:${rankColor}">${myRank}<span style="font-size:18px">${suffix}</span></div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">out of ${total} teams</div>
+      </div>
+      <div style="max-height:140px;overflow-y:auto">
+        ${teamVals.slice(0,6).map((t,i)=>
+          `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px${t.isMe?';background:var(--primary-d);border-radius:4px;padding:4px 6px':''}">
+            <span style="width:18px;text-align:center;font-weight:700;color:var(--text3)">${i+1}</span>
+            <span style="flex:1;font-weight:${t.isMe?'700':'400'};color:${t.isMe?'var(--primary-l)':'var(--text1)'}">${t.isMe?'⭐ '+t.name:t.name}</span>
+            <span style="color:var(--text3)">${fmtVal(t.val)}</span>
+          </div>`).join('')}
+      </div>`;
+  } else {
+    powerHtml = `<div style="padding:20px 0;text-align:center;color:var(--text3);font-size:13px">Import your full league<br>to see power rankings</div>`;
+  }
+
   document.getElementById('homeDashExtra').innerHTML = `
-    <div class="home-actions-bar">
-      <button class="home-action-btn" onclick="switchTab('analyzer')"><span class="home-action-icon">⚖️</span>Trade HQ</button>
-      <button class="home-action-btn" onclick="switchTab('values')"><span class="home-action-icon">📊</span>Player HQ</button>
-      <button class="home-action-btn" onclick="switchTab('wire')"><span class="home-action-icon">📋</span>Waiver HQ</button>
-      <button class="home-action-btn" onclick="switchTab('buysell')"><span class="home-action-icon">📈</span>Value HQ</button>
-      <button class="home-action-btn" onclick="switchTab('draft')"><span class="home-action-icon">🎯</span>Draft HQ</button>
-      <button class="home-action-btn" onclick="switchTab('roster')"><span class="home-action-icon">🏈</span>Team HQ</button>
+    <div class="home-intel-card">
+      <div class="home-intel-ttl">🔥 Trending Up <span style="margin-left:auto;font-weight:400;font-size:10px;cursor:pointer;color:var(--primary-l)" onclick="switchTab('values')">See all →</span></div>
+      ${trendHtml}
+    </div>
+    <div class="home-intel-card">
+      <div class="home-intel-ttl">🏈 Roster Breakdown</div>
+      <div style="padding-top:10px">${posBars}</div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        <span>Total Value</span><span style="font-weight:700;color:var(--text1)">${fmtVal(totalVal)}</span>
+      </div>
+    </div>
+    <div class="home-intel-card">
+      <div class="home-intel-ttl">🏆 Power Ranking</div>
+      ${powerHtml}
     </div>
   `;
 }
