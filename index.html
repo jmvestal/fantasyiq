@@ -4250,10 +4250,30 @@ function renderRosterList() {
   btn.disabled = false;
 
   const league    = S.connectedLeague;
-  const allPos    = league?.rosterPositions || [];   // full positions array incl BN/IR/TAXI
+  let   allPos    = league?.rosterPositions || [];   // full positions array incl BN/IR/TAXI
   const starterIds = (league?.starterIds || []).filter(id => id && id !== '0');
   const reserveIds = league?.reserveIds || [];
   const taxiIds    = league?.taxiIds    || [];
+
+  // ── Fallback: if rosterPositions is empty (old save / non-Sleeper), build from settings ──
+  if (!allPos.length) {
+    const slots = getRosterSlots();
+    const build = [];
+    for (let i = 0; i < (slots.QB||1);    i++) build.push('QB');
+    for (let i = 0; i < (slots.RB||2);    i++) build.push('RB');
+    for (let i = 0; i < (slots.WR||2);    i++) build.push('WR');
+    for (let i = 0; i < (slots.TE||1);    i++) build.push('TE');
+    for (let i = 0; i < (slots.FLEX||1);  i++) build.push('FLEX');
+    for (let i = 0; i < (slots.SFLEX||0); i++) build.push('SUPER_FLEX');
+    for (let i = 0; i < (slots.K||1);     i++) build.push('K');
+    for (let i = 0; i < (slots.DEF||1);   i++) build.push('DEF');
+    for (let i = 0; i < (slots.IDP||0);   i++) build.push('IDP_FLEX');
+    // Estimate bench size based on roster
+    const benchEst = Math.max(0, S.roster.length - build.length - reserveIds.length - taxiIds.length);
+    for (let i = 0; i < benchEst; i++) build.push('BN');
+    allPos = build;
+    console.log('[FantasyIQ] rosterPositions empty — built fallback:', build);
+  }
 
   // Partition positions into sections
   const starterSlots = allPos.filter(p => !['BN','IR','TAXI'].includes(p));
@@ -7040,6 +7060,8 @@ async function importSleeperLeague(leagueId) {
     fetch(`https://api.sleeper.app/v1/league/${leagueId}/users`).then(r=>r.json()),
   ]);
   if (!leagueInfo?.league_id) throw new Error('Could not load league data from Sleeper');
+  console.log('[FantasyIQ] Sleeper roster_positions:', leagueInfo.roster_positions);
+  console.log('[FantasyIQ] My starters:', userRoster?.starters, '| reserve:', userRoster?.reserve, '| taxi:', userRoster?.taxi);
 
   // Build user lookup map: user_id → display_name
   const userMap = {};
@@ -7324,7 +7346,11 @@ async function silentSleeperRefresh(lg) {
       if (teamEntry) userRoster = rosters.find(r => r.owner_id === teamEntry.userId);
     }
     if (!userRoster) return;
-    const allIds = [...(userRoster.players||[]), ...(userRoster.reserve||[])].map(String);
+    const allIds = [
+      ...(userRoster.players||[]),
+      ...(userRoster.reserve||[]),
+      ...(userRoster.taxi   ||[]),
+    ].map(String);
     const rosterPlayers = allIds.map(id => S.players.find(p=>String(p.player_id||p.id)===String(id))).filter(Boolean);
     // Re-capture rosterPositions and settings from fresh leagueInfo on every refresh
     const freshPositions = leagueInfo.roster_positions || lg.rosterPositions || [];
@@ -7333,6 +7359,9 @@ async function silentSleeperRefresh(lg) {
       ...S.connectedLeague,
       rosterIds:       allIds,
       rosterPositions: freshPositions,
+      starterIds:      userRoster.starters || [],
+      reserveIds:      userRoster.reserve  || [],
+      taxiIds:         userRoster.taxi     || [],
       settings:        freshSettings,
       connectedAt:     Date.now(),
     };
