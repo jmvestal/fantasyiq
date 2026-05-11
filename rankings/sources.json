@@ -29,13 +29,6 @@
     ]
   },
   {
-    "key": "tradeiq_rookies",
-    "name": "TradeIQ 2026 Rookies",
-    "redraftFiles": [
-      "2026 Redraft PPR Rookie Rankings.csv"
-    ]
-  },
-  {
     "key": "tradeiq_rd_idp",
     "name": "TradeIQ Redraft IDP",
     "redraftFiles": [
