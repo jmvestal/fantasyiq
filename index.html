@@ -6313,7 +6313,7 @@ async function fetchDynastyProcessValues() {
   }
   try {
     // DynastyProcess hosts weekly-updated FantasyPros dynasty ECR data on GitHub
-    const DP_URL = 'https://raw.githubusercontent.com/dynastyprocess/data/master/files/db_fpecr.csv';
+    const DP_URL = 'https://raw.githubusercontent.com/dynastyprocess/data/master/files/db_fpecr_latest.csv';
     const res = await fetch(DP_URL, { signal: AbortSignal.timeout(10000) });
     if (!res.ok) throw new Error('DP fetch failed: ' + res.status);
     const text = await res.text();
