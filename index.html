@@ -5,20 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Fantasy IQ">
+  <meta name="apple-mobile-web-app-title" content="Fantasy HQ">
   <meta name="theme-color" content="#0e0e14">
-  <meta name="description" content="Fantasy IQ — Free NFL Fantasy Analyzer. Trade IQ, Player IQ, Waiver IQ, Team IQ, League IQ, and Draft IQ — all-in-one tools built for serious fantasy players.">
+  <meta name="description" content="Fantasy HQ — Free NFL Fantasy Analyzer. Trade IQ, Player IQ, Waiver IQ, Team IQ, League IQ, and Draft IQ — all-in-one tools built for serious fantasy players.">
   <!-- Open Graph / Social sharing -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://jmvestal.github.io/fantasyiq/">
-  <meta property="og:title" content="Fantasy IQ — NFL Fantasy Analyzer">
+  <meta property="og:title" content="Fantasy HQ — NFL Fantasy Analyzer">
   <meta property="og:description" content="Free NFL fantasy tools: Trade IQ, Player IQ, Waiver IQ, Team IQ, League IQ, and Draft IQ. Multi-source consensus rankings built for serious players.">
   <meta property="og:image" content="https://jmvestal.github.io/fantasyiq/og-image.svg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <!-- Twitter / X -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Fantasy IQ — NFL Fantasy Analyzer">
+  <meta name="twitter:title" content="Fantasy HQ — NFL Fantasy Analyzer">
   <meta name="twitter:description" content="Free NFL fantasy tools: Trade IQ, Player IQ, Waiver IQ, Team IQ, League IQ, and Draft IQ — all in one place.">
   <meta name="twitter:image" content="https://jmvestal.github.io/fantasyiq/og-image.svg">
   <!-- PWA / icons -->
@@ -26,9 +26,9 @@
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="icon" type="image/png" href="favicon-32.png" sizes="32x32">
-  <title>Fantasy IQ — NFL Fantasy Analyzer</title>
+  <title>Fantasy HQ — NFL Fantasy Analyzer</title>
   <!-- Structured data for Google -->
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Fantasy IQ","url":"https://jmvestal.github.io/fantasyiq/","description":"Free NFL fantasy tools: Trade IQ, Player IQ, Waiver IQ, Team IQ, League IQ, and Draft IQ — all-in-one analyzer built for serious fantasy players.","applicationCategory":"SportsApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"keywords":"fantasy football trade analyzer, dynasty trade calculator, NFL dynasty rankings, dynasty buy sell, waiver wire, fantasy football draft tool, fantasy IQ"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Fantasy HQ","url":"https://jmvestal.github.io/fantasyiq/","description":"Free NFL fantasy tools: Trade IQ, Player IQ, Waiver IQ, Team IQ, League IQ, and Draft IQ — all-in-one analyzer built for serious fantasy players.","applicationCategory":"SportsApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"keywords":"fantasy football trade analyzer, dynasty trade calculator, NFL dynasty rankings, dynasty buy sell, waiver wire, fantasy football draft tool, fantasy IQ"}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <!-- Firebase SDK (compat v9) -->
@@ -939,12 +939,12 @@
   </style>
 </head>
 <body>
-<noscript><p style="padding:20px;color:#e2e8f0;background:#0e0e14;font-family:sans-serif">Fantasy IQ — Free NFL Fantasy Analyzer with Trade IQ, Player IQ, Waiver IQ, Team IQ, League IQ, and Draft IQ. <a href="https://jmvestal.github.io/fantasyiq/" style="color:#9d5af0">Open Fantasy IQ</a></p></noscript>
+<noscript><p style="padding:20px;color:#e2e8f0;background:#0e0e14;font-family:sans-serif">Fantasy HQ — Free NFL Fantasy Analyzer with Trade IQ, Player IQ, Waiver IQ, Team IQ, League IQ, and Draft IQ. <a href="https://jmvestal.github.io/fantasyiq/" style="color:#9d5af0">Open Fantasy HQ</a></p></noscript>
 
 <!-- ═══ HEADER ═══ -->
 <header class="hdr">
   <div class="hdr-inner">
-    <div class="logo" onclick="switchTab('home')" style="cursor:pointer" title="Home"><em>Fantasy</em><span>IQ</span></div>
+    <div class="logo" onclick="switchTab('home')" style="cursor:pointer" title="Home"><em>Fantasy</em><span>HQ</span></div>
     <nav class="nav">
       <button class="nav-btn" data-tab="analyzer">
         <svg class="nav-icon" viewBox="0 0 16 16"><path d="M2 5.5h10M9.5 3l2.5 2.5-2.5 2.5M14 10.5H4M6.5 8l-2.5 2.5 2.5 2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -960,7 +960,7 @@
       </button>
       <button class="nav-btn" data-tab="buysell">
         <svg class="nav-icon" viewBox="0 0 16 16"><path d="M2 12l4-4 3 2.5 5-6.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 4h3v3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Value IQ
+        Value IQ <span class="pro-badge">PRO</span>
       </button>
       <button class="nav-btn" data-tab="roster">
         <svg class="nav-icon" viewBox="0 0 16 16"><path d="M8 2L3 4.5V9c0 3.5 2.5 5.5 5 6 2.5-.5 5-2.5 5-6V4.5L8 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1378,7 +1378,7 @@
               <th onclick="sortTable('value')">Dynasty</th>
               <th>Redraft</th>
               <th>Tier</th>
-              <th onclick="sortTable('engine')" title="Fantasy IQ composite score (0–100): Production · Age · Opportunity · Physical · Efficiency. Hover a row to see breakdown.">FIQ Score ▸</th>
+              <th onclick="sortTable('engine')" title="Fantasy HQ composite score (0–100): Production · Age · Opportunity · Physical · Efficiency. Hover a row to see breakdown.">FIQ Score ▸</th>
               <th onclick="sortTable('trend')">Trend</th>
             </tr>
           </thead>
@@ -1429,7 +1429,7 @@
       <div class="connect-prompt" id="connectPrompt">
         <div style="font-size:40px;margin-bottom:10px">🏈</div>
         <h3>Connect Your Fantasy League</h3>
-        <p>Import your roster from Sleeper and unlock everything Fantasy IQ can do for your team:</p>
+        <p>Import your roster from Sleeper and unlock everything Fantasy HQ can do for your team:</p>
         <div style="display:inline-block;text-align:left;margin:0 auto 16px;font-size:13px;color:var(--text2);line-height:1.9">
           <div>✅ <strong>Roster grades</strong> by position — QB, RB, WR, TE</div>
           <div>✅ <strong>Buy / Sell / Hold</strong> advice for every player</div>
@@ -1532,7 +1532,7 @@
               <div style="font-size:13px;font-weight:700">🧙 Live Draft IQ Assistant</div>
               <span class="info-chip" id="wizModeChip" style="font-size:10px"></span>
             </div>
-            <div style="font-size:11px;color:var(--text2)">Rankings auto-update when you change league settings (Dynasty/Redraft, SF, scoring). Mark picks as they happen — Fantasy IQ highlights best value each round.</div>
+            <div style="font-size:11px;color:var(--text2)">Rankings auto-update when you change league settings (Dynasty/Redraft, SF, scoring). Mark picks as they happen — Fantasy HQ highlights best value each round.</div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0">
             <select id="wizDraftType" class="trade-partner-sel" style="max-width:130px" onchange="initWizard()">
@@ -1917,7 +1917,7 @@
 
 <!-- ══ FOOTER ══ -->
 <footer style="background:var(--bg2);border-top:1px solid var(--border);padding:14px 20px;text-align:center;font-size:11px;color:var(--text3);margin-bottom:56px">
-  <span>© 2026 Fantasy IQ · For entertainment purposes only</span>
+  <span>© 2026 Fantasy HQ · For entertainment purposes only</span>
   <span style="margin:0 8px">·</span>
   <button class="btn-link" style="font-size:11px" onclick="openModal('privacyModal')">Privacy Policy</button>
   <span style="margin:0 8px">·</span>
@@ -2043,7 +2043,7 @@
   <div class="mo-box wide">
     <button class="mo-close" onclick="closeModal('sourcesModal')">✕</button>
     <div class="mo-ttl">📊 Ranking Sources</div>
-    <div class="mo-sub">Fantasy IQ averages values from all loaded sources — dynasty and redraft separately. More sources = more accurate consensus.</div>
+    <div class="mo-sub">Fantasy HQ averages values from all loaded sources — dynasty and redraft separately. More sources = more accurate consensus.</div>
 
     <!-- Active sources list -->
     <div class="src-list" id="sourcesList"></div>
@@ -2197,7 +2197,7 @@
     <div style="text-align:center;margin-bottom:16px">
       <div style="font-size:36px;margin-bottom:8px">📬</div>
       <div class="mo-ttl">Stay Ahead Every Week</div>
-      <div class="mo-sub">Get Fantasy IQ's weekly email — free for all registered users</div>
+      <div class="mo-sub">Get Fantasy HQ's weekly email — free for all registered users</div>
     </div>
 
     <div class="email-tier-row">
@@ -2240,7 +2240,7 @@
   <div class="mo-box" style="max-width:460px;text-align:center">
     <button class="mo-close" onclick="closeModal('proModal')">✕</button>
     <div style="font-size:32px;margin-bottom:10px">⚡</div>
-    <div style="font-size:20px;font-weight:800;margin-bottom:6px">Fantasy IQ Pro</div>
+    <div style="font-size:20px;font-weight:800;margin-bottom:6px">Fantasy HQ Pro</div>
     <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6" id="proModalFeatureText">This feature requires a Pro subscription.</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;text-align:left">
       <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px">
@@ -2269,15 +2269,15 @@
       <p><strong style="color:var(--text)">1. What We Collect</strong><br>
       When you sign in with Google, we store your name, email address, and a unique account ID. If you connect a fantasy league, we store your league settings, roster information, and trade history. We do not collect payment information.</p>
       <p style="margin-top:12px"><strong style="color:var(--text)">2. How We Use It</strong><br>
-      Your data is used solely to provide Fantasy IQ features — syncing your settings across devices, saving connected leagues, and personalizing trade analysis. We do not sell your data to third parties. Ever.</p>
+      Your data is used solely to provide Fantasy HQ features — syncing your settings across devices, saving connected leagues, and personalizing trade analysis. We do not sell your data to third parties. Ever.</p>
       <p style="margin-top:12px"><strong style="color:var(--text)">3. Third-Party Services</strong><br>
-      Fantasy IQ uses Firebase (Google) for authentication and data storage, and the Sleeper API to fetch player and league data. We use Google Analytics to understand how the app is used in aggregate. These services have their own privacy policies.</p>
+      Fantasy HQ uses Firebase (Google) for authentication and data storage, and the Sleeper API to fetch player and league data. We use Google Analytics to understand how the app is used in aggregate. These services have their own privacy policies.</p>
       <p style="margin-top:12px"><strong style="color:var(--text)">4. Data Storage</strong><br>
       Your data is stored in Google Firebase (Firestore) with access restricted to your account only. League settings and preferences are also stored locally on your device via localStorage.</p>
       <p style="margin-top:12px"><strong style="color:var(--text)">5. Your Rights</strong><br>
       You can delete your account and all associated data at any time by contacting us. You can also use the app as a guest (no sign-in required) — guest data is stored only on your device.</p>
       <p style="margin-top:12px"><strong style="color:var(--text)">6. Cookies</strong><br>
-      Fantasy IQ does not use advertising cookies. We use localStorage for app functionality (caching rankings, saving settings). Firebase may set session cookies for authentication.</p>
+      Fantasy HQ does not use advertising cookies. We use localStorage for app functionality (caching rankings, saving settings). Firebase may set session cookies for authentication.</p>
       <p style="margin-top:12px"><strong style="color:var(--text)">7. Contact</strong><br>
       Questions? Email us at <a href="mailto:vestalagencyllc@gmail.com" style="color:var(--primary-l)">vestalagencyllc@gmail.com</a></p>
     </div>
@@ -3904,7 +3904,7 @@ function renderChips(arr, side) {
         <span title="Opportunity">O:${Math.round(b.opportunity)}</span>
         <span title="Physical">Ph:${Math.round(b.physical)}</span>
         <span title="Efficiency">E:${Math.round(b.efficiency)}</span>
-        ${p._engineScore!=null?`<span class="chip-eng-total" title="Fantasy IQ Score">FIQ:${p._engineScore}</span>`:''}
+        ${p._engineScore!=null?`<span class="chip-eng-total" title="Fantasy HQ Score">FIQ:${p._engineScore}</span>`:''}
       </div>`;
     })() : '';
     return `<div class="chip">
@@ -4683,7 +4683,7 @@ function switchTab(name) {
 
   // Dynamic page title for UX + SEO
   const TAB_TITLES = {
-    home: 'Fantasy IQ — NFL Fantasy Analyzer',
+    home: 'Fantasy HQ — NFL Fantasy Analyzer',
     analyzer: 'Trade IQ — Fantasy Trade Analyzer',
     values: 'Player IQ — Dynasty & Redraft Rankings',
     wire: 'Waiver IQ — Weekly Waiver Targets',
@@ -4692,7 +4692,7 @@ function switchTab(name) {
     league: 'League IQ — League Analyzer',
     draft: 'Draft IQ — Draft Assistant',
   };
-  document.title = TAB_TITLES[name] || 'Fantasy IQ — NFL Fantasy Analyzer';
+  document.title = TAB_TITLES[name] || 'Fantasy HQ — NFL Fantasy Analyzer';
 
   if (name === 'home') { renderHome(); }
   else { document.body.classList.remove('landing-mode'); }
@@ -5008,7 +5008,7 @@ function trackEvent(name, params = {}) {
   } catch(e) {}
   // Also log to console in dev
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    console.log('[Fantasy IQ Analytics]', name, params);
+    console.log('[Fantasy HQ Analytics]', name, params);
   }
 }
 
@@ -5038,7 +5038,7 @@ const RANKING_SOURCES = [
   { key:'espn',name:'ESPN',                type:'csv',        dynasty:false, redraft:true,  color:'#ef4444' },
   { key:'fan', name:'Fantrax',             type:'csv',        dynasty:true,  redraft:true,  color:'#f97316' },
   { key:'cbs', name:'CBS Sports',          type:'csv',        dynasty:false, redraft:true,  color:'#6366f1' },
-  { key:'tiq', name:'Fantasy IQ Baseline', type:'builtin',    dynasty:true,  redraft:true,  color:'#7c3aed' },
+  { key:'tiq', name:'Fantasy HQ Baseline', type:'builtin',    dynasty:true,  redraft:true,  color:'#7c3aed' },
 ];
 
 // S.sourceValues = { [key]: { [normalizedName]: { dv, rv, trend } } }
@@ -5406,20 +5406,20 @@ function showBookmarkletHelp(key) {
   modal.innerHTML = `<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:28px;max-width:520px;width:100%">
     <div style="font-size:18px;font-weight:800;margin-bottom:8px">🔖 ${src.name} Bookmarklet</div>
     <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6">
-      This bookmarklet scrapes ${src.name} rankings and imports them directly into Fantasy IQ — no CSV needed.
+      This bookmarklet scrapes ${src.name} rankings and imports them directly into Fantasy HQ — no CSV needed.
     </div>
     <div style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:14px;margin-bottom:16px">
       <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Step 1 — Add the bookmarklet</div>
       <div style="font-size:13px;color:var(--text2);margin-bottom:10px">Drag the button below to your Chrome bookmarks bar:</div>
-      <a href="${bm}" class="btn btn-p" style="display:inline-block;text-decoration:none;cursor:grab" ondragstart="void(0)">🔖 Import ${src.name} → Fantasy IQ</a>
+      <a href="${bm}" class="btn btn-p" style="display:inline-block;text-decoration:none;cursor:grab" ondragstart="void(0)">🔖 Import ${src.name} → Fantasy HQ</a>
       <div style="font-size:11px;color:var(--text3);margin-top:8px">Or right-click → Bookmark this link → choose Bookmarks Bar</div>
     </div>
     <div style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:14px;margin-bottom:20px">
       <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Step 2 — Use it</div>
       <ol style="font-size:13px;color:var(--text2);line-height:1.8;padding-left:18px">
         <li>Go to <a href="${src.bmUrl||'https://dynatyze.com/football'}" target="_blank" style="color:var(--primary-l)">${src.bmUrl||src.name}</a> (logged in)</li>
-        <li>Click the <strong>🔖 Import ${src.name} → Fantasy IQ</strong> bookmark</li>
-        <li>Fantasy IQ opens with the rankings auto-loaded ✅</li>
+        <li>Click the <strong>🔖 Import ${src.name} → Fantasy HQ</strong> bookmark</li>
+        <li>Fantasy HQ opens with the rankings auto-loaded ✅</li>
       </ol>
     </div>
     <button class="btn btn-ghost" onclick="document.getElementById('bmHelpModal').remove()">Close</button>
@@ -5569,7 +5569,7 @@ if(players.length<5){
     }
   });
 }
-if(players.length<5){alert('Fantasy IQ: Only found '+players.length+' players.\\nNavigate to '+SRC+' rankings page first, then click the bookmarklet.');return;}
+if(players.length<5){alert('Fantasy HQ: Only found '+players.length+' players.\\nNavigate to '+SRC+' rankings page first, then click the bookmarklet.');return;}
 players.sort(function(a,b){return a.rank-b.rank;});
 var csv='Rank,Name,Position\\n'+players.map(function(p,i){return (p.rank||i+1)+',"'+p.name.replace(/"/g,'')+'",'+p.pos;}).join('\\n');
 var b64;try{b64=btoa(unescape(encodeURIComponent(csv)));}catch(e){b64=btoa(csv);}
@@ -6826,7 +6826,7 @@ async function registerWithEmail() {
   try {
     await fbAuth.createUserWithEmailAndPassword(email, pass);
     closeModal('authModal');
-    showToast('Account created! Welcome to Fantasy IQ 🎉');
+    showToast('Account created! Welcome to Fantasy HQ 🎉');
   } catch(e) {
     errEl.textContent =
       e.code === 'auth/email-already-in-use'  ? 'Email already in use — sign in instead.' :
@@ -9441,7 +9441,7 @@ function buildScoutSystemPrompt() {
   const leagueLine = _tiqChatLeague
     ? `\nCONNECTED LEAGUE: ${_tiqChatLeague.leagueName} | ${_tiqChatLeague.totalTeams||size} teams` : '';
 
-  return `You are Scout IQ, an expert AI fantasy football analyst embedded in the Fantasy IQ web app. You give sharp, specific, actionable fantasy advice. You have deep knowledge of NFL players, dynasty and redraft strategy, trade evaluation, and roster construction.
+  return `You are Scout IQ, an expert AI fantasy football analyst embedded in the Fantasy HQ web app. You give sharp, specific, actionable fantasy advice. You have deep knowledge of NFL players, dynasty and redraft strategy, trade evaluation, and roster construction.
 
 CURRENT USER SETTINGS: ${size}-team | ${modeLabel} | ${qbLabel} | ${scoring.toUpperCase()}${te==='on'?' | TE Premium':''}${leagueLine}
 SEASON CONTEXT: 2026 NFL offseason/preseason
