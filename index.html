@@ -345,6 +345,8 @@
     .ros-slot-lbl.is-special  {color:#67e8f9;border-color:rgba(103,232,249,.3);background:rgba(103,232,249,.07)}
     .ros-slot-lbl.is-ir       {color:#f87171;border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.07)}
     .ros-slot-lbl.is-bench    {color:var(--text3)}
+    .ros-slot-lbl.is-idp      {color:#a78bfa;border-color:rgba(167,139,250,.35);background:rgba(167,139,250,.1)}
+    .ros-slot-lbl.is-taxi     {color:#94a3b8;border-color:rgba(148,163,184,.3);background:rgba(148,163,184,.07)}
     /* legacy alias kept for safety */
     .ros-slot-lbl.is-starter  {color:#60a5fa;border-color:rgba(96,165,250,.3);background:rgba(96,165,250,.08)}
     .ros-empty{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);opacity:.45}
@@ -4174,25 +4176,63 @@ function sortTable(col) {
 // ═══════════════════════════════════════════════════════════
 // ROSTER / BUY-SELL-HOLD
 // ═══════════════════════════════════════════════════════════
-// ── Infer starting slot counts from connected league or settings ──────
+
+// What player positions are eligible for each Sleeper slot type
+const SLOT_ELIGIBLE = {
+  QB:         ['QB'],
+  RB:         ['RB'],
+  WR:         ['WR'],
+  TE:         ['TE'],
+  K:          ['K'],
+  DEF:        ['DEF','DST'],
+  DST:        ['DEF','DST'],
+  FLEX:       ['RB','WR','TE'],
+  WRRB_FLEX:  ['WR','RB'],
+  REC_FLEX:   ['WR','TE'],
+  TE_FLEX:    ['TE','WR'],
+  SUPER_FLEX: ['QB','RB','WR','TE'],
+  IDP_FLEX:   ['DE','DT','DL','LB','OLB','ILB','MLB','CB','S','FS','SS','DB','IDP'],
+  DL:         ['DE','DT','DL'],
+  LB:         ['LB','OLB','ILB','MLB'],
+  DB:         ['CB','S','FS','SS','DB'],
+  DE:         ['DE','DL'],
+  DT:         ['DT','DL'],
+  CB:         ['CB','DB'],
+  S:          ['S','FS','SS','DB'],
+};
+
+const SLOT_CSS = {
+  QB:'is-slot-QB', RB:'is-slot-RB', WR:'is-slot-WR', TE:'is-slot-TE',
+  K:'is-special', DEF:'is-special', DST:'is-special',
+  FLEX:'is-flex', WRRB_FLEX:'is-flex', REC_FLEX:'is-flex', TE_FLEX:'is-flex', SUPER_FLEX:'is-flex',
+  IDP_FLEX:'is-idp', DL:'is-idp', LB:'is-idp', DB:'is-idp',
+  DE:'is-idp', DT:'is-idp', CB:'is-idp', S:'is-idp',
+  BN:'is-bench', IR:'is-ir', TAXI:'is-taxi',
+};
+
+const SLOT_LABEL = {
+  SUPER_FLEX:'SFLX', WRRB_FLEX:'FLEX', REC_FLEX:'RFLX', TE_FLEX:'TFLX',
+  IDP_FLEX:'IDP', DST:'DEF',
+};
+
+// Legacy slot-count object — still used by BSH and value calculations
 function getRosterSlots() {
-  const raw = S.connectedLeague?.rosterPositions || [];
-  // Filter out bench/IR/taxi spots — only count starting slots
+  const raw      = S.connectedLeague?.rosterPositions || [];
   const starters = raw.filter(p => !['BN','IR','TAXI'].includes(p));
   if (starters.length) {
+    const idpSlots = ['IDP_FLEX','DL','LB','DB','DE','DT','CB','S'];
     return {
       QB:    starters.filter(p => p === 'QB').length,
       RB:    starters.filter(p => p === 'RB').length,
       WR:    starters.filter(p => p === 'WR').length,
       TE:    starters.filter(p => p === 'TE').length,
-      FLEX:  starters.filter(p => ['FLEX','REC_FLEX','WRRB_FLEX','TE_FLEX'].includes(p)).length,
+      FLEX:  starters.filter(p => ['FLEX','WRRB_FLEX','REC_FLEX','TE_FLEX'].includes(p)).length,
       SFLEX: starters.filter(p => p === 'SUPER_FLEX').length,
       K:     starters.filter(p => p === 'K').length,
       DEF:   starters.filter(p => ['DEF','DST'].includes(p)).length,
-      IDP:   starters.filter(p => p === 'IDP_FLEX').length,
+      IDP:   starters.filter(p => idpSlots.includes(p)).length,
     };
   }
-  // Fallback: infer from QB format setting (used when no league imported)
   const qb = S.settings.qb;
   if (qb === '2qb') return { QB:2, RB:2, WR:2, TE:1, FLEX:1, SFLEX:0, K:1, DEF:1, IDP:0 };
   if (qb === 'sf')  return { QB:1, RB:2, WR:3, TE:1, FLEX:1, SFLEX:1, K:1, DEF:1, IDP:0 };
@@ -4203,97 +4243,131 @@ function renderRosterList() {
   const el  = document.getElementById('rosterList');
   const btn = document.getElementById('bshBtn');
   if (!S.roster.length) {
-    el.innerHTML = '<div class="chip-empty">Your roster is empty — search for players above</div>';
+    el.innerHTML = '<div class="empty-state"><span>🏈</span>Connect your Sleeper league above to load your roster</div>';
     btn.disabled = true;
     return;
   }
   btn.disabled = false;
 
-  const slots = getRosterSlots();
-  const used  = new Set();
+  const league    = S.connectedLeague;
+  const allPos    = league?.rosterPositions || [];   // full positions array incl BN/IR/TAXI
+  const starterIds = (league?.starterIds || []).filter(id => id && id !== '0');
+  const reserveIds = league?.reserveIds || [];
+  const taxiIds    = league?.taxiIds    || [];
 
-  // Sort all rostered players by dynasty value (best first)
-  const sorted = [...S.roster].sort((a,b) => (b.dynasty_val||0) - (a.dynasty_val||0));
+  // Partition positions into sections
+  const starterSlots = allPos.filter(p => !['BN','IR','TAXI'].includes(p));
+  const benchCount   = allPos.filter(p => p === 'BN').length;
+  const irCount      = allPos.filter(p => p === 'IR').length;
+  const taxiCount    = allPos.filter(p => p === 'TAXI').length;
 
-  // Pick best available players for a slot group
-  function pick(positions, count) {
-    const taken = [];
-    for (const p of sorted) {
-      if (taken.length >= count) break;
-      const pos = p.position === 'DST' ? 'DEF' : p.position;
-      if (!used.has(p.id) && positions.includes(pos)) {
-        taken.push(p);
-        used.add(p.id);
-      }
+  // Helper: find a player by Sleeper ID
+  const byId = id => S.roster.find(p => String(p.player_id || p.id || p.sleeper_id) === String(id));
+
+  // ── Determine starter assignment ──────────────────────────────
+  // Priority 1: use Sleeper's actual starters array (maps 1:1 with starter slots)
+  // Priority 2: greedy by value (offseason / no active matchup)
+  const usedIds = new Set();
+  let starterAssignments = []; // array parallel to starterSlots
+
+  const hasRealStarters = starterIds.length > 0 && starterIds.some(id => byId(id));
+
+  if (hasRealStarters) {
+    // Use Sleeper's actual lineup — starters array matches starting slots positionally
+    // Filter starters to just the non-BN/IR/TAXI subset
+    const sleeperStarters = (league?.starterIds || []);
+    for (let i = 0; i < starterSlots.length; i++) {
+      const pid = sleeperStarters[i];
+      const p   = pid && pid !== '0' ? byId(pid) : null;
+      if (p) usedIds.add(String(p.player_id || p.id));
+      starterAssignments.push(p || null);
     }
-    return taken;
+  } else {
+    // Greedy fallback: sort by value, assign best eligible to each slot in order
+    const sorted = [...S.roster].sort((a,b) => calcValue(b) - calcValue(a));
+    const pickBest = slot => {
+      const eligible = SLOT_ELIGIBLE[slot] || [slot];
+      for (const p of sorted) {
+        const pid = String(p.player_id || p.id);
+        if (usedIds.has(pid)) continue;
+        const pos = (p.position === 'DST' ? 'DEF' : p.position) || '';
+        if (eligible.includes(pos)) { usedIds.add(pid); return p; }
+      }
+      return null;
+    };
+    starterAssignments = starterSlots.map(slot => pickBest(slot));
   }
 
-  // Assign starter slots in order
-  const qbStarters    = pick(['QB'], slots.QB);
-  const rbStarters    = pick(['RB'], slots.RB);
-  const wrStarters    = pick(['WR'], slots.WR);
-  const teStarters    = pick(['TE'], slots.TE);
-  const flexStarters  = pick(['RB','WR','TE'], slots.FLEX);
-  const sflexStarters = pick(['QB','RB','WR','TE'], slots.SFLEX);
-  const kStarters     = pick(['K'], slots.K);
-  const defStarters   = pick(['DEF','DST'], slots.DEF);
-  const idpStarters   = pick(['DE','DT','LB','CB','S','FS','SS','DB','OLB','ILB','MLB','DL','IDP'], slots.IDP || 0);
-  const bench         = sorted.filter(p => !used.has(p.id));
+  // All remaining players (not starters) go to bench
+  const benchPlayers = S.roster.filter(p => {
+    const pid = String(p.player_id || p.id);
+    return !usedIds.has(pid) && !reserveIds.includes(pid) && !taxiIds.includes(pid);
+  }).sort((a,b) => calcValue(b) - calcValue(a));
 
-  // Build one player row
+  // IR and taxi players
+  const irPlayers   = reserveIds.map(id => byId(id)).filter(Boolean);
+  const taxiPlayers = taxiIds.map(id => byId(id)).filter(Boolean);
+
+  // ── Row renderers ────────────────────────────────────────────
   function row(p, slotLabel, cls) {
-    const pos = p.position === 'DST' ? 'DEF' : p.position;
+    if (!p) return emptyRow(slotLabel, cls);
+    const pos = (p.position === 'DST' ? 'DEF' : p.position) || '';
     const v   = calcValue(p);
     return `<div class="ros-row">
       <span class="ros-slot-lbl ${cls}">${slotLabel}</span>
       <div class="ros-row-info">
-        <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="event.stopPropagation();event._pcHandled=true;var _n=this.getAttribute('data-pcname');if(_n&&window.showPlayerCard)window.showPlayerCard(_n)">${escHtml(p.full_name)}</span><span class="pb pb-${pos}" style="font-size:9px;vertical-align:middle;margin-left:4px">${pos}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
+        <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+          <span class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="event.stopPropagation();event._pcHandled=true;var _n=this.getAttribute('data-pcname');if(_n&&window.showPlayerCard)window.showPlayerCard(_n)">${escHtml(p.full_name)}</span>
+          <span class="pb pb-${pos}" style="font-size:9px;vertical-align:middle;margin-left:4px">${pos}</span>
+          ${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}
+        </div>
         <div style="font-size:11px;color:var(--text3)">${p.team||'FA'}${p.age?' · Age '+p.age:''}</div>
       </div>
       <div style="font-weight:700;font-size:13px;color:var(--primary-l);flex-shrink:0">${fmtVal(v)}</div>
-      <button class="chip-rm" onclick="removeFromRoster('${p.id}')">×</button>
+      <button class="chip-rm" onclick="removeFromRoster('${p.player_id||p.id}')">×</button>
     </div>`;
   }
 
-  // Build an empty-slot placeholder
-  function emptySlot(slotLabel, cls) {
+  function emptyRow(slotLabel, cls) {
     return `<div class="ros-empty">
-      <span class="ros-slot-lbl ${cls}" style="opacity:.6">${slotLabel}</span>
-      <span class="ros-empty-name">Empty slot</span>
+      <span class="ros-slot-lbl ${cls}" style="opacity:.55">${slotLabel}</span>
+      <span class="ros-empty-name">Empty</span>
     </div>`;
   }
 
-  // Build a group (slot label, players, slot count, css class)
-  function group(label, players, count, cls, showEmpty = true) {
-    if (!count && !players.length) return '';
-    return Array.from({ length: Math.max(count, players.length) }, (_, i) =>
-      players[i] ? row(players[i], label, cls) : (showEmpty ? emptySlot(label, cls) : '')
-    ).join('');
+  // ── Build HTML ────────────────────────────────────────────────
+  let html = '';
+
+  // Starters — in exact slot order from league
+  if (starterSlots.length) {
+    html += '<div class="ros-section-hdr">Starters</div>';
+    starterSlots.forEach((slot, i) => {
+      const lbl = SLOT_LABEL[slot] || slot;
+      const cls = SLOT_CSS[slot]   || 'is-bench';
+      html += row(starterAssignments[i], lbl, cls);
+    });
   }
 
-  const isDynasty = S.settings.mode === 'dynasty';
-  const hasSpecial = kStarters.length || defStarters.length ||
-    (S.settings.mode === 'redraft' && (slots.K > 0 || slots.DEF > 0));
-
-  let html = '<div class="ros-section-hdr">Starters</div>';
-  html += group('QB',   qbStarters,    slots.QB,    'is-slot-QB');
-  html += group('RB',   rbStarters,    slots.RB,    'is-slot-RB');
-  html += group('WR',   wrStarters,    slots.WR,    'is-slot-WR');
-  html += group('TE',   teStarters,    slots.TE,    'is-slot-TE');
-  if (slots.FLEX  > 0) html += group('FLEX',  flexStarters,  slots.FLEX,  'is-flex');
-  if (slots.SFLEX > 0) html += group('SFLX',  sflexStarters, slots.SFLEX, 'is-flex');
-  if ((slots.IDP||0) > 0) html += group('IDP', idpStarters, slots.IDP, 'is-special');
-
-  if (hasSpecial) {
-    html += '<div class="ros-section-hdr" style="margin-top:4px">K / Defense</div>';
-    if (slots.K   > 0) html += group('K',   kStarters,   slots.K,   'is-special', !isDynasty);
-    if (slots.DEF > 0) html += group('DEF', defStarters, slots.DEF, 'is-special', !isDynasty);
-  }
-
-  if (bench.length) {
+  // Bench
+  const emptyBench = Math.max(0, benchCount - benchPlayers.length);
+  if (benchPlayers.length || emptyBench > 0) {
     html += '<div class="ros-section-hdr ros-section-bench">Bench</div>';
-    bench.forEach(p => { html += row(p, 'BN', 'is-bench'); });
+    benchPlayers.forEach(p => { html += row(p, 'BN', 'is-bench'); });
+    for (let i = 0; i < emptyBench; i++) html += emptyRow('BN', 'is-bench');
+  }
+
+  // IR / Injured Reserve
+  if (irPlayers.length || irCount > 0) {
+    html += '<div class="ros-section-hdr" style="margin-top:6px">IR / Injured Reserve</div>';
+    irPlayers.forEach(p => { html += row(p, 'IR', 'is-ir'); });
+    for (let i = irPlayers.length; i < irCount; i++) html += emptyRow('IR', 'is-ir');
+  }
+
+  // Taxi Squad (dynasty)
+  if (taxiPlayers.length || taxiCount > 0) {
+    html += '<div class="ros-section-hdr" style="margin-top:6px">Taxi Squad</div>';
+    taxiPlayers.forEach(p => { html += row(p, 'TAXI', 'is-taxi'); });
+    for (let i = taxiPlayers.length; i < taxiCount; i++) html += emptyRow('TAXI', 'is-taxi');
   }
 
   el.innerHTML = html;
@@ -6996,8 +7070,12 @@ async function importSleeperLeague(leagueId) {
     };
   });
 
-  // My roster players
-  const allIds = [...(userRoster.players||[]), ...(userRoster.reserve||[])];
+  // My roster players — include players + reserve + taxi
+  const allIds = [
+    ...(userRoster.players  || []),
+    ...(userRoster.reserve  || []),
+    ...(userRoster.taxi     || []),
+  ];
   const rosterPlayers = allIds.map(id => S.players.find(p=>String(p.player_id||p.id)===String(id))).filter(Boolean);
 
   // Build league data object
@@ -7009,6 +7087,10 @@ async function importSleeperLeague(leagueId) {
     settings:        detectedSettings,
     rosterIds:       allIds,
     rosterPositions: leagueInfo.roster_positions || [],
+    // Sleeper lineup data — starters[i] maps to rosterPositions[i]; "0" = empty slot
+    starterIds:      userRoster.starters || [],
+    reserveIds:      userRoster.reserve  || [],
+    taxiIds:         userRoster.taxi     || [],
     allTeams,
     totalTeams:      leagueInfo.settings?.num_teams || 12,
     connectedAt:     Date.now(),
