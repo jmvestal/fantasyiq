@@ -146,10 +146,13 @@
     .home-ticker-sep{display:inline-block;padding:9px 0;color:var(--border);font-size:12px;flex-shrink:0;user-select:none}
     /* Position rankings */
     .home-posrank{max-width:700px;width:100%;margin-top:8px;padding-bottom:40px}
-    .home-posrank-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .home-posrank-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
     .home-posrank-ttl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)}
-    .home-posrank-tabs{display:flex;gap:4px}
-    .home-posrank-tab{padding:5px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;color:var(--text3);background:transparent;border:1px solid var(--border);transition:all .15s}
+    .home-posrank-mode-tabs{display:flex;gap:4px}
+    .home-posrank-mode-tab{padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;color:var(--text3);background:transparent;border:1px solid var(--border);transition:all .15s}
+    .home-posrank-mode-tab.on{background:var(--primary-d);color:var(--primary-l);border-color:var(--primary)}
+    .home-posrank-pos-tabs{display:flex;gap:6px;margin-bottom:12px}
+    .home-posrank-tab{padding:6px 20px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;color:var(--text3);background:var(--bg3);border:1px solid var(--border);transition:all .15s;flex:1;text-align:center}
     .home-posrank-tab.on{background:var(--primary-d);color:var(--primary-l);border-color:var(--primary)}
     .home-posrank-list{display:grid;grid-template-columns:1fr 1fr;gap:6px}
     .home-posrank-row{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;cursor:pointer;transition:border-color .15s}
@@ -1177,12 +1180,16 @@
           <div class="home-posrank" id="homePosRank" style="display:none">
             <div class="home-posrank-hdr">
               <div class="home-posrank-ttl">📊 Position Rankings</div>
-              <div class="home-posrank-tabs">
-                <button class="home-posrank-tab on" data-pos="RB" onclick="renderPosRank('RB')">RB</button>
-                <button class="home-posrank-tab" data-pos="WR" onclick="renderPosRank('WR')">WR</button>
-                <button class="home-posrank-tab" data-pos="QB" onclick="renderPosRank('QB')">QB</button>
-                <button class="home-posrank-tab" data-pos="TE" onclick="renderPosRank('TE')">TE</button>
+              <div class="home-posrank-mode-tabs">
+                <button class="home-posrank-mode-tab on" data-mode="dynasty" onclick="setPosRankMode('dynasty')">Dynasty</button>
+                <button class="home-posrank-mode-tab" data-mode="redraft" onclick="setPosRankMode('redraft')">Redraft</button>
               </div>
+            </div>
+            <div class="home-posrank-pos-tabs">
+              <button class="home-posrank-tab on" data-pos="RB" onclick="renderPosRank('RB')">RB</button>
+              <button class="home-posrank-tab" data-pos="WR" onclick="renderPosRank('WR')">WR</button>
+              <button class="home-posrank-tab" data-pos="QB" onclick="renderPosRank('QB')">QB</button>
+              <button class="home-posrank-tab" data-pos="TE" onclick="renderPosRank('TE')">TE</button>
             </div>
             <div class="home-posrank-list" id="homePosRankList"></div>
             <div style="text-align:center;margin-top:12px">
@@ -4913,10 +4920,14 @@ function renderGlobalTicker() {
   bar.classList.add('ready');
 }
 
+// Current position rankings state — persists across tab switches
+let _posRankMode = 'dynasty'; // 'dynasty' | 'redraft'
+let _posRankPos  = 'RB';      // 'QB' | 'RB' | 'WR' | 'TE'
+
 // Populate the landing-page news ticker and position rankings (logged-out view only).
 function renderLandingWidgets() {
-  const landing = document.getElementById('homeOptionA');
-  if (!landing || landing.style.display === 'none') return;
+  // Only render on the logged-out landing page
+  if (S.auth) return;
 
   const hasValues = (S.players || []).some(p =>
     ['QB','RB','WR','TE'].includes(p.position) && (p.dynasty_val || 0) > 0
@@ -4938,27 +4949,42 @@ function renderLandingWidgets() {
   // ── Position rankings ─────────────────────────────────────
   const rankEl = document.getElementById('homePosRank');
   if (rankEl) rankEl.style.display = '';
-  renderPosRank('RB');
+  renderPosRank(_posRankPos);
 }
 
-// Render the position rankings grid on the landing page.
-// Called by renderLandingWidgets() and directly by the RB/WR/QB/TE toggle buttons.
+// Switch dynasty/redraft mode and re-render current position
+function setPosRankMode(mode) {
+  _posRankMode = mode;
+  document.querySelectorAll('.home-posrank-mode-tab').forEach(t =>
+    t.classList.toggle('on', t.dataset.mode === mode));
+  renderPosRank(_posRankPos);
+}
+
+// Render the position rankings grid — called by widget init and toggle buttons.
 function renderPosRank(pos) {
+  _posRankPos = pos;
+
   document.querySelectorAll('.home-posrank-tab').forEach(t =>
     t.classList.toggle('on', t.dataset.pos === pos));
 
   const list = document.getElementById('homePosRankList');
   if (!list) return;
 
+  const valKey = _posRankMode === 'redraft' ? 'redraft_val' : 'dynasty_val';
   const ranked = (S.players || [])
-    .filter(p => p.position === pos && (p.dynasty_val || 0) > 0)
-    .sort((a,b) => (b.dynasty_val||0) - (a.dynasty_val||0))
+    .filter(p => p.position === pos && (p[valKey] || 0) > 0)
+    .sort((a,b) => (b[valKey]||0) - (a[valKey]||0))
     .slice(0, 10);
 
+  if (!ranked.length) {
+    list.innerHTML = `<div style="grid-column:1/-1;padding:20px;text-align:center;color:var(--text3);font-size:13px">No ${pos} rankings loaded yet</div>`;
+    return;
+  }
+
   list.innerHTML = ranked.map((p, i) => {
-    const rank  = i + 1;
+    const rank   = i + 1;
     const numCls = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
-    const arrow = p.trend === 'up'
+    const arrow  = p.trend === 'up'
       ? `<span class="home-posrank-arrow up">▲</span>`
       : p.trend === 'down'
       ? `<span class="home-posrank-arrow down">▼</span>`
@@ -4967,8 +4993,7 @@ function renderPosRank(pos) {
     return `<div class="home-posrank-row" onclick="switchTab('values')">
       <span class="home-posrank-num ${numCls}">${rank}</span>
       <div class="home-posrank-name">${p.full_name}</div>
-      ${team}
-      ${arrow}
+      ${team}${arrow}
     </div>`;
   }).join('');
 }
@@ -5523,11 +5548,8 @@ function rebuildPlayerValues() {
   updateSourceCount();
   // Global ticker updates on every page whenever values rebuild
   renderGlobalTicker();
-  // Landing page widgets (ticker + snapshot) — only on logged-out home
-  if (document.getElementById('tab-home')?.classList.contains('active') &&
-      document.getElementById('homeOptionA')?.style.display !== 'none') {
-    renderLandingWidgets();
-  }
+  // Landing widgets — guard handled inside the function
+  renderLandingWidgets();
 }
 
 // Build consensus value for one player across all loaded sources.
@@ -7006,6 +7028,11 @@ async function init() {
   if (location.search.includes('a=') || location.search.includes('b=')) {
     loadFromUrl();
   }
+
+  // Final render of landing widgets — called here to guarantee they fire
+  // after ALL data (players + consensus values) is fully ready.
+  renderGlobalTicker();
+  renderLandingWidgets();
 }
 
 // ═══════════════════════════════════════════════════════════
