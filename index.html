@@ -378,7 +378,8 @@
     .ros-empty{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);opacity:.45}
     .ros-empty-name{font-size:12px;font-style:italic;color:var(--text3);flex:1}
     /* ── AI CHAT WIDGET ─────────────────────────────── */
-    .tiq-chat-btn{position:fixed;bottom:72px;right:16px;width:auto;height:44px;border-radius:22px;padding:0 18px 0 14px;background:var(--primary);border:2px solid rgba(157,90,240,.4);color:#fff;font-size:18px;cursor:pointer;box-shadow:0 4px 20px rgba(124,58,237,.45);z-index:300;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s;line-height:1;gap:6px}
+    .tiq-chat-btn{position:fixed;bottom:72px;right:16px;width:auto;height:44px;border-radius:22px;padding:0 18px 0 14px;background:var(--primary);border:2px solid rgba(157,90,240,.4);color:#fff;font-size:18px;cursor:pointer;box-shadow:0 4px 20px rgba(124,58,237,.45);z-index:300;display:none;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s;line-height:1;gap:6px}
+    body.logged-in .tiq-chat-btn{display:flex}
     .tiq-chat-btn:hover{transform:scale(1.05);box-shadow:0 6px 24px rgba(124,58,237,.6)}
     .tiq-chat-btn-label{font-size:12px;font-weight:800;letter-spacing:-.2px;line-height:1}
     .tiq-chat-panel{position:fixed;bottom:134px;right:16px;width:330px;height:430px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.5);z-index:299;display:none;flex-direction:column;overflow:hidden;transition:opacity .2s}
@@ -4820,7 +4821,13 @@ function switchTab(name) {
 // Populate the scrolling ticker and player snapshot on the logged-out landing page.
 // Both pull from S.players which is loaded from VALUE_DB + any active sources.
 function renderLandingWidgets() {
-  const players = (S.players || []).filter(p => ['QB','RB','WR','TE'].includes(p.position));
+  // Only run on the logged-out landing page
+  const landing = document.getElementById('homeOptionA');
+  if (!landing || landing.style.display === 'none') return;
+
+  const players = (S.players || []).filter(p =>
+    ['QB','RB','WR','TE'].includes(p.position) && (p.dynasty_val || 0) > 0
+  );
   if (!players.length) return;
 
   // ── Ticker ──────────────────────────────────────────────
@@ -5438,8 +5445,10 @@ function rebuildPlayerValues() {
   renderValuesTable();
   renderTrade();
   updateSourceCount();
-  // Refresh landing page widgets (ticker + snapshot) whenever values update
-  if (document.getElementById('tab-home')?.classList.contains('active') && !S.auth) {
+  // Refresh landing page widgets (ticker + snapshot) whenever values update.
+  // Check homeOptionA visibility — it's only shown on the logged-out landing page.
+  if (document.getElementById('tab-home')?.classList.contains('active') &&
+      document.getElementById('homeOptionA')?.style.display !== 'none') {
     renderLandingWidgets();
   }
 }
@@ -9687,15 +9696,15 @@ RESPONSE STYLE:
 }
 
 // ── Toggle chat panel ────────────────────────────────────
-// Show the chat button only when the user is signed in.
-// Called from handleAuthStateChange and signOutUser.
+// Chat button visibility is handled purely via CSS:
+//   .tiq-chat-btn { display:none }         — hidden by default
+//   body.logged-in .tiq-chat-btn { display:flex } — shown only when signed in
+// This function just closes the open panel on sign-out.
 function updateChatVisibility() {
-  const btn = document.getElementById('tiqChatBtn');
-  const panel = document.getElementById('tiqChatPanel');
-  if (!btn) return;
-  const show = !!S.auth;
-  btn.style.display = show ? '' : 'none';
-  if (!show && panel) panel.classList.remove('open'); // close panel on sign-out
+  if (!S.auth) {
+    const panel = document.getElementById('tiqChatPanel');
+    if (panel) panel.classList.remove('open');
+  }
 }
 
 function toggleTiqChat() {
@@ -11611,7 +11620,7 @@ document.addEventListener('keydown', function(e) {
 </div>
 
 <!-- ══ FLOATING AI CHAT ══ -->
-<button class="tiq-chat-btn" id="tiqChatBtn" onclick="toggleTiqChat()" title="Ask Scout HQ" style="display:none">💬<span class="tiq-chat-btn-label">Scout HQ</span></button>
+<button class="tiq-chat-btn" id="tiqChatBtn" onclick="toggleTiqChat()" title="Ask Scout HQ">💬<span class="tiq-chat-btn-label">Scout HQ</span></button>
 <div class="tiq-chat-panel" id="tiqChatPanel">
   <div class="tiq-chat-hdr">
     <div class="tiq-chat-hdr-title">
