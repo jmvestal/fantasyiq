@@ -121,9 +121,34 @@
     .home-feat-icon{font-size:26px}
     .home-feat-name{font-size:13px;font-weight:700;color:var(--text)}
     .home-feat-desc{font-size:11px;color:var(--text3);line-height:1.5}
+    /* Ticker */
+    .home-ticker-wrap{width:100%;max-width:700px;overflow:hidden;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:28px;position:relative}
+    .home-ticker-wrap::before,.home-ticker-wrap::after{content:'';position:absolute;top:0;bottom:0;width:36px;z-index:2;pointer-events:none}
+    .home-ticker-wrap::before{left:0;background:linear-gradient(to right,var(--bg3),transparent)}
+    .home-ticker-wrap::after{right:0;background:linear-gradient(to left,var(--bg3),transparent)}
+    .home-ticker{display:flex;white-space:nowrap;animation:home-ticker-scroll 50s linear infinite;will-change:transform}
+    .home-ticker:hover{animation-play-state:paused}
+    @keyframes home-ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+    .home-ticker-item{display:inline-flex;align-items:center;gap:5px;padding:9px 16px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;transition:color .15s;flex-shrink:0}
+    .home-ticker-item:hover{color:var(--text)}
+    .home-ticker-sep{display:inline-block;padding:9px 0;color:var(--border);font-size:12px;flex-shrink:0;user-select:none}
+    /* Snapshot */
+    .home-snapshot{max-width:700px;width:100%;margin-top:8px;padding-bottom:40px}
+    .home-snapshot-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .home-snapshot-ttl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)}
+    .home-snapshot-tabs{display:flex;gap:4px}
+    .home-snapshot-tab{padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;color:var(--text3);background:transparent;border:1px solid var(--border);transition:all .15s}
+    .home-snapshot-tab.on{background:var(--primary-d);color:var(--primary-l);border-color:var(--primary)}
+    .home-snapshot-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .home-snapshot-row{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;transition:border-color .15s}
+    .home-snapshot-row:hover{border-color:var(--primary)}
+    .home-snapshot-rank{font-size:10px;font-weight:700;color:var(--text3);width:14px;text-align:right;flex-shrink:0}
+    .home-snapshot-name{flex:1;font-size:12px;font-weight:600;color:var(--text);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .home-snapshot-val{font-size:12px;font-weight:700;color:var(--primary-l);flex-shrink:0}
     @media(max-width:600px){
       .home-landing-logo{font-size:48px}
       .home-feat-grid{grid-template-columns:repeat(2,1fr);max-width:420px}
+      .home-snapshot-grid{grid-template-columns:1fr}
     }
     /* Option C — Smart Dashboard */
     .home-dash{max-width:1100px;margin:0 auto;padding-bottom:40px}
@@ -1084,6 +1109,10 @@
       <!-- Option A: not logged in — full-screen landing -->
       <div id="homeOptionA">
         <div class="home-landing">
+          <!-- Live ticker -->
+          <div class="home-ticker-wrap" id="homeTickerWrap" style="display:none">
+            <div class="home-ticker" id="homeTicker"></div>
+          </div>
           <div class="home-landing-logo"><em>Fantasy</em>HQ</div>
           <div class="home-landing-tag">The free NFL fantasy analyzer built for serious players.</div>
           <button class="btn btn-p" style="font-size:15px;padding:12px 40px;border-radius:10px;margin-bottom:20px" onclick="openModal('authModal')">Sign In</button>
@@ -1117,6 +1146,20 @@
               <div class="home-feat-icon">🏈</div>
               <div class="home-feat-name">Team HQ</div>
               <div class="home-feat-desc">Roster valuation and personalized team analysis.</div>
+            </div>
+          </div>
+          <!-- Live player snapshot -->
+          <div class="home-snapshot" id="homeSnapshot" style="display:none">
+            <div class="home-snapshot-hdr">
+              <div class="home-snapshot-ttl">📊 Live Player Values</div>
+              <div class="home-snapshot-tabs">
+                <button class="home-snapshot-tab on" data-mode="dynasty" onclick="renderSnapshot('dynasty')">Dynasty</button>
+                <button class="home-snapshot-tab" data-mode="redraft" onclick="renderSnapshot('redraft')">Redraft</button>
+              </div>
+            </div>
+            <div class="home-snapshot-grid" id="homeSnapshotGrid"></div>
+            <div style="text-align:center;margin-top:12px">
+              <span style="font-size:11px;color:var(--text3);cursor:pointer" onclick="switchTab('values')">View full rankings in Player HQ →</span>
             </div>
           </div>
         </div>
@@ -4771,6 +4814,83 @@ function switchTab(name) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// HOMEPAGE — LANDING WIDGETS (ticker + snapshot)
+// ═══════════════════════════════════════════════════════════
+
+// Populate the scrolling ticker and player snapshot on the logged-out landing page.
+// Both pull from S.players which is loaded from VALUE_DB + any active sources.
+function renderLandingWidgets() {
+  const players = (S.players || []).filter(p => ['QB','RB','WR','TE'].includes(p.position));
+  if (!players.length) return;
+
+  // ── Ticker ──────────────────────────────────────────────
+  const tickerWrap = document.getElementById('homeTickerWrap');
+  const tickerEl   = document.getElementById('homeTicker');
+  if (tickerWrap && tickerEl) {
+    const top = players
+      .map(p => ({ p, v: p.dynasty_val || 0 }))
+      .filter(({v}) => v > 0)
+      .sort((a,b) => b.v - a.v)
+      .slice(0, 22);
+
+    const fmtShort = n => n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/,'')+'k' : String(n);
+    const mkItem = ({p, v}) => {
+      const trendMark = p.trend === 'up'
+        ? `<span style="color:var(--success);font-size:10px">▲</span>`
+        : p.trend === 'down'
+        ? `<span style="color:var(--danger);font-size:10px">▼</span>`
+        : '';
+      const nameParts = (p.full_name || '').split(' ');
+      const shortName = nameParts.length > 1
+        ? nameParts[0][0] + '. ' + nameParts.slice(1).join(' ')
+        : p.full_name;
+      return `<span class="home-ticker-item" onclick="switchTab('values')">`
+        + `<span class="pb pb-${p.position}" style="font-size:9px">${p.position}</span>`
+        + `<span>${shortName}</span>`
+        + `<span style="color:var(--text1);font-weight:700">${fmtShort(v)}</span>`
+        + trendMark
+        + `</span><span class="home-ticker-sep">·</span>`;
+    };
+
+    const content = top.map(mkItem).join('');
+    tickerEl.innerHTML = content + content; // doubled for seamless infinite loop
+    tickerWrap.style.display = '';
+  }
+
+  // ── Snapshot ─────────────────────────────────────────────
+  const snapEl = document.getElementById('homeSnapshot');
+  if (snapEl) snapEl.style.display = '';
+  renderSnapshot('dynasty');
+}
+
+// Render the top-10 player snapshot grid on the landing page.
+// Called by renderLandingWidgets() and directly by the Dynasty/Redraft toggle buttons.
+function renderSnapshot(mode) {
+  const players = (S.players || []).filter(p => ['QB','RB','WR','TE'].includes(p.position));
+  const sorted  = players
+    .map(p => ({ p, v: mode === 'dynasty' ? (p.dynasty_val || 0) : (p.redraft_val || 0) }))
+    .filter(({v}) => v > 0)
+    .sort((a,b) => b.v - a.v)
+    .slice(0, 10);
+
+  // Sync tab highlight
+  document.querySelectorAll('.home-snapshot-tab').forEach(t =>
+    t.classList.toggle('on', t.dataset.mode === mode));
+
+  const grid = document.getElementById('homeSnapshotGrid');
+  if (!grid) return;
+
+  const fmtVal2 = n => n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/,'')+'k' : String(n);
+  grid.innerHTML = sorted.map(({p, v}, i) => `
+    <div class="home-snapshot-row" onclick="switchTab('values')">
+      <span class="home-snapshot-rank">${i + 1}</span>
+      <span class="pb pb-${p.position}" style="font-size:9px">${p.position}</span>
+      <div class="home-snapshot-name">${p.full_name}</div>
+      <div class="home-snapshot-val">${fmtVal2(v)}</div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
 // HOMEPAGE
 // ═══════════════════════════════════════════════════════════
 function renderHome() {
@@ -4781,7 +4901,7 @@ function renderHome() {
   document.body.classList.toggle('landing-mode', !showDash);
   document.getElementById('homeOptionA').style.display = showDash ? 'none' : '';
   document.getElementById('homeOptionC').style.display = showDash ? ''     : 'none';
-  if (!showDash) return;
+  if (!showDash) { renderLandingWidgets(); return; }
 
   // ── Greeting ───────────────────────────────────────────
   const firstName = S.auth?.displayName?.split(' ')[0] || 'there';
