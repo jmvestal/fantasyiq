@@ -2105,34 +2105,34 @@
       <div class="mob-s-section" id="mob-s-qb">
         <div class="mob-s-label">QB Format</div>
         <div class="mob-tog-row">
-          <button class="mob-tog" data-s="qb" data-v="1qb" onclick="setSetting('qb','1qb');syncMobToggles()">1-QB</button>
-          <button class="mob-tog on" data-s="qb" data-v="sf" onclick="setSetting('qb','sf');syncMobToggles()">SF</button>
-          <button class="mob-tog" data-s="qb" data-v="2qb" onclick="setSetting('qb','2qb');syncMobToggles()">2QB</button>
+          <button class="mob-tog" data-s="qb" data-v="1qb" onclick="uiSetSetting('qb','1qb');syncMobToggles()">1-QB</button>
+          <button class="mob-tog on" data-s="qb" data-v="sf" onclick="uiSetSetting('qb','sf');syncMobToggles()">SF</button>
+          <button class="mob-tog" data-s="qb" data-v="2qb" onclick="uiSetSetting('qb','2qb');syncMobToggles()">2QB</button>
         </div>
       </div>
       <div class="mob-s-section" id="mob-s-size">
         <div class="mob-s-label">League Size</div>
         <div class="mob-tog-row">
-          <button class="mob-tog" data-s="size" data-v="8" onclick="setSetting('size',8);syncMobToggles()">8</button>
-          <button class="mob-tog" data-s="size" data-v="10" onclick="setSetting('size',10);syncMobToggles()">10</button>
-          <button class="mob-tog on" data-s="size" data-v="12" onclick="setSetting('size',12);syncMobToggles()">12</button>
-          <button class="mob-tog" data-s="size" data-v="14" onclick="setSetting('size',14);syncMobToggles()">14</button>
-          <button class="mob-tog" data-s="size" data-v="16" onclick="setSetting('size',16);syncMobToggles()">16</button>
+          <button class="mob-tog" data-s="size" data-v="8" onclick="uiSetSetting('size',8);syncMobToggles()">8</button>
+          <button class="mob-tog" data-s="size" data-v="10" onclick="uiSetSetting('size',10);syncMobToggles()">10</button>
+          <button class="mob-tog on" data-s="size" data-v="12" onclick="uiSetSetting('size',12);syncMobToggles()">12</button>
+          <button class="mob-tog" data-s="size" data-v="14" onclick="uiSetSetting('size',14);syncMobToggles()">14</button>
+          <button class="mob-tog" data-s="size" data-v="16" onclick="uiSetSetting('size',16);syncMobToggles()">16</button>
         </div>
       </div>
       <div class="mob-s-section" id="mob-s-scoring">
         <div class="mob-s-label">Scoring</div>
         <div class="mob-tog-row">
-          <button class="mob-tog on" data-s="scoring" data-v="ppr" onclick="setSetting('scoring','ppr');syncMobToggles()">PPR</button>
-          <button class="mob-tog" data-s="scoring" data-v="half" onclick="setSetting('scoring','half');syncMobToggles()">Half</button>
-          <button class="mob-tog" data-s="scoring" data-v="std" onclick="setSetting('scoring','std');syncMobToggles()">Std</button>
+          <button class="mob-tog on" data-s="scoring" data-v="ppr" onclick="uiSetSetting('scoring','ppr');syncMobToggles()">PPR</button>
+          <button class="mob-tog" data-s="scoring" data-v="half" onclick="uiSetSetting('scoring','half');syncMobToggles()">Half</button>
+          <button class="mob-tog" data-s="scoring" data-v="std" onclick="uiSetSetting('scoring','std');syncMobToggles()">Std</button>
         </div>
       </div>
       <div class="mob-s-section" id="mob-s-te">
         <div class="mob-s-label">TE Premium</div>
         <div class="mob-tog-row">
-          <button class="mob-tog on" data-s="te" data-v="off" onclick="setSetting('te','off');syncMobToggles()">Off</button>
-          <button class="mob-tog" data-s="te" data-v="on" onclick="setSetting('te','on');syncMobToggles()">On</button>
+          <button class="mob-tog on" data-s="te" data-v="off" onclick="uiSetSetting('te','off');syncMobToggles()">Off</button>
+          <button class="mob-tog" data-s="te" data-v="on" onclick="uiSetSetting('te','on');syncMobToggles()">On</button>
         </div>
       </div>
     </div>
@@ -4780,14 +4780,18 @@ function removeSugGive(id) {
 // ═══════════════════════════════════════════════════════════
 // SETTINGS
 // ═══════════════════════════════════════════════════════════
-function setSetting(key, val) {
-  // All settings except dynasty/redraft mode toggle require a premium account
+// UI wrapper — checks premium before calling setSetting (for mobile onclick buttons)
+function uiSetSetting(key, val) {
   if (key !== 'mode' && !S.isPremium) {
     const el = document.getElementById('proModalFeatureText');
     if (el) el.textContent = 'Upgrade to Pro to customize league size, QB format, scoring, and more.';
     openModal('proModal');
     return;
   }
+  setSetting(key, val);
+}
+
+function setSetting(key, val) {
   if (key === 'size') val = parseInt(val);
   S.settings[key] = val;
 
@@ -8594,9 +8598,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }, { passive: true });
 
-  // Settings toggles
+  // Settings toggles — premium gate lives here (not in setSetting, which is also called internally)
   document.querySelectorAll('[data-s]').forEach(btn => {
-    btn.addEventListener('click', () => setSetting(btn.dataset.s, btn.dataset.v));
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.s;
+      if (key !== 'mode' && !S.isPremium) {
+        const el = document.getElementById('proModalFeatureText');
+        if (el) el.textContent = 'Upgrade to Pro to customize league size, QB format, scoring, and more.';
+        openModal('proModal');
+        return;
+      }
+      setSetting(key, btn.dataset.v);
+    });
   });
 
   // Rookie optimism slider
