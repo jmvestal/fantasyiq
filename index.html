@@ -5044,12 +5044,31 @@ function renderPosRank(pos) {
 function renderHome() {
   const loggedIn  = !!S.auth;
   const hasLeague = !!(S.connectedLeague?.leagueId);
-  const showDash  = loggedIn && hasLeague;
 
-  document.body.classList.toggle('landing-mode', !showDash);
-  document.getElementById('homeOptionA').style.display = showDash ? 'none' : '';
-  document.getElementById('homeOptionC').style.display = showDash ? ''     : 'none';
-  if (!showDash) { renderLandingWidgets(); return; }
+  // Any logged-in user goes to the dashboard view — no league connected shows a welcome/connect prompt
+  document.body.classList.toggle('landing-mode', !loggedIn);
+  document.getElementById('homeOptionA').style.display = loggedIn ? 'none' : '';
+  document.getElementById('homeOptionC').style.display = loggedIn ? ''     : 'none';
+  if (!loggedIn) { renderLandingWidgets(); return; }
+
+  // Logged in but no league yet — show a welcome screen inside the dashboard
+  if (!hasLeague) {
+    const firstName = S.auth?.displayName?.split(' ')[0] || 'there';
+    const hour      = new Date().getHours();
+    const greeting  = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    document.getElementById('homeDashGreet').textContent  = `${greeting}, ${firstName}!`;
+    document.getElementById('homeDashLeague').textContent = 'Connect a league to unlock your personalized dashboard';
+    document.getElementById('homeDashStats').innerHTML = `
+      <div style="grid-column:1/-1;background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:28px 24px;text-align:center">
+        <div style="font-size:28px;margin-bottom:10px">🔗</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px">Connect Your League</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:18px;line-height:1.6">Import from Sleeper, ESPN, or CBS to get your roster valuation, trade targets, and personalized intel.</div>
+        <button class="btn btn-p" onclick="openModal('connectModal')">Connect League →</button>
+      </div>`;
+    document.getElementById('homeDashIntel').innerHTML = '';
+    document.getElementById('homeDashExtra').innerHTML = '';
+    return;
+  }
 
   // ── Greeting ───────────────────────────────────────────
   const firstName = S.auth?.displayName?.split(' ')[0] || 'there';
