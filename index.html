@@ -133,34 +133,40 @@
     .home-feat-icon{font-size:26px}
     .home-feat-name{font-size:13px;font-weight:700;color:var(--text)}
     .home-feat-desc{font-size:11px;color:var(--text3);line-height:1.5}
-    /* Ticker */
+    /* News ticker */
     .home-ticker-wrap{width:100%;max-width:700px;overflow:hidden;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:28px;position:relative}
     .home-ticker-wrap::before,.home-ticker-wrap::after{content:'';position:absolute;top:0;bottom:0;width:36px;z-index:2;pointer-events:none}
     .home-ticker-wrap::before{left:0;background:linear-gradient(to right,var(--bg3),transparent)}
     .home-ticker-wrap::after{right:0;background:linear-gradient(to left,var(--bg3),transparent)}
-    .home-ticker{display:flex;white-space:nowrap;animation:home-ticker-scroll 50s linear infinite;will-change:transform}
+    .home-ticker{display:flex;white-space:nowrap;animation:home-ticker-scroll 60s linear infinite;will-change:transform}
     .home-ticker:hover{animation-play-state:paused}
     @keyframes home-ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-    .home-ticker-item{display:inline-flex;align-items:center;gap:5px;padding:9px 16px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;transition:color .15s;flex-shrink:0}
+    .home-ticker-item{display:inline-flex;align-items:center;gap:5px;padding:9px 18px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;transition:color .15s;flex-shrink:0}
     .home-ticker-item:hover{color:var(--text)}
     .home-ticker-sep{display:inline-block;padding:9px 0;color:var(--border);font-size:12px;flex-shrink:0;user-select:none}
-    /* Snapshot */
-    .home-snapshot{max-width:700px;width:100%;margin-top:8px;padding-bottom:40px}
-    .home-snapshot-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-    .home-snapshot-ttl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)}
-    .home-snapshot-tabs{display:flex;gap:4px}
-    .home-snapshot-tab{padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;color:var(--text3);background:transparent;border:1px solid var(--border);transition:all .15s}
-    .home-snapshot-tab.on{background:var(--primary-d);color:var(--primary-l);border-color:var(--primary)}
-    .home-snapshot-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-    .home-snapshot-row{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;transition:border-color .15s}
-    .home-snapshot-row:hover{border-color:var(--primary)}
-    .home-snapshot-rank{font-size:10px;font-weight:700;color:var(--text3);width:14px;text-align:right;flex-shrink:0}
-    .home-snapshot-name{flex:1;font-size:12px;font-weight:600;color:var(--text);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .home-snapshot-val{font-size:12px;font-weight:700;color:var(--primary-l);flex-shrink:0}
+    /* Position rankings */
+    .home-posrank{max-width:700px;width:100%;margin-top:8px;padding-bottom:40px}
+    .home-posrank-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .home-posrank-ttl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)}
+    .home-posrank-tabs{display:flex;gap:4px}
+    .home-posrank-tab{padding:5px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;color:var(--text3);background:transparent;border:1px solid var(--border);transition:all .15s}
+    .home-posrank-tab.on{background:var(--primary-d);color:var(--primary-l);border-color:var(--primary)}
+    .home-posrank-list{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .home-posrank-row{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;cursor:pointer;transition:border-color .15s}
+    .home-posrank-row:hover{border-color:var(--primary)}
+    .home-posrank-num{font-size:11px;font-weight:800;color:var(--text3);width:18px;text-align:center;flex-shrink:0}
+    .home-posrank-num.gold{color:#f59e0b}
+    .home-posrank-num.silver{color:#94a3b8}
+    .home-posrank-num.bronze{color:#b45309}
+    .home-posrank-name{flex:1;font-size:12px;font-weight:600;color:var(--text);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .home-posrank-team{font-size:10px;color:var(--text3);flex-shrink:0}
+    .home-posrank-arrow{font-size:9px;font-weight:800;flex-shrink:0}
+    .home-posrank-arrow.up{color:var(--success)}
+    .home-posrank-arrow.down{color:var(--danger)}
     @media(max-width:600px){
       .home-landing-logo{font-size:48px}
       .home-feat-grid{grid-template-columns:repeat(2,1fr);max-width:420px}
-      .home-snapshot-grid{grid-template-columns:1fr}
+      .home-posrank-list{grid-template-columns:1fr}
     }
     /* Option C — Smart Dashboard */
     .home-dash{max-width:1100px;margin:0 auto;padding-bottom:40px}
@@ -1167,17 +1173,20 @@
             </div>
           </div>
           <!-- Live player snapshot -->
-          <div class="home-snapshot" id="homeSnapshot" style="display:none">
-            <div class="home-snapshot-hdr">
-              <div class="home-snapshot-ttl">📊 Live Player Values</div>
-              <div class="home-snapshot-tabs">
-                <button class="home-snapshot-tab on" data-mode="dynasty" onclick="renderSnapshot('dynasty')">Dynasty</button>
-                <button class="home-snapshot-tab" data-mode="redraft" onclick="renderSnapshot('redraft')">Redraft</button>
+          <!-- Position rankings with toggle -->
+          <div class="home-posrank" id="homePosRank" style="display:none">
+            <div class="home-posrank-hdr">
+              <div class="home-posrank-ttl">📊 Position Rankings</div>
+              <div class="home-posrank-tabs">
+                <button class="home-posrank-tab on" data-pos="RB" onclick="renderPosRank('RB')">RB</button>
+                <button class="home-posrank-tab" data-pos="WR" onclick="renderPosRank('WR')">WR</button>
+                <button class="home-posrank-tab" data-pos="QB" onclick="renderPosRank('QB')">QB</button>
+                <button class="home-posrank-tab" data-pos="TE" onclick="renderPosRank('TE')">TE</button>
               </div>
             </div>
-            <div class="home-snapshot-grid" id="homeSnapshotGrid"></div>
+            <div class="home-posrank-list" id="homePosRankList"></div>
             <div style="text-align:center;margin-top:12px">
-              <span style="font-size:11px;color:var(--text3);cursor:pointer" onclick="switchTab('values')">View full rankings in Player HQ →</span>
+              <span style="font-size:11px;color:var(--text3);cursor:pointer" onclick="switchTab('values')">Full rankings in Player HQ →</span>
             </div>
           </div>
         </div>
@@ -4832,43 +4841,63 @@ function switchTab(name) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// HOMEPAGE — LANDING WIDGETS (ticker + snapshot)
+// HOMEPAGE — LANDING WIDGETS (news ticker + position rankings)
 // ═══════════════════════════════════════════════════════════
 
-// Build a list of trending movers from loaded players.
-// Returns interleaved array of {p, dir} objects (up/down), capped at maxItems.
-function buildTrendingMovers(maxUp, maxDown) {
+// Build news-style blurb items from player trend/value data.
+// Each item has { emoji, text, pos, type } for display in the ticker.
+function buildNewsItems() {
   const players = (S.players || []).filter(p =>
-    ['QB','RB','WR','TE'].includes(p.position) && (p.dynasty_val || 0) > 0 && p.trend
+    ['QB','RB','WR','TE'].includes(p.position) && (p.dynasty_val || 0) > 1500
   );
-  const up   = players.filter(p => p.trend === 'up')
-    .sort((a,b) => (b.dynasty_val||0) - (a.dynasty_val||0)).slice(0, maxUp);
-  const down = players.filter(p => p.trend === 'down')
-    .sort((a,b) => (b.dynasty_val||0) - (a.dynasty_val||0)).slice(0, maxDown);
-  // Interleave 2 up then 1 down for a good mix
-  const mixed = [];
-  let ui = 0, di = 0;
-  while (ui < up.length || di < down.length) {
-    if (ui < up.length)   mixed.push({ p: up[ui++],   dir: 'up'   });
-    if (ui < up.length)   mixed.push({ p: up[ui++],   dir: 'up'   });
-    if (di < down.length) mixed.push({ p: down[di++], dir: 'down' });
+
+  const upTemplates   = ['rising in dynasty value', 'trending up this offseason', 'buy window open', 'climbing the rankings', 'surging in dynasty leagues'];
+  const downTemplates = ['selling opportunity', 'value trending down', 'sell-high candidate', 'sliding in dynasty value'];
+  const youngTemplates= ['emerging dynasty asset', 'must-hold long-term', 'future franchise piece'];
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+  const items = [];
+
+  // Position leaders (always include #1 at each spot)
+  ['QB','RB','WR','TE'].forEach(pos => {
+    const leader = players.filter(p => p.position === pos)
+      .sort((a,b) => (b.dynasty_val||0) - (a.dynasty_val||0))[0];
+    if (leader) items.push({ emoji: '👑', text: `${leader.full_name} — ${pos}1`, pos: leader.position, type: 'leader' });
+  });
+
+  // Trending up — high-value players
+  players.filter(p => p.trend === 'up')
+    .sort((a,b) => (b.dynasty_val||0) - (a.dynasty_val||0))
+    .slice(0, 8)
+    .forEach(p => items.push({ emoji: '🔥', text: `${p.full_name} ${pick(upTemplates)}`, pos: p.position, type: 'up' }));
+
+  // Trending down — high-value players
+  players.filter(p => p.trend === 'down')
+    .sort((a,b) => (b.dynasty_val||0) - (a.dynasty_val||0))
+    .slice(0, 5)
+    .forEach(p => items.push({ emoji: '📉', text: `${p.full_name} ${pick(downTemplates)}`, pos: p.position, type: 'down' }));
+
+  // Young stars (age ≤ 24, high value, not already trending down)
+  players.filter(p => p.age && p.age <= 24 && p.trend !== 'down' && (p.dynasty_val||0) > 3000)
+    .sort((a,b) => (b.dynasty_val||0) - (a.dynasty_val||0))
+    .slice(0, 5)
+    .forEach(p => items.push({ emoji: '⭐', text: `${p.full_name} — ${pick(youngTemplates)}`, pos: p.position, type: 'star' }));
+
+  // Shuffle so it's not always the same order
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
   }
-  return mixed;
+  return items;
 }
 
-// Shared helper: render one ticker item as HTML string.
-function mkTickerItem(p, dir, cssClass) {
-  const nameParts = (p.full_name || '').split(' ');
-  const name = nameParts.length > 1 ? nameParts[0][0] + '. ' + nameParts.slice(1).join(' ') : p.full_name;
-  const icon = dir === 'up' ? '🔥' : '📉';
-  const arrow = dir === 'up'
-    ? `<span style="font-size:9px;font-weight:800">▲</span>`
-    : `<span style="font-size:9px;font-weight:800">▼</span>`;
-  return `<span class="${cssClass} ${dir}" onclick="switchTab('values')">`
-    + `<span>${icon}</span>`
-    + `<span class="pb pb-${p.position}" style="font-size:9px">${p.position}</span>`
-    + `<span>${name}</span>`
-    + arrow
+// Render one news ticker item as HTML.
+function mkNewsItem(item, cssClass) {
+  const posColor = { QB:'#a78bfa', RB:'#34d399', WR:'#60a5fa', TE:'#fb923c' }[item.pos] || 'var(--text3)';
+  return `<span class="${cssClass}" onclick="switchTab('values')" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;flex-shrink:0;white-space:nowrap;transition:color .15s">`
+    + `<span>${item.emoji}</span>`
+    + `<span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;background:${posColor}22;color:${posColor}">${item.pos}</span>`
+    + `<span>${item.text}</span>`
     + `</span><span class="home-ticker-sep">·</span>`;
 }
 
@@ -4877,16 +4906,15 @@ function renderGlobalTicker() {
   const bar   = document.getElementById('globalTickerBar');
   const inner = document.getElementById('globalTickerInner');
   if (!bar || !inner) return;
-  const movers = buildTrendingMovers(12, 6);
-  if (!movers.length) return;
-  const content = movers.map(({p, dir}) => mkTickerItem(p, dir, 'global-ticker-item')).join('');
-  inner.innerHTML = content + content; // doubled for seamless loop
+  const items = buildNewsItems();
+  if (!items.length) return;
+  const content = items.map(item => mkNewsItem(item, 'global-ticker-item')).join('');
+  inner.innerHTML = content + content;
   bar.classList.add('ready');
 }
 
-// Populate the landing-page ticker and player snapshot (logged-out view only).
+// Populate the landing-page news ticker and position rankings (logged-out view only).
 function renderLandingWidgets() {
-  // Only run on the logged-out landing page
   const landing = document.getElementById('homeOptionA');
   if (!landing || landing.style.display === 'none') return;
 
@@ -4895,49 +4923,54 @@ function renderLandingWidgets() {
   );
   if (!hasValues) return;
 
-  // ── Landing ticker: trending movers ──────────────────────
+  // ── News ticker ───────────────────────────────────────────
   const tickerWrap = document.getElementById('homeTickerWrap');
   const tickerEl   = document.getElementById('homeTicker');
   if (tickerWrap && tickerEl) {
-    const movers = buildTrendingMovers(12, 6);
-    if (movers.length) {
-      const content = movers.map(({p, dir}) => mkTickerItem(p, dir, 'home-ticker-item')).join('');
+    const items = buildNewsItems();
+    if (items.length) {
+      const content = items.map(item => mkNewsItem(item, 'home-ticker-item')).join('');
       tickerEl.innerHTML = content + content;
       tickerWrap.style.display = '';
     }
   }
 
-  // ── Snapshot ─────────────────────────────────────────────
-  const snapEl = document.getElementById('homeSnapshot');
-  if (snapEl) snapEl.style.display = '';
-  renderSnapshot('dynasty');
+  // ── Position rankings ─────────────────────────────────────
+  const rankEl = document.getElementById('homePosRank');
+  if (rankEl) rankEl.style.display = '';
+  renderPosRank('RB');
 }
 
-// Render the top-10 player snapshot grid on the landing page.
-// Called by renderLandingWidgets() and directly by the Dynasty/Redraft toggle buttons.
-function renderSnapshot(mode) {
-  const players = (S.players || []).filter(p => ['QB','RB','WR','TE'].includes(p.position));
-  const sorted  = players
-    .map(p => ({ p, v: mode === 'dynasty' ? (p.dynasty_val || 0) : (p.redraft_val || 0) }))
-    .filter(({v}) => v > 0)
-    .sort((a,b) => b.v - a.v)
+// Render the position rankings grid on the landing page.
+// Called by renderLandingWidgets() and directly by the RB/WR/QB/TE toggle buttons.
+function renderPosRank(pos) {
+  document.querySelectorAll('.home-posrank-tab').forEach(t =>
+    t.classList.toggle('on', t.dataset.pos === pos));
+
+  const list = document.getElementById('homePosRankList');
+  if (!list) return;
+
+  const ranked = (S.players || [])
+    .filter(p => p.position === pos && (p.dynasty_val || 0) > 0)
+    .sort((a,b) => (b.dynasty_val||0) - (a.dynasty_val||0))
     .slice(0, 10);
 
-  // Sync tab highlight
-  document.querySelectorAll('.home-snapshot-tab').forEach(t =>
-    t.classList.toggle('on', t.dataset.mode === mode));
-
-  const grid = document.getElementById('homeSnapshotGrid');
-  if (!grid) return;
-
-  const fmtVal2 = n => n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/,'')+'k' : String(n);
-  grid.innerHTML = sorted.map(({p, v}, i) => `
-    <div class="home-snapshot-row" onclick="switchTab('values')">
-      <span class="home-snapshot-rank">${i + 1}</span>
-      <span class="pb pb-${p.position}" style="font-size:9px">${p.position}</span>
-      <div class="home-snapshot-name">${p.full_name}</div>
-      <div class="home-snapshot-val">${fmtVal2(v)}</div>
-    </div>`).join('');
+  list.innerHTML = ranked.map((p, i) => {
+    const rank  = i + 1;
+    const numCls = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
+    const arrow = p.trend === 'up'
+      ? `<span class="home-posrank-arrow up">▲</span>`
+      : p.trend === 'down'
+      ? `<span class="home-posrank-arrow down">▼</span>`
+      : '';
+    const team = p.team && p.team !== 'FA' ? `<span class="home-posrank-team">${p.team}</span>` : '';
+    return `<div class="home-posrank-row" onclick="switchTab('values')">
+      <span class="home-posrank-num ${numCls}">${rank}</span>
+      <div class="home-posrank-name">${p.full_name}</div>
+      ${team}
+      ${arrow}
+    </div>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════════════════════
