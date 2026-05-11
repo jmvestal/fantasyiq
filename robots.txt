@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://jmvestal.github.io/fantasyiq/sitemap.xml
+Sitemap: https://www.myfantasyhq.com/sitemap.xml
