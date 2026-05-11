@@ -7537,7 +7537,6 @@ async function importSleeperLeague(leagueId) {
   ]);
   if (!leagueInfo?.league_id) throw new Error('Could not load league data from Sleeper');
   console.log('[FantasyIQ] Sleeper roster_positions:', leagueInfo.roster_positions);
-  console.log('[FantasyIQ] My starters:', userRoster?.starters, '| reserve:', userRoster?.reserve, '| taxi:', userRoster?.taxi);
 
   // Build user lookup map: user_id → display_name
   const userMap = {};
@@ -7546,6 +7545,7 @@ async function importSleeperLeague(leagueId) {
   // Find current user's roster
   const uid = S._sleeperUser?.user_id;
   let userRoster = rosters.find(r => r.owner_id === uid);
+  console.log('[FantasyIQ] My starters:', userRoster?.starters, '| reserve:', userRoster?.reserve, '| taxi:', userRoster?.taxi);
   if (!userRoster && rosters?.length === 1) userRoster = rosters[0];
   if (!userRoster) throw new Error(`Could not find your roster. Try re-entering your Sleeper username.`);
 
