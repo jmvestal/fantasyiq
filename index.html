@@ -4208,9 +4208,10 @@ function renderValuesTable() {
   const q = document.getElementById('tblSearch').value.toLowerCase();
   const { col, dir } = S.tableSort;
 
-  // Non-signed-in users: lock Player HQ to default 12T/1QB/PPR settings.
+  // Non-signed-in users: lock Player HQ to default 12T/SF/PPR settings.
   // Mode (dynasty/redraft) stays free. Only size/qb/scoring/te are gated.
-  const isPremium = S.isPremium;
+  const isLoggedIn = !!S.auth;
+  const isPremium  = S.isPremium;
   const vtSettings = isPremium ? S.settings : {
     ...S.settings, size: 12, qb: 'sf', scoring: 'ppr', te: 'off'
   };
