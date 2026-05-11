@@ -5629,8 +5629,40 @@ async function fetchKTCValues() {
   }
 
   if (!data?.length) {
-    S.sourceStatus['ktc'] = 'err';
-    console.warn('KTC fetch failed — CORS blocked. Use CSV import instead.');
+    // API blocked — try local CSV fallback (rankings/ktc-1qb.csv)
+    console.warn('KTC API blocked — trying local CSV fallback…');
+    try {
+      const qb = S.settings?.qb || '1qb';
+      const csvFile = (qb === 'sf' || qb === '2qb') ? 'rankings/ktc-sf.csv' : 'rankings/ktc-1qb.csv';
+      const csvRes  = await fetch(csvFile, { cache: 'default' });
+      if (!csvRes.ok) throw new Error('CSV not found');
+      const text  = await csvRes.text();
+      const lines = text.trim().split('\n').slice(1); // skip header
+      const ktcSource = {};
+      lines.forEach(line => {
+        const cols = line.split(',');
+        const rank = parseInt(cols[0]);
+        const name = (cols[3] || '').trim().replace(/^"|"$/g,'');
+        if (!rank || !name) return;
+        // Rank→value curve: top player ≈9998, falls exponentially
+        const dv = Math.round(Math.min(9998, Math.max(100, 10200 * Math.exp(-0.015 * (rank - 1)))));
+        ktcSource[normName(name)] = { dv, rv: 0, trend: 'flat' };
+      });
+      if (Object.keys(ktcSource).length > 10) {
+        S.sourceValues['ktc'] = ktcSource;
+        S.sourceStatus['ktc'] = 'ok';
+        S.sourceMeta['ktc'] = { count: Object.keys(ktcSource).length, loaded: Date.now(), file: csvFile + ' (offline)' };
+        localStorage.setItem(KTC_CACHE_KEY, JSON.stringify(ktcSource));
+        localStorage.setItem(KTC_TS_KEY, String(Date.now() - KTC_TTL + 60*60*1000)); // expire in 1hr so it retries API next load
+        console.log(`KTC CSV fallback: loaded ${Object.keys(ktcSource).length} players`);
+        rebuildPlayerValues();
+      } else {
+        S.sourceStatus['ktc'] = 'err';
+      }
+    } catch(e) {
+      console.warn('KTC fetch failed — CORS blocked. Use CSV import instead.');
+      S.sourceStatus['ktc'] = 'err';
+    }
     return;
   }
 
