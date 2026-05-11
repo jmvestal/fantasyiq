@@ -3316,19 +3316,32 @@ function calcValue(p, _over) {
 
   // ── QB FORMAT ──
   // dynasty_val stored as 1QB baseline = KTC SF ÷ 1.38  →  SF dynasty: × 1.38 restores KTC SF value
-  // redraft_val stored as 1QB PPR baseline                →  SF redraft: × 1.62 (higher scarcity)
-  // 2QB: most valuable QB format — 24 starters needed in 12-team
-  // SF:  very valuable — QBs as flex starters
-  // 1QB: baseline — only top 12–14 QBs matter
+  // redraft_val stored as 1QB PPR baseline
+  //
+  // REDRAFT SF/2QB: rv is calibrated for 1QB PPR and CANNOT be linearly scaled to multi-QB formats.
+  // In 1QB, Mahomes rv=1910 (ranked ~20th overall). In 2QB 16-team, he's a round-2 pick.
+  // Solution: derive from dynasty_val (already SF-calibrated) × a redraft discount factor.
+  //   • 2QB redraft: dv × 1.38 × 0.88  (strongest scarcity: all 32 starters needed in 16-team)
+  //   • SF  redraft: dv × 1.38 × 0.80  (flex slot: less scarcity than 2QB)
+  // Dynasty multipliers are unchanged (dv is already the correct baseline).
   if (pos === 'QB') {
     if (qb === '2qb') {
-      v = Math.round(v * 1.55);
+      if (mode === 'redraft') {
+        // Replace 1QB rv with SF-calibrated dynasty base × redraft factor
+        v = Math.round((p.dynasty_val || 500) * 1.38 * 0.88);
+      } else {
+        v = Math.round(v * 1.55); // 2QB dynasty: baseline multiplier
+      }
     } else if (qb === 'sf') {
-      // Dynasty: 1.38 restores the KTC SF value stored as SF÷1.38 in VALUE_DB
-      // Redraft: 1.62 reflects stronger QB scarcity in SF redraft vs dynasty
-      v = Math.round(v * (mode === 'redraft' ? 1.62 : 1.38));
+      if (mode === 'redraft') {
+        // SF redraft: same dynasty-derived approach, slightly smaller than 2QB
+        v = Math.round((p.dynasty_val || 500) * 1.38 * 0.80);
+      } else {
+        // SF dynasty: × 1.38 restores KTC SF value from the SF÷1.38 dv baseline
+        v = Math.round(v * 1.38);
+      }
     }
-    // 1QB: no change
+    // 1QB: no change — rv is calibrated correctly for 1QB PPR
   }
 
   // ── TE PREMIUM ──
