@@ -3314,34 +3314,44 @@ function calcValue(p, _over) {
     if (pos === 'K')       v = Math.min(v, 1600);
   }
 
-  // ── QB FORMAT ──
-  // dynasty_val stored as 1QB baseline = KTC SF ÷ 1.38  →  SF dynasty: × 1.38 restores KTC SF value
-  // redraft_val stored as 1QB PPR baseline
+  // ══════════════════════════════════════════════════════════════
+  // RANKING RULES — QB FORMAT
   //
-  // REDRAFT SF/2QB: rv is calibrated for 1QB PPR and CANNOT be linearly scaled to multi-QB formats.
-  // In 1QB, Mahomes rv=1910 (ranked ~20th overall). In 2QB 16-team, he's a round-2 pick.
-  // Solution: derive from dynasty_val (already SF-calibrated) × a redraft discount factor.
-  //   • 2QB redraft: dv × 1.38 × 0.88  (strongest scarcity: all 32 starters needed in 16-team)
-  //   • SF  redraft: dv × 1.38 × 0.80  (flex slot: less scarcity than 2QB)
-  // Dynasty multipliers are unchanged (dv is already the correct baseline).
+  // RULE 1 — QB ORDERING CONSISTENCY:
+  //   The same QB who is QB1 in 1QB must be QB1 in SF and 2QB.
+  //   QB2 in 1QB must be QB2 in SF and 2QB. Etc.
+  //   To enforce this: ALL QB formats use dynasty_val (dv) as the ordering
+  //   source. dv is calibrated to KTC SF consensus — the most widely-agreed
+  //   QB hierarchy. Only the scale factor changes per format.
+  //
+  // RULE 2 — LEAGUE SIZE → QB SCARCITY (encoded in szMod below):
+  //   Larger leagues = more QB starting slots needed = higher scarcity.
+  //   8-team 2QB: 16 QB slots. 16-team 2QB: 32 QB slots — all NFL starters.
+  //   The top QBs become dramatically more valuable as league size grows.
+  //
+  // Scale factors (applied to dv, which is the SF÷1.38 baseline):
+  //   1QB redraft : dv × 0.58   (QBs are depth picks; only top 12–14 matter)
+  //   SF  redraft : dv × 1.38 × 0.80  (1 flex QB per team; current-season focus)
+  //   2QB redraft : dv × 1.38 × 0.88  (all starters needed; strongest scarcity)
+  //   1QB dynasty : dv × 1.00   (baseline — dv IS the 1QB dynasty value)
+  //   SF  dynasty : dv × 1.38   (restores the original KTC SF value)
+  //   2QB dynasty : dv × 1.55   (most valuable QB format in dynasty)
+  // ══════════════════════════════════════════════════════════════
   if (pos === 'QB') {
+    const dv = p.dynasty_val || 500;
     if (qb === '2qb') {
-      if (mode === 'redraft') {
-        // Replace 1QB rv with SF-calibrated dynasty base × redraft factor
-        v = Math.round((p.dynasty_val || 500) * 1.38 * 0.88);
-      } else {
-        v = Math.round(v * 1.55); // 2QB dynasty: baseline multiplier
-      }
+      v = mode === 'redraft'
+        ? Math.round(dv * 1.38 * 0.88)   // all 32 starters needed in 16-team
+        : Math.round(dv * 1.55);          // 2QB dynasty
     } else if (qb === 'sf') {
-      if (mode === 'redraft') {
-        // SF redraft: same dynasty-derived approach, slightly smaller than 2QB
-        v = Math.round((p.dynasty_val || 500) * 1.38 * 0.80);
-      } else {
-        // SF dynasty: × 1.38 restores KTC SF value from the SF÷1.38 dv baseline
-        v = Math.round(v * 1.38);
-      }
+      v = mode === 'redraft'
+        ? Math.round(dv * 1.38 * 0.80)   // SF flex slot, current-season focus
+        : Math.round(dv * 1.38);          // SF dynasty: restores KTC SF value
+    } else {
+      // 1QB: use dv × 0.58 to maintain ordering consistency with SF/2QB
+      // (same QB hierarchy, just scaled down since only 12–14 QBs matter)
+      v = Math.round(dv * 0.58);
     }
-    // 1QB: no change — rv is calibrated correctly for 1QB PPR
   }
 
   // ── TE PREMIUM ──
@@ -3378,24 +3388,43 @@ function calcValue(p, _over) {
     }
   }
 
-  // ── LEAGUE SIZE ──
-  // QB scarcity depends on both league size AND format.
-  // 2QB: you need 2x QBs regardless — even a small 2QB league is starved for QBs.
-  // SF:  one flex QB slot per team — size still matters but less than 1QB.
-  // 1QB: standard scarcity — only top N QBs matter, so small leagues have surplus.
+  // ══════════════════════════════════════════════════════════════
+  // RANKING RULES — LEAGUE SIZE MODIFIERS
+  //
+  // RULE 2 — LEAGUE SIZE → QB SCARCITY:
+  //   Larger leagues = more starting QB slots = higher QB value, especially
+  //   for top QBs. 8-team 2QB has 16 QB slots (top 16 QBs needed).
+  //   16-team 2QB has 32 QB slots — every NFL starter is valuable.
+  //   The tables below encode this proportionally per format.
+  //
+  // RULE 3 — TE PREMIUM IN LARGE LEAGUES:
+  //   Only 3–5 truly elite TEs exist. In 14–16 team leagues the top TEs
+  //   become enormous assets. TEs get their own size table (not the generic
+  //   skill-player one) so elite TEs are boosted, not penalized, in big leagues.
+  // ══════════════════════════════════════════════════════════════
   let szMod;
   if (pos === 'QB') {
     if (qb === '2qb') {
-      // 2QB needs 2× starting QBs — size has modest effect on top of the 1.55× format boost
-      szMod = { 8: 1.00, 10: 1.04, 12: 1.08, 14: 1.13, 16: 1.20 }[size] || 1.0;
+      // 2QB: 8-team needs 16 QB slots, 16-team needs 32 — massive scarcity jump
+      szMod = { 8: 0.88, 10: 0.94, 12: 1.00, 14: 1.10, 16: 1.22 }[size] || 1.0;
     } else if (qb === 'sf') {
-      // SF: one flex slot — small leagues still value QBs highly
-      szMod = { 8: 0.96, 10: 1.00, 12: 1.04, 14: 1.09, 16: 1.15 }[size] || 1.0;
+      // SF: 1 flex QB per team — size matters but less than 2QB
+      szMod = { 8: 0.85, 10: 0.92, 12: 1.00, 14: 1.10, 16: 1.20 }[size] || 1.0;
     } else {
-      // 1QB: surplus in small leagues, scarcity in large
-      szMod = { 8: 0.84, 10: 0.92, 12: 1.00, 14: 1.08, 16: 1.18 }[size] || 1.0;
+      // 1QB: small leagues have surplus, large leagues have real scarcity
+      szMod = { 8: 0.78, 10: 0.88, 12: 1.00, 14: 1.12, 16: 1.26 }[size] || 1.0;
     }
+  } else if (pos === 'TE') {
+    // TEs have unique size dynamics: elite TEs (only ~4 exist) become
+    // game-breaking assets in large leagues — the OPPOSITE of WR/RB elite players.
+    // Non-elite TEs also scale up since every team needs a TE starter.
+    const isEliteTE = v > 4000;
+    szMod = isEliteTE
+      ? { 8: 0.85, 10: 0.92, 12: 1.00, 14: 1.12, 16: 1.25 }[size] || 1.0  // elite TE: strong large-league premium
+      : { 8: 0.90, 10: 0.95, 12: 1.00, 14: 1.08, 16: 1.16 }[size] || 1.0; // non-elite TE: moderate bump
   } else {
+    // WR / RB / other: elite players slightly spread thin in large leagues;
+    // mid-tier players more in demand as rosters deepen
     const isElite = v > 5500;
     szMod = ({ 8: isElite ? 1.12 : 0.86, 10: isElite ? 1.06 : 0.93,
       12: 1.00, 14: isElite ? 0.96 : 1.04, 16: isElite ? 0.91 : 1.10 })[size] || 1.0;
