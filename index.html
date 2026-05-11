@@ -4850,12 +4850,13 @@ function requirePro(tabName) {
 }
 
 async function checkPremiumStatus(user) {
-  if (!user || !fbDb) { S.isPremium = false; document.body.classList.remove('premium'); return; }
-  try {
-    const doc = await fbDb.collection('users').doc(user.uid).get();
-    S.isPremium = doc.exists && doc.data()?.plan === 'pro';
-  } catch(e) { S.isPremium = false; }
-  document.body.classList.toggle('premium', S.isPremium);
+  if (!user) { S.isPremium = false; document.body.classList.remove('premium'); return; }
+  // ── All logged-in users get full access while payments aren't live ──
+  // TODO: restore Firestore plan check when Stripe is wired up:
+  //   const doc = await fbDb.collection('users').doc(user.uid).get();
+  //   S.isPremium = doc.exists && doc.data()?.plan === 'pro';
+  S.isPremium = true;
+  document.body.classList.add('premium');
 }
 
 function switchTab(name) {
@@ -7215,7 +7216,7 @@ function handleAuthStateChange(user) {
     btn.style.display  = 'none';
     pill.style.display = 'flex';
     document.body.classList.add('logged-in');
-    const first = user.displayName?.split(' ')[0] || 'User';
+    const first = user.displayName?.split(' ')[0] || user.email?.split('@')[0] || 'User';
     nm.textContent   = first;
     init.textContent = first[0].toUpperCase();
     if (user.photoURL) {
