@@ -1,7 +1,7 @@
 {
   "name": "Fantasy HQ — NFL Fantasy Analyzer",
   "short_name": "Fantasy HQ",
-  "description": "Free NFL fantasy tools: Trade IQ, Player IQ, Waiver IQ, Team IQ, League IQ, and Draft IQ.",
+  "description": "Free NFL fantasy tools: Trade HQ, Player HQ, Waiver HQ, Team HQ, League HQ, and Draft HQ.",
   "start_url": "/fantasyiq/",
   "scope": "/fantasyiq/",
   "display": "standalone",
