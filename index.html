@@ -6977,12 +6977,9 @@ const FALLBACK_PLAYERS = [
   {id:'fb-126',full_name:'Kyle Pitts',            position:'TE', team:'ATL', age:25, dynasty_val:5900, redraft_val:1682, trend:'up'},
   {id:'fb-124',full_name:'Sam LaPorta',           position:'TE', team:'DET', age:25, dynasty_val:5600, redraft_val:2565, trend:'up'},
   {id:'fb-129',full_name:'Oronde Gadsden II',     position:'TE', team:'LAC', age:24, dynasty_val:5400, redraft_val:314,  trend:'up'},
-  {id:'fb-te2', full_name:'Kenyon Sadiq',         position:'TE', team:'NYJ', age:21, dynasty_val:5100, redraft_val:133,  trend:'up'},
   {id:'fb-132',full_name:'Jake Ferguson',         position:'TE', team:'DAL', age:25, dynasty_val:4400, redraft_val:646,  trend:'flat'},
   {id:'fb-130',full_name:'Theo Johnson',          position:'TE', team:'NYG', age:24, dynasty_val:4200, redraft_val:500,  trend:'up'},
   {id:'fb-131',full_name:'Isaiah Likely',         position:'TE', team:'BAL', age:26, dynasty_val:4000, redraft_val:500,  trend:'up'},
-  {id:'fb-te3', full_name:'Max Klare',            position:'TE', team:'LAR', age:22, dynasty_val:4500, redraft_val:500,  trend:'up'},
-  {id:'fb-te4', full_name:'Eli Raridon',          position:'TE', team:'NE',  age:22, dynasty_val:3800, redraft_val:500,  trend:'up'},
   {id:'fb-128',full_name:'Mason Taylor',          position:'TE', team:'NYJ', age:23, dynasty_val:2800, redraft_val:500,  trend:'up'},
   {id:'fb-133',full_name:'George Kittle',         position:'TE', team:'SF',  age:32, dynasty_val:3000, redraft_val:1853, trend:'down'},
   {id:'fb-134',full_name:'Dalton Kincaid',        position:'TE', team:'BUF', age:26, dynasty_val:2900, redraft_val:751,  trend:'flat'},
@@ -7031,9 +7028,17 @@ async function init() {
   // Use the hardcoded VALUE_DB player list so the page shows content immediately.
   // External sources load in the background and update values progressively.
   const FA_BOOT = new Set(['FA','Free Agent','','N/A']);
+  const _seenBoot = new Set();
   S.players = [...FALLBACK_PLAYERS, ...ROOKIES_2026, ...PICKS]
-    .filter(p => !RETIRED_PLAYERS.has(p.full_name) &&
-      (p.position === 'PICK' || (p.team && !FA_BOOT.has(p.team))));
+    .filter(p => {
+      if (p.position !== 'PICK') {
+        const key = normName(p.full_name || '');
+        if (_seenBoot.has(key)) return false;
+        _seenBoot.add(key);
+      }
+      return !RETIRED_PLAYERS.has(p.full_name) &&
+        (p.position === 'PICK' || (p.team && !FA_BOOT.has(p.team)));
+    });
   S.ready = true;
   renderHome();
   handleBookmarkletImport();
@@ -7071,11 +7076,17 @@ async function init() {
   const FA_VALS = new Set(['FA','Free Agent','','N/A']);
   const sleeperNorms = new Set(sleeperPlayers.map(p => normName(p.full_name || '')));
   const freshRookies = ROOKIES_2026.filter(p => !sleeperNorms.has(normName(p.full_name || '')));
+  const _seen = new Set();
   S.players = [...sleeperPlayers, ...freshRookies, ...PICKS]
-    .filter(p =>
-      !RETIRED_PLAYERS.has(p.full_name) &&
-      (p.position === 'PICK' || (p.team && !FA_VALS.has(p.team)))
-    );
+    .filter(p => {
+      if (p.position !== 'PICK') {
+        const key = normName(p.full_name || '');
+        if (_seen.has(key)) return false;
+        _seen.add(key);
+      }
+      return !RETIRED_PLAYERS.has(p.full_name) &&
+        (p.position === 'PICK' || (p.team && !FA_VALS.has(p.team)));
+    });
 
   FALLBACK_PLAYERS.forEach(p=>{ p.rookie = false; });
 
