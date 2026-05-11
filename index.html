@@ -3357,34 +3357,51 @@ function calcValue(p, _over) {
   // ── TE PREMIUM ──
   if (pos === 'TE' && te === 'on') v = Math.round(v * 1.28);
 
-  // ── SCORING ──
-  // dynasty_val baseline = KTC Half PPR  →  adjustments relative to Half PPR
-  // redraft_val baseline = Full PPR      →  adjustments relative to Full PPR
+  // ══════════════════════════════════════════════════════════════
+  // RANKING RULE 4 — SCORING FORMAT: RBs vs WRs
+  //
+  // Non-PPR (STD) leagues: RBs become the most valuable players by a large
+  // margin. Rushing TDs and yards matter far more than receptions. There are
+  // also very few truly elite workload RBs, making them scarce. WRs drop
+  // significantly because route runners without PPR carry much less value.
+  //
+  // PPR leagues: WRs score meaningfully more points per game from receptions.
+  // However, elite RBs are still highly valuable because they're genuinely rare
+  // — there are far more quality WR options than quality RB options.
+  //
+  // Half-PPR: the middle ground. RBs still get a meaningful boost over PPR.
+  // WRs take a noticeable step back but aren't as hurt as in STD.
+  //
+  // Baselines: dynasty_val = Half PPR  |  redraft_val = Full PPR
+  // ══════════════════════════════════════════════════════════════
   if (mode === 'dynasty') {
-    // Base = Half PPR; apply delta vs. half PPR
+    // Base = Half PPR; deltas are relative to Half PPR
     if (pos === 'RB') {
-      if (scoring === 'ppr')  v = Math.round(v * 0.97);  // PPR marginal vs Half: pure rushers dip slightly
-      if (scoring === 'std')  v = Math.round(v * 1.07);  // STD hugely benefits workhorse RBs
-      // half: baseline, no change
+      if (scoring === 'ppr')  v = Math.round(v * 0.94);  // PPR: pass-catchers compete more with RBs
+      if (scoring === 'std')  v = Math.round(v * 1.15);  // STD: workhorse RBs dominate dynasty
+      // half: baseline
     } else if (pos === 'WR') {
-      if (scoring === 'ppr')  v = Math.round(v * 1.07);  // Full PPR boosts WRs meaningfully
-      if (scoring === 'std')  v = Math.round(v * 0.91);  // STD hurts route runners
+      if (scoring === 'ppr')  v = Math.round(v * 1.12);  // PPR: every route runner gets a bonus
+      if (scoring === 'std')  v = Math.round(v * 0.85);  // STD: route runners without rush floor drop hard
     } else if (pos === 'TE') {
-      if (scoring === 'ppr')  v = Math.round(v * 1.06);  // TEs benefit from full PPR
-      if (scoring === 'std')  v = Math.round(v * 0.92);
+      if (scoring === 'ppr')  v = Math.round(v * 1.10);  // PPR: pass-catching TEs benefit significantly
+      if (scoring === 'std')  v = Math.round(v * 0.88);  // STD: TEs with no rush game fall
     }
   } else {
-    // Redraft — base = Full PPR; adjustments relative to PPR
+    // Redraft — base = Full PPR; deltas are relative to Full PPR
     if (pos === 'RB') {
-      if (scoring === 'half') v = Math.round(v * 1.03);  // Half PPR slightly helps pure rushers vs PPR
-      if (scoring === 'std')  v = Math.round(v * 1.08);  // STD: best for bell-cow backs
-      // ppr: baseline, no change
+      // Even in PPR, elite RBs stay valuable (Bijan/Gibbs-tier) — scarcity is real.
+      // In STD/half, the top RBs become must-have assets: rushing stats dominate scoring.
+      if (scoring === 'half') v = Math.round(v * 1.10);  // Half: RBs meaningfully more valuable
+      if (scoring === 'std')  v = Math.round(v * 1.22);  // STD: bell-cow RBs are the most valuable players
+      // ppr: baseline
     } else if (pos === 'WR') {
-      if (scoring === 'half') v = Math.round(v * 0.95);  // Half PPR: fewer WR targets matter less
-      if (scoring === 'std')  v = Math.round(v * 0.88);  // STD: WRs hurt most
+      // PPR rewards route runners heavily. STD punishes WRs who depend on catch bonuses.
+      if (scoring === 'half') v = Math.round(v * 0.92);  // Half: noticeable step back for WRs
+      if (scoring === 'std')  v = Math.round(v * 0.80);  // STD: WRs fall significantly without PPR bonus
     } else if (pos === 'TE') {
-      if (scoring === 'half') v = Math.round(v * 0.94);
-      if (scoring === 'std')  v = Math.round(v * 0.88);
+      if (scoring === 'half') v = Math.round(v * 0.93);  // Half: pass-catching TEs slightly hurt
+      if (scoring === 'std')  v = Math.round(v * 0.85);  // STD: receiving TEs take a real hit
     }
   }
 
