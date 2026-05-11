@@ -6801,7 +6801,7 @@ async function fetchPlayers() {
   } catch(e) {}
 
   try {
-    const res = await fetch('https://api.sleeper.app/v1/players/nfl', { signal: AbortSignal.timeout(12000) });
+    const res = await fetch('https://api.sleeper.app/v1/players/nfl', { signal: AbortSignal.timeout(25000) });
     if (!res.ok) throw new Error('Sleeper fetch failed');
     const data = await res.json();
 
@@ -7063,23 +7063,20 @@ async function init() {
   document.getElementById('pcBadge').innerHTML =
     `${S.players.length.toLocaleString()} players <span class="spin" style="display:inline-block;width:10px;height:10px;border-width:2px;vertical-align:middle;margin-left:3px"></span>`;
 
-  // ── 3. BACKGROUND FETCH — all sources + Sleeper in parallel ──────
-  // Rankings sources already call rebuildPlayerValues() when each one loads,
-  // so values update progressively as data arrives — no extra wiring needed.
-  const [, sleeperResult] = await Promise.allSettled([
-    Promise.allSettled([
-      fetchFantasyCalcValues(),
-      fetchKTCValues(),
-      fetchFFCValues(),
-      fetchDynastyProcessValues(),
-      fetchDLFValues(),
-      fetchCustomRankings(),
-    ]),
-    fetchPlayers(),
-  ]);
+  // ── 3. BACKGROUND FETCH ───────────────────────────────────────────
+  // Fire ranking sources without awaiting — each one calls rebuildPlayerValues()
+  // on its own when it finishes, so rankings update progressively in the background.
+  fetchFantasyCalcValues();
+  fetchKTCValues();
+  fetchFFCValues();
+  fetchDynastyProcessValues();
+  fetchDLFValues();
+  fetchCustomRankings();
+
+  // Await Sleeper separately with full bandwidth — it's a 3MB payload and needs priority
+  const sleeperPlayers = await fetchPlayers().catch(() => FALLBACK_PLAYERS);
 
   // ── 4. MERGE SLEEPER + FINAL RENDER ──────────────────────────────
-  const sleeperPlayers = sleeperResult.status === 'fulfilled' ? sleeperResult.value : FALLBACK_PLAYERS;
   const FA_VALS = new Set(['FA','Free Agent','','N/A']);
   const sleeperNorms = new Set(sleeperPlayers.map(p => normName(p.full_name || '')));
   const freshRookies = ROOKIES_2026.filter(p => !sleeperNorms.has(normName(p.full_name || '')));
