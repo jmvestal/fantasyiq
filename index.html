@@ -1961,7 +1961,7 @@
       </div>
       <span class="mob-tab-label">Team IQ</span>
     </button>
-    <button class="mob-tab" data-tab="_settings" onclick="openMobSettings()">
+    <button class="mob-tab" data-mob-settings onclick="openMobSettings()">
       <div class="mob-tab-icon-wrap">
         <svg class="mob-tab-icon" viewBox="0 0 16 16"><path d="M2 5h12M2 11h12" stroke-linecap="round"/><circle cx="6" cy="5" r="2" stroke-width="1.6"/><circle cx="10" cy="11" r="2" stroke-width="1.6"/></svg>
       </div>
@@ -1975,7 +1975,7 @@
   <div class="mob-settings-backdrop"></div>
   <div class="mob-settings-panel">
     <div class="mob-settings-handle"></div>
-    <div class="mob-settings-ttl">League Settings</div>
+    <div class="mob-settings-ttl">Settings</div>
     <div class="mob-settings-grid">
       <!-- Active league switcher — shown only when 2+ leagues connected -->
       <div class="mob-s-section" id="mobLgSection" style="grid-column:1/-1;display:none">
@@ -1989,7 +1989,7 @@
           <button class="mob-tog" data-s="mode" data-v="redraft" onclick="setSetting('mode','redraft');syncMobToggles()">Redraft</button>
         </div>
       </div>
-      <div class="mob-s-section">
+      <div class="mob-s-section" id="mob-s-qb">
         <div class="mob-s-label">QB Format</div>
         <div class="mob-tog-row">
           <button class="mob-tog on" data-s="qb" data-v="1qb" onclick="setSetting('qb','1qb');syncMobToggles()">1-QB</button>
@@ -1997,7 +1997,7 @@
           <button class="mob-tog" data-s="qb" data-v="2qb" onclick="setSetting('qb','2qb');syncMobToggles()">2QB</button>
         </div>
       </div>
-      <div class="mob-s-section">
+      <div class="mob-s-section" id="mob-s-size">
         <div class="mob-s-label">League Size</div>
         <div class="mob-tog-row">
           <button class="mob-tog" data-s="size" data-v="8" onclick="setSetting('size',8);syncMobToggles()">8</button>
@@ -2007,7 +2007,7 @@
           <button class="mob-tog" data-s="size" data-v="16" onclick="setSetting('size',16);syncMobToggles()">16</button>
         </div>
       </div>
-      <div class="mob-s-section">
+      <div class="mob-s-section" id="mob-s-scoring">
         <div class="mob-s-label">Scoring</div>
         <div class="mob-tog-row">
           <button class="mob-tog on" data-s="scoring" data-v="ppr" onclick="setSetting('scoring','ppr');syncMobToggles()">PPR</button>
@@ -2015,13 +2015,17 @@
           <button class="mob-tog" data-s="scoring" data-v="std" onclick="setSetting('scoring','std');syncMobToggles()">Std</button>
         </div>
       </div>
-      <div class="mob-s-section">
+      <div class="mob-s-section" id="mob-s-te">
         <div class="mob-s-label">TE Premium</div>
         <div class="mob-tog-row">
           <button class="mob-tog on" data-s="te" data-v="off" onclick="setSetting('te','off');syncMobToggles()">Off</button>
           <button class="mob-tog" data-s="te" data-v="on" onclick="setSetting('te','on');syncMobToggles()">On</button>
         </div>
       </div>
+    </div>
+    <!-- Sign-in lock note — shown on Player IQ tab when not logged in -->
+    <div id="mobSettingsLockNote" style="display:none;font-size:11px;color:var(--text3);text-align:center;margin-top:10px;padding:8px 12px;background:var(--bg3);border-radius:8px;border:1px solid var(--border)">
+      🔒 Sign in to customize league size, QB format &amp; scoring for Player IQ
     </div>
     <div style="display:flex;gap:8px;margin-top:14px">
       <button class="btn btn-s" style="width:100%" onclick="closeMobSettings()">Done</button>
@@ -4528,7 +4532,7 @@ function setSetting(key, val) {
     updateWizRec();
   }
 
-  localStorage.setItem('tradeiq_settings', JSON.stringify(S.settings));
+  localStorage.setItem('fantasyiq_settings', JSON.stringify(S.settings));
 }
 
 function updateModeChip() {
@@ -4582,12 +4586,28 @@ function switchTab(name) {
   document.getElementById('tab-'+name)?.classList.add('active');
   document.querySelector(`.nav-btn[data-tab="${name}"]`)?.classList.add('active');
   document.querySelector(`.mob-tab[data-tab="${name}"]`)?.classList.add('active');
+
+  // Dynamic page title for UX + SEO
+  const TAB_TITLES = {
+    home: 'Fantasy IQ — NFL Fantasy Analyzer',
+    analyzer: 'Trade IQ — Fantasy Trade Analyzer',
+    values: 'Player IQ — Dynasty & Redraft Rankings',
+    wire: 'Waiver IQ — Weekly Waiver Targets',
+    buysell: 'Value IQ — Buy Low Sell High',
+    roster: 'Team IQ — Roster Analysis',
+    league: 'League IQ — League Analyzer',
+    draft: 'Draft IQ — Draft Assistant',
+  };
+  document.title = TAB_TITLES[name] || 'Fantasy IQ — NFL Fantasy Analyzer';
+
   if (name === 'home') { renderHome(); }
   else { document.body.classList.remove('landing-mode'); }
-  if (name === 'league') renderLeagueAnalyzer();
-  if (name === 'draft') initDraftTab();
-  if (name === 'wire') renderWireTab();
+  if (name === 'league')  renderLeagueAnalyzer();
+  if (name === 'draft')   initDraftTab();
+  if (name === 'wire')    renderWireTab();
   if (name === 'buysell') renderBuySellTab();
+  if (name === 'values')  renderValuesTable();
+  if (name === 'roster')  renderRosterList();
   window.scrollTo(0,0);
 }
 
@@ -4850,6 +4870,17 @@ function renderHome() {
 }
 
 function openMobSettings() {
+  // If non-signed-in user opens settings while on Player IQ, show a note
+  // that custom settings require sign-in (matches desktop behavior)
+  const onPlayerIQ = document.getElementById('tab-values')?.classList.contains('active');
+  const locked = !S.auth && onPlayerIQ;
+  // Gray out / disable size, qb, scoring, te sections when locked
+  ['mob-s-qb','mob-s-size','mob-s-scoring','mob-s-te'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.opacity = locked ? '0.45' : '1'; el.style.pointerEvents = locked ? 'none' : ''; }
+  });
+  const lockNote = document.getElementById('mobSettingsLockNote');
+  if (lockNote) lockNote.style.display = locked ? '' : 'none';
   document.getElementById('mobSettingsSheet').classList.add('open');
   syncMobToggles();
 }
@@ -6485,7 +6516,7 @@ const FALLBACK_PLAYERS = [
 async function init() {
   // Load saved settings
   try {
-    const saved = JSON.parse(localStorage.getItem('tradeiq_settings')||'{}');
+    const saved = JSON.parse(localStorage.getItem('fantasyiq_settings')||'{}');
     if (saved.mode)    setSetting('mode',    saved.mode);
     if (saved.size)    setSetting('size',    saved.size);
     if (saved.qb)      setSetting('qb',      saved.qb);
@@ -7028,7 +7059,7 @@ function applyLeagueSettings(s) {
   if (s.qb)      setSetting('qb',      s.qb);
   if (s.scoring) setSetting('scoring', s.scoring);
   if (s.te)      setSetting('te',      s.te);
-  localStorage.setItem('tradeiq_settings', JSON.stringify(S.settings));
+  localStorage.setItem('fantasyiq_settings', JSON.stringify(S.settings));
   showToast(`⚙️ Settings applied: ${s.size}-team · ${s.qb.toUpperCase()} · ${s.scoring.toUpperCase()}`);
 }
 
@@ -7143,7 +7174,7 @@ async function processCBSData(data, leagueId, token) {
 // LEAGUE STORAGE (Firestore + localStorage fallback)
 // ═══════════════════════════════════════════════════════════
 async function saveConnectedLeague(leagueData) {
-  const key = S.auth ? `tradeiq_leagues_${S.auth.uid}` : 'tradeiq_leagues_guest';
+  const key = S.auth ? `fantasyiq_leagues_${S.auth.uid}` : 'fantasyiq_leagues_guest';
   try {
     const arr = JSON.parse(localStorage.getItem(key)||'[]');
     const idx = arr.findIndex(l => l.leagueId === leagueData.leagueId);
@@ -7161,7 +7192,7 @@ async function saveConnectedLeague(leagueData) {
 }
 
 async function loadConnectedLeagues() {
-  const key = S.auth ? `tradeiq_leagues_${S.auth.uid}` : 'tradeiq_leagues_guest';
+  const key = S.auth ? `fantasyiq_leagues_${S.auth.uid}` : 'fantasyiq_leagues_guest';
   let arr = [];
   try { arr = JSON.parse(localStorage.getItem(key)||'[]'); } catch(e) {}
   if (fbDb && S.auth) {
@@ -8024,8 +8055,9 @@ function toggleLeagueTradePlayer(pid, side) {
 // EVENT LISTENERS
 // ═══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-  // Nav tabs
+  // Nav tabs — skip mobile settings button (it uses data-mob-settings, not a real tab)
   document.querySelectorAll('[data-tab]').forEach(btn => {
+    if (btn.hasAttribute('data-mob-settings')) return;
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
 
@@ -8062,7 +8094,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderValuesTable();
       renderTrade();
       if (S.sugGive.length) computeSuggest();
-      localStorage.setItem('tradeiq_settings', JSON.stringify(S.settings));
+      localStorage.setItem('fantasyiq_settings', JSON.stringify(S.settings));
     }
   });
 
@@ -8070,7 +8102,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('pkgAdj').addEventListener('change', function() {
     S.settings.pkgAdj = this.checked;
     renderTrade();
-    localStorage.setItem('tradeiq_settings', JSON.stringify(S.settings));
+    localStorage.setItem('fantasyiq_settings', JSON.stringify(S.settings));
   });
 
   // Values table position filter
