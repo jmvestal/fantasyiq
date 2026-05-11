@@ -1,17 +1,5 @@
 [
   {
-    "key": "peaked",
-    "name": "Peaked",
-    "1qb": "peaked-1qb.csv",
-    "sf":  "peaked-sf.csv"
-  },
-  {
-    "key": "tradeiq_dyn",
-    "name": "TradeIQ Dynasty",
-    "1qb": "1QB PPR Dynasty rankings.csv",
-    "sf":  "SF PPR Dynasty Rankings.csv"
-  },
-  {
     "key": "tradeiq_rd",
     "name": "TradeIQ Redraft",
     "redraftFiles": [
