@@ -3405,7 +3405,7 @@ function pnr(p) {
   const nm = p.full_name || p.name || '?';
   const nameHtml = (pos === 'PICK')
     ? escHtml(nm)
-    : `<span class="pnr-name" data-pcname="${escHtml(nm)}" onclick="event.stopPropagation();event._pcHandled=true;var _n=this.getAttribute('data-pcname');if(_n&&window.showPlayerCard)window.showPlayerCard(_n)">${escHtml(nm)}</span>`;
+    : `<span class="pnr-name" data-pcname="${escHtml(nm)}" onclick="_openPc(event)">${escHtml(nm)}</span>`;
   return `<span style="white-space:nowrap">${nameHtml}<span class="pb pb-${pos}" style="font-size:9px;vertical-align:middle;margin-left:4px">${pos}</span>${rk}</span>`;
 }
 
@@ -4135,7 +4135,7 @@ function renderValuesTable() {
       : `<td style="display:none"></td>`;
     return `<tr>
       <td><span style="color:var(--text3);font-size:12px">${i+1}</span></td>
-      <td style="white-space:nowrap"><strong class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="event.stopPropagation();event._pcHandled=true;var _n=this.getAttribute('data-pcname');if(_n&&window.showPlayerCard)window.showPlayerCard(_n)">${escHtml(p.full_name)}</strong><span class="pb pb-${p.position==='DST'?'DEF':p.position}" style="font-size:9px;vertical-align:middle;margin-left:4px">${p.position==='DST'?'DEF':p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</td>
+      <td style="white-space:nowrap"><strong class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="_openPc(event)">${escHtml(p.full_name)}</strong><span class="pb pb-${p.position==='DST'?'DEF':p.position}" style="font-size:9px;vertical-align:middle;margin-left:4px">${p.position==='DST'?'DEF':p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</td>
       <td style="display:none"></td>
       <td style="color:var(--text2)">${p.team||'—'}</td>
       <td style="color:var(--text2)">${p.age||'—'}</td>
@@ -4337,7 +4337,7 @@ function renderRosterList() {
       <span class="ros-slot-lbl ${cls}">${slotLabel}</span>
       <div class="ros-row-info">
         <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-          <span class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="event.stopPropagation();event._pcHandled=true;var _n=this.getAttribute('data-pcname');if(_n&&window.showPlayerCard)window.showPlayerCard(_n)">${escHtml(p.full_name)}</span>
+          <span class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="_openPc(event)">${escHtml(p.full_name)}</span>
           <span class="pb pb-${pos}" style="font-size:9px;vertical-align:middle;margin-left:4px">${pos}</span>
           ${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}
         </div>
@@ -4480,7 +4480,7 @@ function runBSH() {
     html += `<div class="bsh-card">
       <div class="bsh-grade bsh-${grade}">${grade}</div>
       <div class="bsh-card-info">
-        <div class="bsh-card-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="event.stopPropagation();event._pcHandled=true;var _n=this.getAttribute('data-pcname');if(_n&&window.showPlayerCard)window.showPlayerCard(_n)">${escHtml(p.full_name)}</span><span class="pb pb-${p.position}" style="font-size:9px;vertical-align:middle;margin-left:4px">${p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
+        <div class="bsh-card-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="_openPc(event)">${escHtml(p.full_name)}</span><span class="pb pb-${p.position}" style="font-size:9px;vertical-align:middle;margin-left:4px">${p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
         <div class="bsh-card-reason">${reason}</div>
       </div>
       <div style="font-size:13px;font-weight:700;color:var(--primary-l);flex-shrink:0">${fmtVal(v)}</div>
@@ -8138,7 +8138,7 @@ function rosterPickerChip(p, side) {
   const val   = calcValue(p);
   const valFmt = val >= 1000 ? (val/1000).toFixed(1)+'k' : val;
   return `<div class="lrp${isIn?' in-trade':''}" onclick="toggleLeagueTradePlayer('${escHtml(pid)}','${side}')">
-    <span class="lrp-name"><span class="pnr-name" data-pcname="${escHtml(p.full_name||'Unknown')}" onclick="event.stopPropagation();event._pcHandled=true;var _n=this.getAttribute('data-pcname');if(_n&&window.showPlayerCard)window.showPlayerCard(_n)">${escHtml(p.full_name||'Unknown')}</span><span class="pb pb-${p.position}" style="font-size:9px;vertical-align:middle;margin-left:4px">${p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</span>
+    <span class="lrp-name"><span class="pnr-name" data-pcname="${escHtml(p.full_name||'Unknown')}" onclick="_openPc(event)">${escHtml(p.full_name||'Unknown')}</span><span class="pb pb-${p.position}" style="font-size:9px;vertical-align:middle;margin-left:4px">${p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</span>
     <span class="lrp-val">${valFmt}</span>
     ${isIn ? '<span style="color:var(--success);font-size:13px;flex-shrink:0">✓</span>' : ''}
   </div>`;
@@ -8602,7 +8602,7 @@ function renderWizAvail() {
       <div class="dav-rank">${rank||'?'}</div>
       <span class="pb pb-${p.position}">${p.position}</span>
       <div class="dav-info">
-        <div class="dav-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="event.stopPropagation();event._pcHandled=true;var _n=this.getAttribute('data-pcname');if(_n&&window.showPlayerCard)window.showPlayerCard(_n)">${escHtml(p.full_name)}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
+        <div class="dav-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="_openPc(event)">${escHtml(p.full_name)}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
         <div class="dav-sub">${sub}</div>
       </div>
       ${diffHtml}
@@ -8777,7 +8777,7 @@ function renderWizRoster() {
         <div class="draft-pick-num">${d.round}.${String(d.pickInRound).padStart(2,'0')}</div>
         <span class="pb pb-${d.player.position}">${d.player.position}</span>
         <div class="draft-pick-info">
-          <div class="draft-pick-name"><span class="pnr-name" data-pcname="${escHtml(d.player.full_name)}" onclick="event.stopPropagation();event._pcHandled=true;var _n=this.getAttribute('data-pcname');if(_n&&window.showPlayerCard)window.showPlayerCard(_n)">${escHtml(d.player.full_name)}</span></div>
+          <div class="draft-pick-name"><span class="pnr-name" data-pcname="${escHtml(d.player.full_name)}" onclick="_openPc(event)">${escHtml(d.player.full_name)}</span></div>
           <div class="draft-pick-sub">Rank ${d.adpRank||'?'} · Pick ${d.overall}</div>
         </div>
         <div class="draft-pick-grade ${gradeClass}">${gradeLabel}</div>
@@ -9099,7 +9099,7 @@ function renderWireTab() {
       <div class="wire-rank">${i+1}</div>
       <div class="pb pb-${escHtml(p.pos)}" style="align-self:flex-start;margin-top:2px">${escHtml(p.pos)}</div>
       <div class="wire-info">
-        <div class="wire-name"><span class="pnr-name" data-pcname="${escHtml(p.name)}" onclick="event.stopPropagation();event._pcHandled=true;var _n=this.getAttribute('data-pcname');if(_n&&window.showPlayerCard)window.showPlayerCard(_n)">${escHtml(p.name)}</span>${(S.players||[]).find(x=>x.full_name===p.name)?.rookie?'<span class="badge badge-rook">ROOK</span>':''}<span class="wire-badge ${bc}" style="margin-left:7px">${bl}</span>${availBadge}</div>
+        <div class="wire-name"><span class="pnr-name" data-pcname="${escHtml(p.name)}" onclick="_openPc(event)">${escHtml(p.name)}</span>${(S.players||[]).find(x=>x.full_name===p.name)?.rookie?'<span class="badge badge-rook">ROOK</span>':''}<span class="wire-badge ${bc}" style="margin-left:7px">${bl}</span>${availBadge}</div>
         <div class="wire-sub">${escHtml(p.team)} · ${p.owned||'—'} owned</div>
         <div class="wire-reason">${escHtml(p.reason)}</div>
       </div>
@@ -9232,7 +9232,7 @@ function renderBuySellTab() {
     <div class="bs-card">
       <div class="bs-badge bs-${p.action}">${p.action}</div>
       <div style="flex:1;min-width:0">
-        <div class="bs-name"><span class="pnr-name" data-pcname="${escHtml(p.name)}" onclick="event.stopPropagation();event._pcHandled=true;var _n=this.getAttribute('data-pcname');if(_n&&window.showPlayerCard)window.showPlayerCard(_n)">${escHtml(p.name)}</span><span class="pb pb-${escHtml(p.pos)}" style="font-size:9px;vertical-align:middle;margin-left:4px">${escHtml(p.pos)}</span>${rookBadge}</div>
+        <div class="bs-name"><span class="pnr-name" data-pcname="${escHtml(p.name)}" onclick="_openPc(event)">${escHtml(p.name)}</span><span class="pb pb-${escHtml(p.pos)}" style="font-size:9px;vertical-align:middle;margin-left:4px">${escHtml(p.pos)}</span>${rookBadge}</div>
         <div class="bs-reason">${escHtml(p.reason)}</div>
         <div class="bs-meta">${p.team} · Age ${p.age||'?'} · Val ${p.val.toLocaleString()}</div>
       </div>
@@ -10323,7 +10323,7 @@ function renderDsimBoard() {
       if (pick) {
         const pos = pick.player.position || '?';
         html += `<td class="${cellClass}">
-          <div class="dsim-pick pnr-name" data-pcname="${escHtml(pick.player.full_name||pick.player.name||'')}" onclick="event.stopPropagation();event._pcHandled=true;var _n=this.getAttribute('data-pcname');if(_n&&window.showPlayerCard)window.showPlayerCard(_n)">${escHtml(pick.player.full_name || pick.player.name || '?')}</div>
+          <div class="dsim-pick pnr-name" data-pcname="${escHtml(pick.player.full_name||pick.player.name||'')}" onclick="_openPc(event)">${escHtml(pick.player.full_name || pick.player.name || '?')}</div>
           <div class="dsim-pick-pos" style="color:${_posColor(pos)}">${pos}</div>
         </td>`;
       } else {
@@ -10368,7 +10368,7 @@ function renderDsimMyRoster() {
     const pos = p.position || '?';
     return `<div class="dsim-roster-pick">
       <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
-      <span class="dsim-roster-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="event.stopPropagation();event._pcHandled=true;var _n=this.getAttribute('data-pcname');if(_n&&window.showPlayerCard)window.showPlayerCard(_n)">${escHtml(p.full_name || p.name || '?')}</span>
+      <span class="dsim-roster-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name || p.name || '?')}</span>
       <span class="dsim-roster-round">R${pk.round}</span>
     </div>`;
   }).join('');
@@ -10388,7 +10388,7 @@ function renderDsimPickHistory() {
     return `<div class="dsim-hist-row">
       <span class="dsim-hist-pick">${pk.overall}.</span>
       <span class="pb pb-${pos}" style="font-size:9px;padding:1px 4px">${pos}</span>
-      <span class="dsim-hist-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="event.stopPropagation();event._pcHandled=true;var _n=this.getAttribute('data-pcname');if(_n&&window.showPlayerCard)window.showPlayerCard(_n)">${escHtml(p.full_name || p.name || '?')}</span>
+      <span class="dsim-hist-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name || p.name || '?')}</span>
       ${isMe ? '<span class="dsim-cpu-badge" style="background:var(--primary-d);color:var(--primary-l)">YOU</span>' : '<span class="dsim-cpu-badge">CPU</span>'}
     </div>`;
   }).join('');
@@ -10440,7 +10440,7 @@ function renderDsimRec() {
       <div class="dsim-rec-rank">#${i+1} Recommendation</div>
       <div class="dsim-rec-name">
         <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px;margin-right:4px">${pos}</span>
-        <span class="pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="event.stopPropagation();event._pcHandled=true;var _n=this.getAttribute('data-pcname');if(_n&&window.showPlayerCard)window.showPlayerCard(_n)">${escHtml(p.full_name || p.name || '?')}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}
+        <span class="pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name || p.name || '?')}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}
         <span style="font-size:11px;font-weight:400;color:var(--text3);margin-left:4px">${fmtVal(item.v)}</span>
       </div>
       <div class="dsim-rec-why">${reason}</div>
@@ -10489,7 +10489,7 @@ function renderDsimAvail() {
     const team = p.team || '';
     return `<div class="dsim-avail-row${isMyTurn ? '' : ' not-my-turn'}" onclick="dsimUserPick('${pid}')">
       <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
-      <span class="dsim-avail-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="event.stopPropagation();event._pcHandled=true;var _n=this.getAttribute('data-pcname');if(_n&&window.showPlayerCard)window.showPlayerCard(_n)">${escHtml(p.full_name || p.name || '?')}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</span>
+      <span class="dsim-avail-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name || p.name || '?')}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</span>
       <span class="dsim-avail-meta">${[team, age].filter(Boolean).join(' · ')}</span>
       <span class="dsim-avail-val">${fmtVal(v)}</span>
     </div>`;
@@ -10744,6 +10744,16 @@ const PC_TEAMS = {
 
 // Player card — triggered by document click/touchend listener on elements with data-pcname attribute
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closePlayerCard(); });
+
+// iOS-safe player card opener — avoids 'this' context loss in onclick attributes
+function _openPc(e) {
+  e.stopPropagation();
+  e._pcHandled = true;
+  const n = (e.currentTarget || e.target)?.closest('[data-pcname]')?.getAttribute('data-pcname');
+  if (!n) return;
+  try { showPlayerCard(n); }
+  catch(_) { if (window.showToast) showToast('Could not load player card', 'err'); }
+}
 
 function showPlayerCard(name) {
   try {
