@@ -2312,7 +2312,7 @@
 // STATE
 // ═══════════════════════════════════════════════════════════
 const S = {
-  settings: { mode:'dynasty', size:12, qb:'1qb', scoring:'ppr', te:'off', pkgAdj:true, rookieOpt:50 },
+  settings: { mode:'dynasty', size:12, qb:'sf', scoring:'ppr', te:'off', pkgAdj:true, rookieOpt:50 },
   players: [],
   tradeA: [], tradeB: [],
   sugGive: [],
@@ -5690,8 +5690,8 @@ async function fetchKTCValues() {
 // FANTASY FOOTBALL CALCULATOR AUTO-FETCH — free public ADP API
 // https://fantasyfootballcalculator.com/api/v1/adp/...
 // ═══════════════════════════════════════════════════════════
-const FFC_CACHE_KEY = 'tradeiq_ffc_values';
-const FFC_TS_KEY    = 'tradeiq_ffc_ts';
+const FFC_CACHE_KEY = 'tradeiq_ffc_values_v2';
+const FFC_TS_KEY    = 'tradeiq_ffc_ts_v2';
 const FFC_TTL       = 23 * 60 * 60 * 1000;
 
 async function fetchFFCValues() {
@@ -5738,12 +5738,18 @@ async function fetchFFCValues() {
     );
 
     // Build ADP → value map for dynasty
+    // NOTE: FFC dynasty ADP is SuperFlex format — QB values are inflated vs 1QB leagues.
+    // We store the raw QB position so we can normalize later.
     const dynMap = {};
     (dynData?.players || []).forEach(p => {
       if (!p.name) return;
-      dynMap[normName(p.name)] = { adp: p.adp || p.average_pick || 999, rank: p.position_rank || 999 };
+      dynMap[normName(p.name)] = {
+        adp: p.adp || p.average_pick || 999,
+        rank: p.position_rank || 999,
+        pos: (p.position || '').toUpperCase(),
+      };
     });
-    // Build ADP → value map for redraft
+    // Build ADP → value map for redraft (1QB PPR format — correct as-is)
     const pprMap = {};
     (pprData?.players || []).forEach(p => {
       if (!p.name) return;
@@ -5758,8 +5764,13 @@ async function fetchFFCValues() {
     allNames.forEach(name => {
       const dEntry = dynMap[name];
       const rEntry = pprMap[name];
-      const dv = dEntry ? rankToValue(Math.round(dEntry.adp), dynTotal) : 0;
+      let dv = dEntry ? rankToValue(Math.round(dEntry.adp), dynTotal) : 0;
       const rv = rEntry ? rankToValue(Math.round(rEntry.adp), pprTotal) : 0;
+      // FFC dynasty is SF-format: normalize QB dynasty values to 1QB baseline
+      // by dividing by the same SF multiplier used in calcValue() (1.38)
+      if (dv > 0 && dEntry?.pos === 'QB') {
+        dv = Math.round(dv / 1.38);
+      }
       if (dv > 0 || rv > 0) {
         ffcSource[name] = { dv, rv };
       }
@@ -5783,8 +5794,8 @@ async function fetchFFCValues() {
 // DLF AUTO-FETCH — Dynasty League Football 1QB + SF consensus rankings
 // Hosted in this repo: /rankings/dlf-1qb.csv, dlf-sf.csv, dlf-rookies-sf.csv
 // ═══════════════════════════════════════════════════════════
-const DLF_CACHE_KEY = 'tradeiq_dlf_values';
-const DLF_TS_KEY    = 'tradeiq_dlf_ts';
+const DLF_CACHE_KEY = 'tradeiq_dlf_values_v2';
+const DLF_TS_KEY    = 'tradeiq_dlf_ts_v2';
 const DLF_TTL       = 7 * 24 * 60 * 60 * 1000; // 7 days (static files, update manually)
 
 async function fetchDLFValues() {
@@ -5817,10 +5828,13 @@ async function fetchDLFValues() {
     if (!text1qb && !textSF) { S.sourceStatus['dlf'] = 'err'; return; }
 
     // Parse a DLF CSV: uses Rank (overall) and Avg (consensus avg rank) and Pos columns
+    // Files are comma-separated (exported from the same ranking tool as ktc-*.csv)
     function parseDLF(text) {
       if (!text) return {};
       const lines = text.replace(/\r\n/g,'\n').trim().split('\n').filter(l=>l.trim());
-      const header = lines[0].split('\t').map(h=>h.trim().toLowerCase());
+      // Auto-detect delimiter: if header has tabs use tabs, else commas
+      const delim = lines[0].includes('\t') ? '\t' : ',';
+      const header = lines[0].split(delim).map(h=>h.trim().toLowerCase().replace(/"/g,''));
       const rankIdx = header.indexOf('rank');
       const avgIdx  = header.indexOf('avg');
       const nameIdx = header.indexOf('name');
@@ -5830,7 +5844,7 @@ async function fetchDLFValues() {
       const total = lines.length - 1;
       const out = {};
       lines.slice(1).forEach((line, i) => {
-        const cols = line.split('\t');
+        const cols = line.split(delim).map(c=>c.trim().replace(/"/g,''));
         const name = (cols[nameIdx]||'').trim();
         if (!name || name === '-') return;
         const rank = rankIdx >= 0 ? (parseInt(cols[rankIdx]) || i+1) : i+1;
@@ -5908,7 +5922,7 @@ async function fetchDLFValues() {
 // Dynasty only — rv:0 so redraft values are never affected.
 // ═══════════════════════════════════════════════════════════
 const CUSTOM_BASE     = 'https://raw.githubusercontent.com/jmvestal/fantasyiq/main/rankings/';
-const CUSTOM_CACHE_KEY = 'tradeiq_custom_v12';
+const CUSTOM_CACHE_KEY = 'tradeiq_custom_v13';
 const CUSTOM_TS_KEY    = 'tradeiq_custom_ts_v5';
 const CUSTOM_TTL       = 24 * 60 * 60 * 1000; // 24 hours
 
