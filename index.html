@@ -7110,20 +7110,15 @@ async function init() {
   document.getElementById('pcBadge').innerHTML =
     `${S.players.length.toLocaleString()} players <span class="spin" style="display:inline-block;width:10px;height:10px;border-width:2px;vertical-align:middle;margin-left:3px"></span>`;
 
-  // ── 3. BACKGROUND FETCH ───────────────────────────────────────────
-  // Fire ranking sources without awaiting — each one calls rebuildPlayerValues()
-  // on its own when it finishes, so rankings update progressively in the background.
-  fetchFantasyCalcValues();
-  fetchKTCValues();
-  fetchFFCValues();
-  fetchDynastyProcessValues();
-  fetchDLFValues();
-  fetchCustomRankings();
+  // ── 3. LOAD FULL PLAYER LIST ──────────────────────────────────────
+  // Fetch players.json FIRST with zero competition — it's a fast CDN hit.
+  // Ranking sources fire AFTER so they don't clog the connection pool.
+  const sleeperPlayers = await fetchPlayers().catch(e => {
+    console.warn('fetchPlayers failed:', e);
+    return FALLBACK_PLAYERS;
+  });
 
-  // Await Sleeper separately with full bandwidth — it's a 3MB payload and needs priority
-  const sleeperPlayers = await fetchPlayers().catch(() => FALLBACK_PLAYERS);
-
-  // ── 4. MERGE SLEEPER + FINAL RENDER ──────────────────────────────
+  // ── 4. MERGE + FINAL RENDER ───────────────────────────────────────
   const FA_VALS = new Set(['FA','Free Agent','','N/A']);
   const sleeperNorms = new Set(sleeperPlayers.map(p => normName(p.full_name || '')));
   const freshRookies = ROOKIES_2026.filter(p => !sleeperNorms.has(normName(p.full_name || '')));
@@ -7147,6 +7142,7 @@ async function init() {
   }
 
   rebuildPlayerValues();
+  try { renderValuesTable(); } catch(e) {}
   renderSourcesUI();
 
   const srcCount  = Object.values(S.sourceStatus).filter(s=>s==='ok').length;
@@ -7156,6 +7152,16 @@ async function init() {
     : '';
   document.getElementById('pcBadge').innerHTML = `${S.players.length.toLocaleString()} players${offlineBadge}`;
   trackEvent('app_loaded', { sources: srcCount, players: S.players.length, offline: isOffline });
+
+  // ── 5. BACKGROUND RANKING SOURCES ─────────────────────────────────
+  // Fire after S.players is fully populated — each calls rebuildPlayerValues()
+  // on its own when done, updating values progressively.
+  fetchFantasyCalcValues();
+  fetchKTCValues();
+  fetchFFCValues();
+  fetchDynastyProcessValues();
+  fetchDLFValues();
+  fetchCustomRankings();
 }
 
 // ═══════════════════════════════════════════════════════════
