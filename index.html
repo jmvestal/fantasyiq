@@ -110,6 +110,18 @@
     body.landing-mode .layout { display:block }
     body.landing-mode .main { padding:0 }
     body.landing-mode #tab-home { display:block }
+    /* Global trending ticker — sits between header and layout on all pages */
+    .global-ticker-bar{background:var(--bg3);border-bottom:1px solid var(--border);overflow:hidden;height:0;transition:height .2s}
+    .global-ticker-bar.ready{height:30px}
+    body.landing-mode .global-ticker-bar{display:none}
+    .global-ticker-inner{display:flex;white-space:nowrap;animation:global-ticker-scroll 55s linear infinite;will-change:transform;height:100%;align-items:center}
+    .global-ticker-inner:hover{animation-play-state:paused}
+    @keyframes global-ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+    .global-ticker-item{display:inline-flex;align-items:center;gap:5px;padding:0 14px;font-size:11px;font-weight:600;cursor:pointer;transition:color .15s;flex-shrink:0}
+    .global-ticker-item.up{color:var(--success)}
+    .global-ticker-item.down{color:var(--danger)}
+    .global-ticker-item:hover{opacity:.8}
+    .global-ticker-sep{display:inline-block;color:var(--border);font-size:11px;flex-shrink:0;padding:0 2px;user-select:none}
     /* Option A — Full-screen centered landing */
     .home-landing{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;background:var(--bg)}
     .home-landing-logo{font-size:64px;font-weight:900;letter-spacing:-3px;margin-bottom:10px;line-height:1}
@@ -1025,6 +1037,11 @@
     </div>
   </div>
 </header>
+
+<!-- ═══ GLOBAL TRENDING TICKER ═══ -->
+<div class="global-ticker-bar" id="globalTickerBar">
+  <div class="global-ticker-inner" id="globalTickerInner"></div>
+</div>
 
 <!-- ═══ LAYOUT ═══ -->
 <div class="layout">
@@ -4818,50 +4835,76 @@ function switchTab(name) {
 // HOMEPAGE — LANDING WIDGETS (ticker + snapshot)
 // ═══════════════════════════════════════════════════════════
 
-// Populate the scrolling ticker and player snapshot on the logged-out landing page.
-// Both pull from S.players which is loaded from VALUE_DB + any active sources.
+// Build a list of trending movers from loaded players.
+// Returns interleaved array of {p, dir} objects (up/down), capped at maxItems.
+function buildTrendingMovers(maxUp, maxDown) {
+  const players = (S.players || []).filter(p =>
+    ['QB','RB','WR','TE'].includes(p.position) && (p.dynasty_val || 0) > 0 && p.trend
+  );
+  const up   = players.filter(p => p.trend === 'up')
+    .sort((a,b) => (b.dynasty_val||0) - (a.dynasty_val||0)).slice(0, maxUp);
+  const down = players.filter(p => p.trend === 'down')
+    .sort((a,b) => (b.dynasty_val||0) - (a.dynasty_val||0)).slice(0, maxDown);
+  // Interleave 2 up then 1 down for a good mix
+  const mixed = [];
+  let ui = 0, di = 0;
+  while (ui < up.length || di < down.length) {
+    if (ui < up.length)   mixed.push({ p: up[ui++],   dir: 'up'   });
+    if (ui < up.length)   mixed.push({ p: up[ui++],   dir: 'up'   });
+    if (di < down.length) mixed.push({ p: down[di++], dir: 'down' });
+  }
+  return mixed;
+}
+
+// Shared helper: render one ticker item as HTML string.
+function mkTickerItem(p, dir, cssClass) {
+  const nameParts = (p.full_name || '').split(' ');
+  const name = nameParts.length > 1 ? nameParts[0][0] + '. ' + nameParts.slice(1).join(' ') : p.full_name;
+  const icon = dir === 'up' ? '🔥' : '📉';
+  const arrow = dir === 'up'
+    ? `<span style="font-size:9px;font-weight:800">▲</span>`
+    : `<span style="font-size:9px;font-weight:800">▼</span>`;
+  return `<span class="${cssClass} ${dir}" onclick="switchTab('values')">`
+    + `<span>${icon}</span>`
+    + `<span class="pb pb-${p.position}" style="font-size:9px">${p.position}</span>`
+    + `<span>${name}</span>`
+    + arrow
+    + `</span><span class="home-ticker-sep">·</span>`;
+}
+
+// Render the global trending ticker bar (shown on all pages for all users).
+function renderGlobalTicker() {
+  const bar   = document.getElementById('globalTickerBar');
+  const inner = document.getElementById('globalTickerInner');
+  if (!bar || !inner) return;
+  const movers = buildTrendingMovers(12, 6);
+  if (!movers.length) return;
+  const content = movers.map(({p, dir}) => mkTickerItem(p, dir, 'global-ticker-item')).join('');
+  inner.innerHTML = content + content; // doubled for seamless loop
+  bar.classList.add('ready');
+}
+
+// Populate the landing-page ticker and player snapshot (logged-out view only).
 function renderLandingWidgets() {
   // Only run on the logged-out landing page
   const landing = document.getElementById('homeOptionA');
   if (!landing || landing.style.display === 'none') return;
 
-  const players = (S.players || []).filter(p =>
+  const hasValues = (S.players || []).some(p =>
     ['QB','RB','WR','TE'].includes(p.position) && (p.dynasty_val || 0) > 0
   );
-  if (!players.length) return;
+  if (!hasValues) return;
 
-  // ── Ticker ──────────────────────────────────────────────
+  // ── Landing ticker: trending movers ──────────────────────
   const tickerWrap = document.getElementById('homeTickerWrap');
   const tickerEl   = document.getElementById('homeTicker');
   if (tickerWrap && tickerEl) {
-    const top = players
-      .map(p => ({ p, v: p.dynasty_val || 0 }))
-      .filter(({v}) => v > 0)
-      .sort((a,b) => b.v - a.v)
-      .slice(0, 22);
-
-    const fmtShort = n => n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/,'')+'k' : String(n);
-    const mkItem = ({p, v}) => {
-      const trendMark = p.trend === 'up'
-        ? `<span style="color:var(--success);font-size:10px">▲</span>`
-        : p.trend === 'down'
-        ? `<span style="color:var(--danger);font-size:10px">▼</span>`
-        : '';
-      const nameParts = (p.full_name || '').split(' ');
-      const shortName = nameParts.length > 1
-        ? nameParts[0][0] + '. ' + nameParts.slice(1).join(' ')
-        : p.full_name;
-      return `<span class="home-ticker-item" onclick="switchTab('values')">`
-        + `<span class="pb pb-${p.position}" style="font-size:9px">${p.position}</span>`
-        + `<span>${shortName}</span>`
-        + `<span style="color:var(--text1);font-weight:700">${fmtShort(v)}</span>`
-        + trendMark
-        + `</span><span class="home-ticker-sep">·</span>`;
-    };
-
-    const content = top.map(mkItem).join('');
-    tickerEl.innerHTML = content + content; // doubled for seamless infinite loop
-    tickerWrap.style.display = '';
+    const movers = buildTrendingMovers(12, 6);
+    if (movers.length) {
+      const content = movers.map(({p, dir}) => mkTickerItem(p, dir, 'home-ticker-item')).join('');
+      tickerEl.innerHTML = content + content;
+      tickerWrap.style.display = '';
+    }
   }
 
   // ── Snapshot ─────────────────────────────────────────────
@@ -5445,8 +5488,9 @@ function rebuildPlayerValues() {
   renderValuesTable();
   renderTrade();
   updateSourceCount();
-  // Refresh landing page widgets (ticker + snapshot) whenever values update.
-  // Check homeOptionA visibility — it's only shown on the logged-out landing page.
+  // Global ticker updates on every page whenever values rebuild
+  renderGlobalTicker();
+  // Landing page widgets (ticker + snapshot) — only on logged-out home
   if (document.getElementById('tab-home')?.classList.contains('active') &&
       document.getElementById('homeOptionA')?.style.display !== 'none') {
     renderLandingWidgets();
