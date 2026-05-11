@@ -5438,6 +5438,10 @@ function rebuildPlayerValues() {
   renderValuesTable();
   renderTrade();
   updateSourceCount();
+  // Refresh landing page widgets (ticker + snapshot) whenever values update
+  if (document.getElementById('tab-home')?.classList.contains('active') && !S.auth) {
+    renderLandingWidgets();
+  }
 }
 
 // Build consensus value for one player across all loaded sources.
@@ -6976,6 +6980,7 @@ function handleAuthStateChange(user) {
     }
     showToast(`Welcome back, ${first}! 👋`);
     checkAndPromptSubscription(user);
+    updateChatVisibility();
     // Re-render home if currently on it
     if (document.getElementById('tab-home')?.classList.contains('active')) renderHome();
   } else {
@@ -6983,6 +6988,7 @@ function handleAuthStateChange(user) {
     pill.style.display = 'none';
     document.body.classList.remove('logged-in');
     S.isPremium = false;
+    updateChatVisibility();
     if (document.getElementById('tab-home')?.classList.contains('active')) renderHome();
   }
 }
@@ -7083,6 +7089,7 @@ function signOutUser() {
   S.connectedLeagues = [];
   document.getElementById('authBtn').style.display = 'block';
   document.getElementById('userPill').style.display = 'none';
+  updateChatVisibility();
   updateLeagueBar();
   showToast('Signed out');
 }
@@ -9680,6 +9687,17 @@ RESPONSE STYLE:
 }
 
 // ── Toggle chat panel ────────────────────────────────────
+// Show the chat button only when the user is signed in.
+// Called from handleAuthStateChange and signOutUser.
+function updateChatVisibility() {
+  const btn = document.getElementById('tiqChatBtn');
+  const panel = document.getElementById('tiqChatPanel');
+  if (!btn) return;
+  const show = !!S.auth;
+  btn.style.display = show ? '' : 'none';
+  if (!show && panel) panel.classList.remove('open'); // close panel on sign-out
+}
+
 function toggleTiqChat() {
   const panel = document.getElementById('tiqChatPanel');
   const isOpening = !panel.classList.contains('open');
@@ -11593,7 +11611,7 @@ document.addEventListener('keydown', function(e) {
 </div>
 
 <!-- ══ FLOATING AI CHAT ══ -->
-<button class="tiq-chat-btn" id="tiqChatBtn" onclick="toggleTiqChat()" title="Ask Scout HQ">💬<span class="tiq-chat-btn-label">Scout HQ</span></button>
+<button class="tiq-chat-btn" id="tiqChatBtn" onclick="toggleTiqChat()" title="Ask Scout HQ" style="display:none">💬<span class="tiq-chat-btn-label">Scout HQ</span></button>
 <div class="tiq-chat-panel" id="tiqChatPanel">
   <div class="tiq-chat-hdr">
     <div class="tiq-chat-hdr-title">
