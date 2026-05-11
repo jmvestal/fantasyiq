@@ -5159,25 +5159,38 @@ function rebuildPlayerValues() {
 // Uses MEDIAN to prevent one outlier CSV from inflating/deflating a player.
 // VALUE_DB is always included as one anchor source so rank-inflated CSVs
 // get grounded (e.g. Goff QB12 in a position file can't average to elite).
+//
+// STABILITY DAMPENING: Live API sources (fc, ktc, ffc) + VALUE_DB form a
+// trusted anchor. CSV uploads can shift the consensus by at most ±15% from
+// that anchor. This prevents a single new ranking file from dramatically
+// re-ranking players — rankings update in unison with existing consensus.
 function buildConsensus(p) {
   const pid  = normName(p.full_name || '');
   const dvArr = [], rvArr = [], trends = [];
+  // Live API sources — these form the stability anchor alongside VALUE_DB
+  const anchorDvArr = [], anchorRvArr = [];
 
-  // Collect all source values
+  // Collect all source values; track which ones come from live APIs
   for (const [key, vals] of Object.entries(S.sourceValues || {})) {
     if (!vals) continue;
     const entry = vals[pid];
     if (!entry) continue;
-    if (entry.dv > 0) dvArr.push(entry.dv);
-    if (entry.rv > 0) rvArr.push(entry.rv);
+    const isAnchor = (key === 'fc' || key === 'ktc' || key === 'ffc');
+    if (entry.dv > 0) {
+      dvArr.push(entry.dv);
+      if (isAnchor) anchorDvArr.push(entry.dv);
+    }
+    if (entry.rv > 0) {
+      rvArr.push(entry.rv);
+      if (isAnchor) anchorRvArr.push(entry.rv);
+    }
     if (entry.trend) trends.push(entry.trend);
   }
 
-  // Always include VALUE_DB as one anchor source.
-  // This grounds the consensus — a rank-inflated CSV can't dominate the average.
-  // API sources (fc, ktc) are more reliable so if they're present, VALUE_DB has less impact.
+  // Always include VALUE_DB as an anchor source.
+  // API sources (fc, ktc, ffc) are more reliable so if they're present, VALUE_DB has less impact.
   const vdb = VALUE_DB[p.full_name];
-  const hasApiSource = (S.sourceValues?.fc?.[pid]?.dv > 0) || (S.sourceValues?.ktc?.[pid]?.dv > 0);
+  const hasApiSource = anchorDvArr.length > 0;
   if (vdb) {
     if (!hasApiSource) {
       // No live API coverage → give VALUE_DB 2 votes to anchor strongly
@@ -5189,6 +5202,9 @@ function buildConsensus(p) {
       rvArr.push(vdb.rv || vdb.dv);
     }
     if (vdb.trend) trends.push(vdb.trend);
+    // VALUE_DB is always part of the stability anchor
+    anchorDvArr.push(vdb.dv);
+    anchorRvArr.push(vdb.rv || vdb.dv);
   } else if (dvArr.length === 0) {
     // Nothing at all — use player's existing estimate
     return {
@@ -5202,18 +5218,36 @@ function buildConsensus(p) {
   // Median is more robust than mean — one bad outlier CSV can't swing the result
   const median = arr => {
     if (!arr.length) return 0;
-    const s = [...arr].sort((a,b)=>a-b);
+    const s = [...arr].sort((a,b) => a-b);
     const m = Math.floor(s.length / 2);
     return s.length % 2 ? s[m] : Math.round((s[m-1] + s[m]) / 2);
   };
+
+  let dv = median(dvArr) || p.dynasty_val || 500;
+  let rv = median(rvArr) || p.redraft_val || 500;
+
+  // ── Stability dampening ─────────────────────────────────────────────────
+  // Clamp the full consensus to within ±15% of the anchor (API + VALUE_DB).
+  // A minimum flex of 300 pts lets low-value players still move naturally.
+  // This means uploading a new CSV fine-tunes rankings rather than overriding them.
+  if (anchorDvArr.length > 0) {
+    const aDv      = median(anchorDvArr);
+    const maxDelta = Math.max(aDv * 0.15, 300);
+    dv = Math.round(Math.min(aDv + maxDelta, Math.max(aDv - maxDelta, dv)));
+  }
+  if (anchorRvArr.length > 0) {
+    const aRv      = median(anchorRvArr);
+    const maxDelta = Math.max(aRv * 0.15, 300);
+    rv = Math.round(Math.min(aRv + maxDelta, Math.max(aRv - maxDelta, rv)));
+  }
 
   const upCt = trends.filter(t=>t==='up').length;
   const dnCt = trends.filter(t=>t==='down').length;
   const trend = upCt > dnCt ? 'up' : dnCt > upCt ? 'down' : 'flat';
 
   return {
-    dv: median(dvArr) || p.dynasty_val || 500,
-    rv: median(rvArr) || p.redraft_val || 500,
+    dv: dv || p.dynasty_val || 500,
+    rv: rv || p.redraft_val || 500,
     trend,
     sources: dvArr.length,
   };
@@ -5915,7 +5949,7 @@ async function fetchDLFValues() {
 // Dynasty only — rv:0 so redraft values are never affected.
 // ═══════════════════════════════════════════════════════════
 const CUSTOM_BASE     = 'https://raw.githubusercontent.com/jmvestal/fantasyiq/main/rankings/';
-const CUSTOM_CACHE_KEY = 'tradeiq_custom_v8';
+const CUSTOM_CACHE_KEY = 'tradeiq_custom_v9';
 const CUSTOM_TS_KEY    = 'tradeiq_custom_ts_v5';
 const CUSTOM_TTL       = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -5937,8 +5971,12 @@ function parseCreatorCSV(text) {
   const dataLines = lines.slice(1);
   const total = dataLines.length;
 
-  // Rank → value curve: #1 = 9800, last = 200, quadratic decay
-  const rankToVal = (rank, n) => Math.round(200 + Math.pow(1 - (rank-1)/Math.max(n-1,1), 2) * 9600);
+  // Rank → value: KTC-calibrated exponential curve.
+  // rank 1 → 9800, rank 15 → 8268, rank 30 → 6735, rank 100 → 2274, floor 200.
+  // Exponential matches actual dynasty market spread far better than quadratic,
+  // which compressed rank 10-50 into 8800-9800 and inflated every rookie in top-30.
+  // `n` (file size) is intentionally ignored — dynasty value is absolute, not relative.
+  const rankToVal = (rank, _n) => Math.round(Math.min(9800, Math.max(200, 10200 * Math.exp(-0.015 * (rank - 1)))));
 
   const result = {};
   dataLines.forEach((line, idx) => {
