@@ -6784,78 +6784,125 @@ function applyValueDB(p) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// FETCH SLEEPER PLAYERS
+// FETCH SLEEPER PLAYERS  (stale-while-revalidate)
 // ═══════════════════════════════════════════════════════════
+const _SLEEPER_CACHE_KEY = 'tradeiq_sleeper_players_v8';
+const _SLEEPER_REFRESH_TTL = 24 * 60 * 60 * 1000; // 24h before background refresh
+
+// Raw fetch + cache write — shared by fetchPlayers() and refreshSleeperCache()
+async function _fetchSleeperFresh() {
+  const VALID_POS = new Set(['QB','RB','WR','TE','K','DEF','DST',
+    'DE','DT','LB','CB','S','FS','SS','DB','OLB','ILB','MLB','DL','IDP']);
+  const res = await fetch('https://api.sleeper.app/v1/players/nfl', { signal: AbortSignal.timeout(25000) });
+  if (!res.ok) throw new Error('Sleeper ' + res.status);
+  const data = await res.json();
+  const players = Object.values(data)
+    .filter(p =>
+      p.full_name &&
+      VALID_POS.has(p.position) &&
+      p.active === true &&
+      p.team &&
+      p.team !== 'FA' &&
+      p.team !== 'Free Agent' &&
+      p.status !== 'Inactive' &&
+      p.status !== 'Retired' &&
+      p.status !== 'Reserve/Retired' &&
+      p.status !== 'Reserve/PUP' &&
+      !RETIRED_PLAYERS.has(p.full_name) &&
+      (p.search_rank || 0) < 2500
+    )
+    .map(p => ({
+      id: p.player_id,
+      player_id: p.player_id,
+      full_name: p.full_name,
+      position: p.position,
+      team: p.team,
+      age: p.age,
+      height: p.height,
+      weight: p.weight,
+      years_exp: p.years_exp || 0,
+      search_rank: p.search_rank || 999,
+      trend: 'flat',
+      rookie: (p.years_exp || 0) === 0,
+    }));
+  try { localStorage.setItem(_SLEEPER_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: players })); } catch(e) {}
+  return players.map(p => applyValueDB(p));
+}
+
+// Main entry — fastest available source wins
 async function fetchPlayers() {
-  const CACHE_KEY = 'tradeiq_sleeper_players_v8';
-  // Clear any stale older cache versions
+  // Clear legacy cache keys (one-time housekeeping)
   try { ['v1','v2','v3','v4','v5','v6','v7'].forEach(v => localStorage.removeItem('tradeiq_sleeper_players_'+v)); } catch(e) {}
-  const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours (was 12 — shorter to catch retirements faster)
-  // Try cache first
+
+  // ── 1. SITE-HOSTED players.json ────────────────────────
+  // Served from GitHub Pages CDN — fastest for every user on every visit.
+  // Updated daily by the GitHub Action (update-players.yml).
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
+    const res = await fetch('/players.json', { signal: AbortSignal.timeout(8000) });
+    if (res.ok) {
+      const { players, updated, count } = await res.json();
+      if (players && players.length > 100) {
+        console.log(`players.json: ${count} players (updated ${updated})`);
+        return players.map(p => applyValueDB(p));
+      }
+    }
+  } catch(e) {
+    console.warn('players.json unavailable, falling back to Sleeper cache:', e.message);
+  }
+
+  // ── 2. STALE-WHILE-REVALIDATE from localStorage ────────
+  // Return ANY cached Sleeper data immediately (even if expired).
+  // Kick off background refresh if data is older than 24h.
+  try {
+    const raw = localStorage.getItem(_SLEEPER_CACHE_KEY);
     if (raw) {
       const { ts, data } = JSON.parse(raw);
-      if (Date.now() - ts < CACHE_TTL) return data.map(p => applyValueDB(p));
+      if (Date.now() - ts > _SLEEPER_REFRESH_TTL) {
+        setTimeout(refreshSleeperCache, 3000);
+      }
+      console.log(`Sleeper localStorage hit (${data.length} players, ${Math.round((Date.now()-ts)/3600000)}h old)`);
+      return data.map(p => applyValueDB(p));
     }
   } catch(e) {}
 
+  // ── 3. Cold first visit — fetch directly from Sleeper ──
   try {
-    const res = await fetch('https://api.sleeper.app/v1/players/nfl', { signal: AbortSignal.timeout(25000) });
-    if (!res.ok) throw new Error('Sleeper fetch failed');
-    const data = await res.json();
-
-    const VALID_POS = new Set(['QB','RB','WR','TE','K','DEF','DST',
-      'DE','DT','LB','CB','S','FS','SS','DB','OLB','ILB','MLB','DL','IDP']);
-    const players = Object.values(data)
-      .filter(p =>
-        p.full_name &&
-        VALID_POS.has(p.position) &&
-        p.active === true &&
-        p.team &&
-        p.team !== 'FA' &&
-        p.team !== 'Free Agent' &&
-        p.status !== 'Inactive' &&
-        p.status !== 'Retired' &&
-        p.status !== 'Reserve/Retired' &&
-        p.status !== 'Reserve/PUP' &&
-        !RETIRED_PLAYERS.has(p.full_name) &&
-        (p.search_rank || 0) < 2500
-      )
-      .map(p => ({
-        id: p.player_id,
-        player_id: p.player_id,
-        full_name: p.full_name,
-        position: p.position,
-        team: p.team,
-        age: p.age,
-        height: p.height,
-        weight: p.weight,
-        years_exp: p.years_exp || 0,
-        search_rank: p.search_rank || 999,
-        trend: 'flat',
-        rookie: (p.years_exp || 0) === 0,
-      }));
-
-    // Cache raw player list (before applyValueDB — that runs on load from cache too)
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: players })); } catch(e) {}
-    return players.map(p => applyValueDB(p));
-  } catch (e) {
-    console.warn('Sleeper API failed, using fallback:', e);
-    // Try stale cache before full fallback
-    try {
-      const raw = localStorage.getItem(CACHE_KEY);
-      if (raw) {
-        const { data } = JSON.parse(raw);
-        console.warn('Using stale Sleeper cache');
-        return data.map(p => applyValueDB(p));
-      }
-    } catch(e2) {}
+    return await _fetchSleeperFresh();
+  } catch(e) {
+    console.warn('Sleeper fetch failed on cold load:', e);
     const FA_SET = new Set(['FA','Free Agent','','N/A']);
     return FALLBACK_PLAYERS.filter(p =>
-      !RETIRED_PLAYERS.has(p.full_name) &&
-      p.team && !FA_SET.has(p.team)
+      !RETIRED_PLAYERS.has(p.full_name) && p.team && !FA_SET.has(p.team)
     );
+  }
+}
+
+// Background refresh — silently updates S.players when stale cache is served
+async function refreshSleeperCache() {
+  try {
+    console.log('Background Sleeper refresh starting…');
+    const freshPlayers = await _fetchSleeperFresh();
+    // Re-merge exactly as init() does
+    const FA_VALS = new Set(['FA','Free Agent','','N/A']);
+    const sleeperNorms = new Set(freshPlayers.map(p => normName(p.full_name || '')));
+    const freshRookies = ROOKIES_2026.filter(p => !sleeperNorms.has(normName(p.full_name || '')));
+    const _seen = new Set();
+    S.players = [...freshPlayers, ...freshRookies, ...PICKS]
+      .filter(p => {
+        if (p.position !== 'PICK') {
+          const key = normName(p.full_name || '');
+          if (_seen.has(key)) return false;
+          _seen.add(key);
+        }
+        return !RETIRED_PLAYERS.has(p.full_name) &&
+          (p.position === 'PICK' || (p.team && !FA_VALS.has(p.team)));
+      });
+    FALLBACK_PLAYERS.forEach(p => { p.rookie = false; });
+    rebuildPlayerValues();
+    try { document.getElementById('pcBadge').innerHTML = `${S.players.length.toLocaleString()} players`; } catch(e) {}
+    console.log(`Background Sleeper refresh done: ${S.players.length} players`);
+  } catch(e) {
+    console.warn('Background Sleeper refresh failed:', e);
   }
 }
 
