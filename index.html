@@ -114,7 +114,7 @@
     .global-ticker-bar{background:var(--bg3);border-bottom:1px solid var(--border);overflow:hidden;height:0;transition:height .2s}
     .global-ticker-bar.ready{height:30px}
     body.landing-mode .global-ticker-bar{display:none}
-    .global-ticker-inner{display:flex;white-space:nowrap;animation:global-ticker-scroll 55s linear infinite;will-change:transform;height:100%;align-items:center}
+    .global-ticker-inner{display:flex;white-space:nowrap;animation:global-ticker-scroll 28s linear infinite;will-change:transform;height:100%;align-items:center}
     .global-ticker-inner:hover{animation-play-state:paused}
     @keyframes global-ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
     .global-ticker-item{display:inline-flex;align-items:center;gap:5px;padding:0 14px;font-size:11px;font-weight:600;cursor:pointer;transition:color .15s;flex-shrink:0}
@@ -138,7 +138,7 @@
     .home-ticker-wrap::before,.home-ticker-wrap::after{content:'';position:absolute;top:0;bottom:0;width:36px;z-index:2;pointer-events:none}
     .home-ticker-wrap::before{left:0;background:linear-gradient(to right,var(--bg3),transparent)}
     .home-ticker-wrap::after{right:0;background:linear-gradient(to left,var(--bg3),transparent)}
-    .home-ticker{display:flex;white-space:nowrap;animation:home-ticker-scroll 60s linear infinite;will-change:transform}
+    .home-ticker{display:flex;white-space:nowrap;animation:home-ticker-scroll 28s linear infinite;will-change:transform}
     .home-ticker:hover{animation-play-state:paused}
     @keyframes home-ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
     .home-ticker-item{display:inline-flex;align-items:center;gap:5px;padding:9px 18px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;transition:color .15s;flex-shrink:0}
@@ -146,14 +146,15 @@
     .home-ticker-sep{display:inline-block;padding:9px 0;color:var(--border);font-size:12px;flex-shrink:0;user-select:none}
     /* Position rankings */
     .home-posrank{max-width:700px;width:100%;margin-top:8px;padding-bottom:40px}
-    .home-posrank-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-    .home-posrank-ttl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)}
-    .home-posrank-mode-tabs{display:flex;gap:4px}
-    .home-posrank-mode-tab{padding:4px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;color:var(--text3);background:transparent;border:1px solid var(--border);transition:all .15s}
-    .home-posrank-mode-tab.on{background:var(--primary-d);color:var(--primary-l);border-color:var(--primary)}
-    .home-posrank-pos-tabs{display:flex;gap:6px;margin-bottom:12px}
-    .home-posrank-tab{padding:6px 20px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;color:var(--text3);background:var(--bg3);border:1px solid var(--border);transition:all .15s;flex:1;text-align:center}
+    /* Position rankings header: [pos tabs] [title] [mode tabs] */
+    .home-posrank-hdr{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:14px}
+    .home-posrank-pos-tabs{display:flex;gap:4px;justify-content:flex-start}
+    .home-posrank-tab{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;color:var(--text3);background:var(--bg3);border:1px solid var(--border);transition:all .15s}
     .home-posrank-tab.on{background:var(--primary-d);color:var(--primary-l);border-color:var(--primary)}
+    .home-posrank-ttl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);text-align:center;white-space:nowrap}
+    .home-posrank-mode-tabs{display:flex;gap:4px;justify-content:flex-end}
+    .home-posrank-mode-tab{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;color:var(--text3);background:var(--bg3);border:1px solid var(--border);transition:all .15s}
+    .home-posrank-mode-tab.on{background:var(--primary-d);color:var(--primary-l);border-color:var(--primary)}
     .home-posrank-list{display:grid;grid-template-columns:1fr 1fr;gap:6px}
     .home-posrank-row{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;cursor:pointer;transition:border-color .15s}
     .home-posrank-row:hover{border-color:var(--primary)}
@@ -170,6 +171,10 @@
       .home-landing-logo{font-size:48px}
       .home-feat-grid{grid-template-columns:repeat(2,1fr);max-width:420px}
       .home-posrank-list{grid-template-columns:1fr}
+      .home-posrank-hdr{grid-template-columns:1fr 1fr;grid-template-rows:auto auto;gap:6px}
+      .home-posrank-ttl{display:none}
+      .home-posrank-pos-tabs{grid-column:1;grid-row:1}
+      .home-posrank-mode-tabs{grid-column:2;grid-row:1;justify-content:flex-end}
     }
     /* Option C — Smart Dashboard */
     .home-dash{max-width:1100px;margin:0 auto;padding-bottom:40px}
@@ -1176,20 +1181,23 @@
             </div>
           </div>
           <!-- Live player snapshot -->
-          <!-- Position rankings with toggle -->
+          <!-- Position rankings -->
           <div class="home-posrank" id="homePosRank" style="display:none">
             <div class="home-posrank-hdr">
-              <div class="home-posrank-ttl">📊 Position Rankings</div>
+              <!-- Left: position tabs -->
+              <div class="home-posrank-pos-tabs">
+                <button class="home-posrank-tab on" data-pos="RB" onclick="renderPosRank('RB')">RB</button>
+                <button class="home-posrank-tab" data-pos="WR" onclick="renderPosRank('WR')">WR</button>
+                <button class="home-posrank-tab" data-pos="QB" onclick="renderPosRank('QB')">QB</button>
+                <button class="home-posrank-tab" data-pos="TE" onclick="renderPosRank('TE')">TE</button>
+              </div>
+              <!-- Center: title -->
+              <div class="home-posrank-ttl">Position Rankings</div>
+              <!-- Right: dynasty/redraft toggle -->
               <div class="home-posrank-mode-tabs">
                 <button class="home-posrank-mode-tab on" data-mode="dynasty" onclick="setPosRankMode('dynasty')">Dynasty</button>
                 <button class="home-posrank-mode-tab" data-mode="redraft" onclick="setPosRankMode('redraft')">Redraft</button>
               </div>
-            </div>
-            <div class="home-posrank-pos-tabs">
-              <button class="home-posrank-tab on" data-pos="RB" onclick="renderPosRank('RB')">RB</button>
-              <button class="home-posrank-tab" data-pos="WR" onclick="renderPosRank('WR')">WR</button>
-              <button class="home-posrank-tab" data-pos="QB" onclick="renderPosRank('QB')">QB</button>
-              <button class="home-posrank-tab" data-pos="TE" onclick="renderPosRank('TE')">TE</button>
             </div>
             <div class="home-posrank-list" id="homePosRankList"></div>
             <div style="text-align:center;margin-top:12px">
