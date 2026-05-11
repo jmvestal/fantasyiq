@@ -2361,8 +2361,8 @@ const VALUE_DB = {
   'Bo Nix':                 {dv:4450,rv:1929,trend:'up'},    // KTC SF: 6137 | DS: 20.3
   'Brock Purdy':            {dv:4200,rv:2271,trend:'flat'},  // KTC SF: 5818 | DS: 23.9
   // ── 2026 QB Rookies (KTC live values, May 10 2026) ──
-  'Fernando Mendoza':       {dv:4100,rv:4200,trend:'up'},    // KTC SF: 5671 — #1 pick, LV starter
-  'Ty Simpson':             {dv:2650,rv:2000,trend:'up'},    // KTC SF: 3685 — #13 pick, LAR
+  'Fernando Mendoza':       {dv:4100,rv:800, trend:'up'},    // KTC SF: 5671 — #1 pick, LV starter; DS 3DV: 0.7 (unproven rookie)
+  'Ty Simpson':             {dv:2650,rv:500, trend:'up'},    // KTC SF: 3685 — LAR backup; DS 3DV: -84.3 (barely plays)
   'Garrett Nussmeier':      {dv:1250,rv:700, trend:'up'},    // KTC SF: 1710 — KC backup, rising
   'Carson Beck':            {dv:900, rv:800, trend:'up'},    // KTC SF: 1242 — CIN backup
   'Drew Allar':             {dv:850, rv:800, trend:'up'},    // KTC SF: 1181 — PIT backup
@@ -2751,13 +2751,13 @@ const VALUE_DB = {
   'Odell Beckham Jr.':      {dv:200, rv:400, trend:'down'},
   'Julio Jones':            {dv:50,  rv:50,  trend:'down'},
   'A.J. Green':             {dv:50,  rv:50,  trend:'down'},
-  'Davante Adams':          {dv:600, rv:1500,trend:'down'},
+  // Davante Adams — do NOT add here; real entry is in WR section (dv:1500,rv:3648) — signed LAR 2026
   'Keenan Allen':           {dv:200, rv:800, trend:'down'},
   'Tyler Lockett':          {dv:500, rv:800, trend:'down'},
   'DeAndre Hopkins':        {dv:200, rv:400, trend:'down'},
   'Stefon Diggs':           {dv:300, rv:500, trend:'down'},
   'JuJu Smith-Schuster':    {dv:50,  rv:50,  trend:'down'},
-  'Christian McCaffrey':    {dv:2500,rv:3500,trend:'down'},
+  // Christian McCaffrey — do NOT add here; real entry is in RB section (dv:3800,rv:8208)
 
   // ── KICKERS ──────────────────────────────────────────────
   'Brandon Aubrey':         {dv:400, rv:4000,trend:'up'},
@@ -5809,7 +5809,7 @@ async function fetchDLFValues() {
     } catch(e) {}
   }
 
-  const BASE = 'https://raw.githubusercontent.com/jmvestal/tradeiq/main/rankings/';
+  const BASE = 'https://raw.githubusercontent.com/jmvestal/fantasyiq/main/rankings/';
   try {
     const [r1qb, rsf, rrook] = await Promise.allSettled([
       fetch(BASE + 'dlf-1qb.csv',      { signal: AbortSignal.timeout(10000) }).then(r => r.ok ? r.text() : null),
@@ -5914,7 +5914,7 @@ async function fetchDLFValues() {
 // Cache TTL: 24 hours per source. Ctrl+Shift+S → Force Refresh to bust cache.
 // Dynasty only — rv:0 so redraft values are never affected.
 // ═══════════════════════════════════════════════════════════
-const CUSTOM_BASE     = 'https://raw.githubusercontent.com/jmvestal/tradeiq/main/rankings/';
+const CUSTOM_BASE     = 'https://raw.githubusercontent.com/jmvestal/fantasyiq/main/rankings/';
 const CUSTOM_CACHE_KEY = 'tradeiq_custom_v7';
 const CUSTOM_TS_KEY    = 'tradeiq_custom_ts_v5';
 const CUSTOM_TTL       = 24 * 60 * 60 * 1000; // 24 hours
