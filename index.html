@@ -5221,9 +5221,11 @@ function rebuildPlayerValues() {
 
 // Build consensus value for one player across all loaded sources.
 // Uses MEDIAN — robust against outliers; one bad CSV can't dominate.
-// VALUE_DB is always included as an anchor so rank-inflated files get grounded.
-// Dynasty sources: KTC, FC, FFC, DLF, DP, VALUE_DB (all calibrated to 1QB baseline).
+// VALUE_DB is always included as an anchor (2 votes) so rank-inflated files get grounded.
+// Dynasty sources: KTC, FantasyCalc, VALUE_DB (all calibrated to 1QB SF baseline).
 // Redraft sources: above + ECR redraft CSVs + DraftShark (rv-only, dv:0).
+// RANKING RULE 5 (Stability): final consensus is capped at ±25% of VALUE_DB baseline
+// so no single upload cycle can overhaul rankings — movement is always gradual.
 function buildConsensus(p) {
   const pid  = normName(p.full_name || '');
   const dvArr = [], rvArr = [], trends = [];
@@ -5263,9 +5265,26 @@ function buildConsensus(p) {
   const dnCt = trends.filter(t=>t==='down').length;
   const trend = upCt > dnCt ? 'up' : dnCt > upCt ? 'down' : 'flat';
 
+  // RANKING RULE 5 — STABILITY: New CSV uploads should never overhaul full consensus
+  // rankings. Like KTC, rankings move gradually — injuries/trades/trends shift a player
+  // up or down incrementally, but a single upload cycle can't explode or crater a player.
+  // Implementation: cap the consensus result at ±25% of the VALUE_DB baseline.
+  // A player ranked at 5,000 dv can move to 6,250 max or 3,750 min from one upload cycle.
+  // This ensures VALUE_DB (anchored to KTC market values) always keeps rankings stable.
+  let rawDv = median(dvArr) || p.dynasty_val || 500;
+  let rawRv = median(rvArr) || p.redraft_val || 500;
+
+  if (vdb) {
+    const CAP = 0.25; // max 25% shift per cycle from VALUE_DB baseline
+    const dvBase = vdb.dv || rawDv;
+    const rvBase = (vdb.rv || vdb.dv) || rawRv;
+    rawDv = Math.min(dvBase * (1 + CAP), Math.max(dvBase * (1 - CAP), rawDv));
+    rawRv = Math.min(rvBase * (1 + CAP), Math.max(rvBase * (1 - CAP), rawRv));
+  }
+
   return {
-    dv: median(dvArr) || p.dynasty_val || 500,
-    rv: median(rvArr) || p.redraft_val || 500,
+    dv: Math.round(rawDv),
+    rv: Math.round(rawRv),
     trend,
     sources: dvArr.length,
   };
@@ -5980,7 +5999,7 @@ async function fetchDLFValues() {
 // Dynasty only — rv:0 so redraft values are never affected.
 // ═══════════════════════════════════════════════════════════
 const CUSTOM_BASE     = 'https://raw.githubusercontent.com/jmvestal/fantasyiq/main/rankings/';
-const CUSTOM_CACHE_KEY = 'tradeiq_custom_v14';
+const CUSTOM_CACHE_KEY = 'tradeiq_custom_v15';
 const CUSTOM_TS_KEY    = 'tradeiq_custom_ts_v5';
 const CUSTOM_TTL       = 24 * 60 * 60 * 1000; // 24 hours
 
