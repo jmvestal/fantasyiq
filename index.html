@@ -1547,6 +1547,7 @@
         </div>
         <div class="lcb-actions">
           <button class="btn btn-xs btn-s" onclick="openModal('connectModal')">Switch</button>
+          <button class="btn btn-xs btn-s" id="syncRosterBtn" onclick="manualSleeperSync()">🔄 Sync</button>
           <button class="btn btn-xs btn-p" onclick="runTeamAnalysis()">Analyze Team</button>
         </div>
       </div>
@@ -2463,574 +2464,1084 @@ const S = {
 };
 
 // ═══════════════════════════════════════════════════════════
-// CONSENSUS VALUE DATABASE
-// Sources: PFN Jan 2026 rankings, FantasyPros May 2026, Yahoo/Justin Boone post-draft
-// dv = dynasty value (1QB, PPR, 12-team), rv = redraft value
-// QB dv stored as 1QB format; SF multiplier applied by engine
+// DYNASTY VALUE DATABASE — dynasty_val anchor (1QB PPR 12-team)
+// Calibrated to KTC/FantasyCalc consensus May 2026
+// trend: 'up' | 'down' | omitted = flat
 // ═══════════════════════════════════════════════════════════
-const VALUE_DB = {
+const DYNASTY_DB = {
   // ── QBs ──────────────────────────────────────
-  // dv = KTC Superflex value ÷ 1.38 = 1QB dynasty baseline (May 10 2026, live KTC)
-  // rv = 1QB PPR redraft 2026 value
-  // rv = DS 1QB PPR redraft (QBs are less valuable in 1QB; calcValue() applies SF multiplier)
-  'Josh Allen':             {dv:7200,rv:4788,trend:'flat'},  // KTC SF: 9990 | DS: 50.4
-  'Drake Maye':             {dv:6800,rv:2784,trend:'up'},    // KTC SF: 9412 | DS: 29.3
-  'Caleb Williams':         {dv:5750,rv:2347,trend:'up'},    // KTC SF: 7939 | DS: 24.7
-  'Jayden Daniels':         {dv:5650,rv:2603,trend:'up'},    // KTC SF: 7825 | DS: 27.4
-  'Lamar Jackson':          {dv:5550,rv:3002,trend:'flat'},  // KTC SF: 7673 | DS: 31.6
-  'Joe Burrow':             {dv:5400,rv:2746,trend:'up'},    // KTC SF: 7489 | DS: 28.9
-  'Justin Herbert':         {dv:4950,rv:2233,trend:'up'},    // KTC SF: 6817 | DS: 23.5
-  'Patrick Mahomes':        {dv:4950,rv:1910,trend:'flat'},  // KTC SF: 6809 | DS: 20.1
-  'Jaxson Dart':            {dv:4850,rv:2147,trend:'up'},    // KTC SF: 6667 | DS: 22.6
-  'Trevor Lawrence':        {dv:4500,rv:2461,trend:'up'},    // KTC SF: 6219 | DS: 25.9
-  'Jalen Hurts':            {dv:4500,rv:2584,trend:'flat'},  // KTC SF: 6185 | DS: 27.2
-  'Bo Nix':                 {dv:4450,rv:1929,trend:'up'},    // KTC SF: 6137 | DS: 20.3
-  'Brock Purdy':            {dv:4200,rv:2271,trend:'flat'},  // KTC SF: 5818 | DS: 23.9
-  // ── 2026 QB Rookies (KTC live values, May 10 2026) ──
-  'Fernando Mendoza':       {dv:3200,rv:800, trend:'up'},    // LV starter, high pick — but unproven; below Jordan Love
-  'Ty Simpson':             {dv:1400,rv:500, trend:'up'},    // LAR backup; barely plays — KTC 2650 was inflated
-  'Garrett Nussmeier':      {dv:1250,rv:700, trend:'up'},    // KTC SF: 1710 — KC backup, rising
-  'Carson Beck':            {dv:900, rv:800, trend:'up'},    // KTC SF: 1242 — CIN backup
-  'Drew Allar':             {dv:850, rv:800, trend:'up'},    // KTC SF: 1181 — PIT backup
-  'Cade Klubnik':           {dv:1200,rv:1000,trend:'up'},    // KTC SF: 1674
-  'Cole Payton':            {dv:500, rv:400, trend:'up'},    // KTC SF: 706
-  // ── Established starters ────────────────────────────
-  'Jordan Love':            {dv:4100,rv:1368,trend:'up'},    // KTC SF: 5636 | DS: 14.4
-  'Cam Ward':               {dv:3800,rv:732, trend:'up'},    // KTC SF: 5249 | DS: 7.7
-  'Dak Prescott':           {dv:3600,rv:2128,trend:'flat'},  // KTC SF: 4966 | DS: 22.4
-  'Tyler Shough':           {dv:3550,rv:1577,trend:'up'},    // KTC SF: 4899 | DS: 16.6
-  'C.J. Stroud':            {dv:3500,rv:1074,trend:'up'},    // KTC SF: 4845 | DS: 11.3
-  'CJ Stroud':              {dv:3500,rv:1074,trend:'up'},
-  'Baker Mayfield':         {dv:3450,rv:1454,trend:'up'},    // KTC SF: 4772 | DS: 15.3
-  'Sam Darnold':            {dv:3450,rv:665, trend:'up'},    // KTC SF: 4756 | DS: 7.0
-  'Jared Goff':             {dv:3350,rv:1701,trend:'up'},    // KTC SF: 4623 | DS: 17.9
-  'Bryce Young':            {dv:3250,rv:190, trend:'up'},    // KTC SF: 4502 | DS: 2.0
-  'Kyler Murray':           {dv:3000,rv:1910,trend:'flat'},  // KTC SF: 4120 | DS: 20.1
-  'Malik Willis':           {dv:2950,rv:960, trend:'up'},    // KTC SF: 4039 | DS: 10.1
-  'Daniel Jones':           {dv:2850,rv:998, trend:'up'},    // KTC SF: 3951 | DS: 10.5
-  'Matthew Stafford':       {dv:2650,rv:1739,trend:'down'},  // KTC SF: 3679 | DS: 18.3
-  'Michael Penix Jr.':      {dv:2300,rv:500, trend:'up'},    // KTC SF: 3162 | DS: -6.7 (floor)
-  'J.J. McCarthy':          {dv:2100,rv:500, trend:'up'},    // KTC SF: 2916 | DS: -80.3 (floor)
-  'JJ McCarthy':            {dv:2100,rv:500, trend:'up'},
-  'Shedeur Sanders':        {dv:2050,rv:500, trend:'up'},    // KTC SF: 2829 | DS: -8.1 (floor)
-  'Tua Tagovailoa':         {dv:1950,rv:500, trend:'flat'},  // KTC SF: 2711 | DS: -7.0 (floor)
-  'Jacoby Brissett':        {dv:1950,rv:219, trend:'flat'},  // KTC SF: 2709 | DS: 2.3
-  'Mac Jones':              {dv:1950,rv:500, trend:'up'},    // KTC SF: 2693 | DS: no data
-  'Jalen Milroe':           {dv:1700,rv:500, trend:'up'},    // KTC SF: 2338 | DS: no data
-  'Anthony Richardson':     {dv:1650,rv:500, trend:'up'},    // KTC SF: 2299 | DS: no data
-  'Geno Smith':             {dv:1550,rv:114, trend:'flat'},  // KTC SF: 2165 | DS: 1.2
-  'Justin Fields':          {dv:1550,rv:500, trend:'flat'},  // KTC SF: 2119 | DS: no data
-  'Deshaun Watson':         {dv:1500,rv:500, trend:'down'},  // KTC SF: 2051 | DS: -8 games
-  'Will Howard':            {dv:1450,rv:500, trend:'up'},    // KTC SF: 2015 | DS: no data
-  'Kirk Cousins':           {dv:1450,rv:500, trend:'down'},  // KTC SF: 2001 | DS: -12.4 (floor)
-  'Quinn Ewers':            {dv:1300,rv:500, trend:'up'},    // KTC SF: 1807 | DS: no data
-  'Aaron Rodgers':          {dv:1300,rv:570, trend:'down'},  // KTC SF: 1777 | DS: 6.0
-  'Riley Leonard':          {dv:1300,rv:500, trend:'up'},    // KTC SF: 1774 | DS: no data
-  'Joe Milton':             {dv:1250,rv:500, trend:'up'},    // KTC SF: 1709 | DS: no data
-  'Spencer Rattler':        {dv:1250,rv:500, trend:'flat'},  // KTC SF: 1704 | DS: no data
-  'Will Levis':             {dv:1050,rv:500, trend:'up'},    // KTC SF: 1483 | DS: no data
-  'Tyson Bagent':           {dv:1050,rv:500, trend:'flat'},  // KTC SF: 1473 | DS: no data
-  'Dillon Gabriel':         {dv:1050,rv:500, trend:'up'},    // KTC SF: 1459 | DS: -94.2 (floor)
-  'Jameis Winston':         {dv:1000,rv:500, trend:'flat'},  // KTC SF: 1404 | DS: no data
-  'Marcus Mariota':         {dv:1000,rv:500, trend:'flat'},  // KTC SF: 1395 | DS: no data
-  'Davis Mills':            {dv:1000,rv:500, trend:'flat'},  // KTC SF: 1392 | DS: no data
-  'Tanner McKee':           {dv:900, rv:1000,trend:'flat'},  // KTC SF: 1239
-  'Tyler Huntley':          {dv:875, rv:1200,trend:'flat'},  // KTC SF: 1210
-  'Gardner Minshew':        {dv:850, rv:1500,trend:'flat'},  // KTC SF: 1171
-  'Joe Flacco':             {dv:850, rv:1200,trend:'flat'},  // KTC SF: 1166
-  'Trey Lance':             {dv:825, rv:500, trend:'down'},  // KTC SF: 1142
-  'Kenny Pickett':          {dv:800, rv:1000,trend:'flat'},  // KTC SF: 1082
-  'Sam Howell':             {dv:750, rv:1000,trend:'flat'},  // KTC SF: 1051
-  'Zach Wilson':            {dv:750, rv:800, trend:'flat'},  // KTC SF: 1028
-  'Drew Lock':              {dv:700, rv:800, trend:'flat'},  // KTC SF: 955
-  'Aidan O\'Connell':       {dv:600, rv:1000,trend:'flat'},  // KTC SF: 816
-  'Mason Rudolph':          {dv:500, rv:800, trend:'flat'},  // KTC SF: 673
-  'Tyrod Taylor':           {dv:375, rv:500, trend:'flat'},  // KTC SF: 521
-  'Derek Carr':             {dv:300, rv:500, trend:'down'},
+  'Josh Allen':             {val:7200},
+  'Drake Maye':             {val:6800,trend:'up'},
+  'Caleb Williams':         {val:5750,trend:'up'},
+  'Jayden Daniels':         {val:5650,trend:'up'},
+  'Lamar Jackson':          {val:5550},
+  'Joe Burrow':             {val:5400,trend:'up'},
+  'Justin Herbert':         {val:4950,trend:'up'},
+  'Patrick Mahomes':        {val:4950},
+  'Jaxson Dart':            {val:4850,trend:'up'},
+  'Trevor Lawrence':        {val:4500,trend:'up'},
+  'Jalen Hurts':            {val:4500},
+  'Bo Nix':                 {val:4450,trend:'up'},
+  'Brock Purdy':            {val:4200},
+  // ── 2026 QB Rookies ──
+  'Fernando Mendoza':       {val:3200,trend:'up'},
+  'Ty Simpson':             {val:1400,trend:'up'},
+  'Garrett Nussmeier':      {val:1250,trend:'up'},
+  'Carson Beck':            {val:900,trend:'up'},
+  'Drew Allar':             {val:850,trend:'up'},
+  'Cade Klubnik':           {val:1200,trend:'up'},
+  'Cole Payton':            {val:500,trend:'up'},
+  // ── Established starters ──
+  'Jordan Love':            {val:4100,trend:'up'},
+  'Cam Ward':               {val:3800,trend:'up'},
+  'Dak Prescott':           {val:3600},
+  'Tyler Shough':           {val:3550,trend:'up'},
+  'C.J. Stroud':            {val:3500,trend:'up'},
+  'CJ Stroud':              {val:3500,trend:'up'},
+  'Baker Mayfield':         {val:3450,trend:'up'},
+  'Sam Darnold':            {val:3450,trend:'up'},
+  'Jared Goff':             {val:3350,trend:'up'},
+  'Bryce Young':            {val:3250,trend:'up'},
+  'Kyler Murray':           {val:3000},
+  'Malik Willis':           {val:2950,trend:'up'},
+  'Daniel Jones':           {val:2850,trend:'up'},
+  'Matthew Stafford':       {val:2650,trend:'down'},
+  'Michael Penix Jr.':      {val:2300,trend:'up'},
+  'J.J. McCarthy':          {val:2100,trend:'up'},
+  'JJ McCarthy':            {val:2100,trend:'up'},
+  'Shedeur Sanders':        {val:2050,trend:'up'},
+  'Tua Tagovailoa':         {val:1950},
+  'Mac Jones':              {val:1950,trend:'up'},
+  'Jalen Milroe':           {val:1700,trend:'up'},
+  'Anthony Richardson':     {val:1650,trend:'up'},
+  'Geno Smith':             {val:1550},
+  'Justin Fields':          {val:1550},
+  'Deshaun Watson':         {val:1500,trend:'down'},
+  'Will Howard':            {val:1450,trend:'up'},
+  'Kirk Cousins':           {val:1450,trend:'down'},
+  'Quinn Ewers':            {val:1300,trend:'up'},
+  'Aaron Rodgers':          {val:1300,trend:'down'},
+  'Riley Leonard':          {val:1300,trend:'up'},
+  'Joe Milton':             {val:1250,trend:'up'},
+  'Spencer Rattler':        {val:1250},
+  'Will Levis':             {val:1050,trend:'up'},
+  'Tyson Bagent':           {val:1050},
+  'Dillon Gabriel':         {val:1050,trend:'up'},
+  'Jameis Winston':         {val:1000},
+  'Marcus Mariota':         {val:1000},
+  'Davis Mills':            {val:1000},
+  'Tanner McKee':           {val:900},
+  'Tyler Huntley':          {val:875},
+  'Gardner Minshew':        {val:850},
+  'Joe Flacco':             {val:850},
+  'Kenny Pickett':          {val:800},
+  'Sam Howell':             {val:750},
+  'Zach Wilson':            {val:750},
+  'Drew Lock':              {val:700},
+  "Aidan O'Connell":        {val:600},
+  'Mason Rudolph':          {val:500},
+  'Derek Carr':             {val:300,trend:'down'},
   // ── RBs ──────────────────────────────────────
-  // dv = KTC SF Half PPR dynasty value (May 10 2026, live KTC) | rv = DS 1QB PPR redraft
-  'Bijan Robinson':         {dv:9998,rv:8700,trend:'flat'},  // KTC: 9998 RB1 | DS: 91.5
-  'Jahmyr Gibbs':           {dv:9559,rv:8800,trend:'up'},    // KTC: 9559 RB2 | DS: 92.5
-  'Ashton Jeanty':          {dv:7559,rv:6400,trend:'up'},    // KTC: 7559 RB4 | DS: 67.7
-  'Omarion Hampton':        {dv:6712,rv:4800,trend:'up'},    // KTC: 6712 RB6 | DS: 50.2
-  "De'Von Achane":          {dv:6871,rv:5500,trend:'up'},    // KTC: 6871 RB5 | DS: 58.4
-  'Jonathan Taylor':        {dv:6060,rv:6800,trend:'flat'},  // KTC: 6060 RB7 | DS: 71.1
-  'Quinshon Judkins':       {dv:4100,rv:2328,trend:'up'},    // FC: 4067 — corrected down from 5800
-  'James Cook':             {dv:6052,rv:5800,trend:'flat'},  // KTC: 6052 RB8 | DS: 60.9
-  'TreVeyon Henderson':     {dv:4200,rv:2480,trend:'up'},    // FC: 4135 — corrected down from 5500
-  'Kenneth Walker III':     {dv:4500,rv:4800,trend:'up'},    // FC: 4456 — corrected down from 5200
-  'Breece Hall':            {dv:4400,rv:3900,trend:'flat'},  // FC: 4410 — corrected
-  'Chase Brown':            {dv:3700,rv:4200,trend:'up'},    // FC: 3666 — corrected down from 4700
-  'Bucky Irving':           {dv:3700,rv:2603,trend:'up'},    // FC: 3693 — corrected down from 4500
-  'Kaleb Johnson':          {dv:4300,rv:800, trend:'up'},    // DS: -10.1 (floor)
-  'Christian McCaffrey':    {dv:4300,rv:8208,trend:'flat'},  // FC: 4379 — corrected up from 3800
-  'Jacory Croskey-Merritt': {dv:3900,rv:1045,trend:'up'},   // DS: 11.0
-  'Trey Benson':            {dv:3800,rv:500, trend:'up'},    // DS: -2.1 (floor)
-  'Josh Jacobs':            {dv:3500,rv:4500,trend:'flat'},  // FC: 3419 — corrected down from 4477
-  'Braelon Allen':          {dv:3600,rv:500, trend:'up'},    // DS: -1.5 (floor)
-  'Isiah Pacheco':          {dv:3400,rv:922, trend:'flat'},  // DS: 9.7
-  'Bhayshul Tuten':         {dv:3200,rv:1967,trend:'up'},   // DS: 20.7
-  'Tyjae Spears':           {dv:3000,rv:1340,trend:'up'},   // DS: 14.1
-  'Cam Skattebo':           {dv:3600,rv:3800,trend:'up'},    // NYG RB1, 23yo — FC:3388 DP:1947 anchor
-  'Jaylen Wright':          {dv:2600,rv:500, trend:'up'},    // DS: -6.1 (floor)
-  'Ollie Gordon II':        {dv:2500,rv:500, trend:'up'},    // DS: -7.7 (floor)
-  'Saquon Barkley':         {dv:3900,rv:5501,trend:'flat'},  // FC: 3988 — corrected up from 2300
-  'Kyren Williams':         {dv:3800,rv:3192,trend:'flat'},  // FC: 3791 — corrected up from 2400
-  'Keaton Mitchell':        {dv:3600,rv:390, trend:'up'},    // DS: 4.1
-  'Isaac Guerendo':         {dv:3200,rv:500, trend:'up'},    // DS: -11.2 (floor)
-  'Brashard Smith':         {dv:3000,rv:500, trend:'up'},    // DS: -2.4 (floor)
-  'Dylan Sampson':          {dv:3200,rv:903, trend:'up'},    // DS: 9.5
-  'Woody Marks':            {dv:3000,rv:1064,trend:'up'},    // DS: 11.2
-  'Tyrone Tracy':           {dv:1600,rv:2200,trend:'flat'},  // NYG — FC:1415 DP:245(Jr.) losing backfield
-  'Tyrone Tracy Jr.':       {dv:1600,rv:2200,trend:'flat'},  // name alias (Sleeper uses no Jr.)
-  'Javonte Williams':       {dv:3100,rv:3477,trend:'flat'},  // FC: 3108 — corrected up from 2800
-  'Blake Corum':            {dv:2800,rv:1235,trend:'up'},    // DS: 13.0
-  'Demond Claiborne':       {dv:3200,rv:500, trend:'up'},    // DS: -8.2 (floor)
-  'Rhamondre Stevenson':    {dv:1800,rv:2052,trend:'flat'},  // FC: 1772 — corrected down from 2600
-  'Zach Charbonnet':        {dv:3200,rv:1045,trend:'up'},   // DS: 11.0 (7 games projected)
-  'Jaylen Warren':          {dv:1900,rv:2233,trend:'flat'},  // FC: 1812 — corrected down from 2600
-  'Jordan Mason':           {dv:2400,rv:1311,trend:'flat'},  // DS: 13.8
-  "Brian Robinson Jr.":     {dv:2400,rv:304, trend:'flat'},  // DS: 3.2
-  'Ray Davis':              {dv:2600,rv:500, trend:'up'},    // DS: -8.6 (floor)
-  'Jonathon Brooks':        {dv:2800,rv:1197,trend:'up'},   // DS: 12.6
-  'RJ Harvey':              {dv:2600,rv:1796,trend:'up'},   // DS: 18.9
-  'Tank Bigsby':            {dv:2200,rv:500, trend:'flat'},  // DS: -5.5 (floor)
-  'J.K. Dobbins':           {dv:1700,rv:1500,trend:'flat'},  // FC: 1638 — corrected down from 2200
-  'Rico Dowdle':            {dv:1900,rv:1796,trend:'flat'},  // FC: 1874 — corrected down from 2400
-  'MarShawn Lloyd':         {dv:2400,rv:500, trend:'up'},    // DS: -2.1 (floor)
-  'Jaydon Blue':            {dv:2200,rv:500, trend:'up'},    // DS: -2.3 (floor)
-  'Kyle Monangai':          {dv:2000,rv:1406,trend:'flat'},  // DS: 14.8
-  'Kaytron Allen':          {dv:2200,rv:447, trend:'up'},    // DS: 4.7
-  'LeQuint Allen Jr.':      {dv:2200,rv:500, trend:'up'},    // DS: -3.3 (floor)
-  'Kendre Miller':          {dv:2000,rv:500, trend:'flat'},  // DS: -6.8 (floor)
-  'Tyler Allgeier':         {dv:2000,rv:304, trend:'flat'},  // DS: 3.2
-  "D'Andre Swift":          {dv:2300,rv:2708,trend:'flat'},  // FC: 2317 — corrected up from 2000
-  'Chuba Hubbard':          {dv:2200,rv:2014,trend:'flat'},  // FC: 2208 — corrected up from 1800
-  'Travis Etienne Jr.':     {dv:3300,rv:3477,trend:'flat'},  // FC: 3364 — corrected up from 2200
-  'Travis Etienne':         {dv:3300,rv:3477,trend:'flat'},  // FC: 3364 — corrected up from 2200
-  'David Montgomery':       {dv:1800,rv:2062,trend:'down'},  // DS: 21.7
-  'Alvin Kamara':           {dv:1600,rv:799, trend:'down'},  // DS: 8.4
-  'Rachaad White':          {dv:1600,rv:1606,trend:'flat'},  // DS: 16.9
-  'Phil Mafah':             {dv:1800,rv:500, trend:'up'},    // DS: -12.3 (floor)
-  'Tony Pollard':           {dv:1500,rv:1986,trend:'down'},  // DS: 20.9
-  'Najee Harris':           {dv:1400,rv:500, trend:'down'},  // DS: -1 (floor)
-  'Derrick Henry':          {dv:2600,rv:4608,trend:'down'},  // FC: 2926 — corrected up from 1200 (still productive)
-  'Devin Singletary':       {dv:1200,rv:500, trend:'flat'},  // DS: -8.2 (floor)
-  'Kareem Hunt':            {dv:900, rv:500, trend:'down'},  // DS: -4.2 (floor)
-  'Austin Ekeler':          {dv:600, rv:500, trend:'down'},  // DS: -3.9 (floor)
-  'Rashaad Penny':          {dv:400, rv:1000,trend:'flat'},
-  // 2026 RB Rookies — adjusted down from KTC (KTC inflates rookies vs proven starters)
-  'Jeremiyah Love':         {dv:6500,rv:4845,trend:'up'},   // consensus #1 RB rookie — legitimately elite ceiling
-  'Jadarian Price':         {dv:3200,rv:1400,trend:'up'},   // solid prospect but below proven starters
-  'Darius Taylor':          {dv:2400,rv:800, trend:'up'},   // MIN — role uncertain
-  'Jaydn Ott':              {dv:2000,rv:500, trend:'up'},   // depth/upside
-  'Nicholas Singleton':     {dv:1700,rv:500, trend:'up'},
-  'Jonah Coleman':          {dv:1700,rv:133, trend:'up'},
-  'Demond Claiborne':       {dv:1200,rv:500, trend:'up'},
-  'Emmett Johnson':         {dv:1100,rv:86,  trend:'up'},
-  'DJ Giddens':             {dv:1800,rv:500, trend:'up'},   // KC — Pacheco backup, role possible
-  'Devin Neal':             {dv:1300,rv:500, trend:'up'},
-  'Kaelon Black':           {dv:800, rv:500, trend:'up'},
-  'Mike Washington Jr.':    {dv:1000,rv:500, trend:'up'},
-  'Kaytron Allen':          {dv:1400,rv:447, trend:'up'},
-  'Le\'Veon Moss':          {dv:700, rv:500, trend:'up'},
-  'Eli Heidenreich':        {dv:600, rv:500, trend:'up'},
-  'Adam Randall':           {dv:600, rv:500, trend:'up'},
-  'Seth McGowan':           {dv:500, rv:500, trend:'up'},
-  'Jam Miller':             {dv:500, rv:500, trend:'up'},
-  // 2026 WR Rookies — adjusted down from KTC (KTC inflates rookies; capped below proven starters)
-  // No 2026 rookie WR should rank above proven young starters like Pickens/Collins/Wilson
-  'Carnell Tate':           {dv:3900,rv:1853,trend:'up'},   // CHI WR1, top pick — real ceiling but unproven
-  'Jordyn Tyson':           {dv:3400,rv:1500,trend:'up'},   // ARI WR, promising landing spot
-  'Makai Lemon':            {dv:3000,rv:900, trend:'up'},   // IND WR, solid upside
-  'KC Concepcion':          {dv:2600,rv:800, trend:'up'},   // mid-tier rookie WR
-  'Omar Cooper Jr.':        {dv:2000,rv:257, trend:'up'},   // depth/upside play
-  'Denzel Boston':          {dv:1600,rv:57,  trend:'up'},   // unproven, near-zero redraft
-  'Chris Bell':             {dv:1400,rv:400, trend:'up'},   // deep stash
-  'Germie Bernard':         {dv:1300,rv:400, trend:'up'},
-  'Elijah Sarratt':         {dv:1200,rv:400, trend:'up'},
-  'Chris Brazzell II':      {dv:1100,rv:400, trend:'up'},
-  'Antonio Williams':       {dv:1100,rv:400, trend:'up'},
-  'Zachariah Branch':       {dv:1000,rv:400, trend:'up'},
-  'Malachi Fields':         {dv:1000,rv:400, trend:'up'},
-  'Skyler Bell':            {dv:900, rv:400, trend:'up'},
-  "Ja'Kobi Lane":           {dv:800, rv:400, trend:'up'},
-  'Ted Hurst':              {dv:700, rv:400, trend:'up'},
-  "De'Zhaun Stribling":     {dv:600, rv:400, trend:'up'},
-  'Kevin Coleman':          {dv:500, rv:400, trend:'up'},
-  'Brenen Thompson':        {dv:500, rv:400, trend:'up'},
-  'Zavion Thomas':          {dv:500, rv:400, trend:'up'},
-  'Bryce Lance':            {dv:400, rv:300, trend:'up'},
-  'Deion Burks':            {dv:400, rv:600, trend:'up'},
-  'Caleb Douglas':          {dv:300, rv:400, trend:'up'},
-  'CJ Daniels':             {dv:250, rv:300, trend:'up'},
-  // 2026 TE Rookies — KTC live values May 10 2026 (already in TE section above)
-  'Justin Joly':            {dv:450, rv:200, trend:'flat'}, // 5th round pick, unproven
-  'Michael Trigg':          {dv:1185,rv:500, trend:'up'},   // KTC TE57: 1185 — DS: neg (floor)
-  // Depth RBs — commonly traded/streamed
-  'Dameon Pierce':          {dv:1800,rv:500, trend:'flat'},
-  'Samaje Perine':          {dv:1400,rv:500, trend:'flat'},
-  'Jaleel McLaughlin':      {dv:1800,rv:500, trend:'up'},
-  'Roschon Johnson':        {dv:1600,rv:500, trend:'up'},   // DS: neg (floor)
-  'Hassan Haskins':         {dv:1400,rv:500, trend:'flat'},
-  'Clyde Edwards-Helaire':  {dv:1200,rv:500, trend:'down'},
-  'Elijah Mitchell':        {dv:1500,rv:500, trend:'flat'},
-  'Jerome Ford':            {dv:1600,rv:500, trend:'flat'},  // DS: -8.9 (floor)
+  'Bijan Robinson':         {val:9998},
+  'Jahmyr Gibbs':           {val:9559,trend:'up'},
+  'Ashton Jeanty':          {val:7559,trend:'up'},
+  "De'Von Achane":          {val:6871,trend:'up'},
+  'Omarion Hampton':        {val:6712,trend:'up'},
+  'Jonathan Taylor':        {val:6060},
+  'James Cook':             {val:6052},
+  'Quinshon Judkins':       {val:4100,trend:'up'},
+  'TreVeyon Henderson':     {val:4200,trend:'up'},
+  'Kaleb Johnson':          {val:4300,trend:'up'},
+  'Christian McCaffrey':    {val:4300},
+  'Kenneth Walker III':     {val:4500,trend:'up'},
+  'Breece Hall':            {val:4400},
+  'Jacory Croskey-Merritt': {val:3900,trend:'up'},
+  'Trey Benson':            {val:3800,trend:'up'},
+  'Saquon Barkley':         {val:3900},
+  'Kyren Williams':         {val:3800},
+  'Keaton Mitchell':        {val:3600,trend:'up'},
+  'Braelon Allen':          {val:3600,trend:'up'},
+  'Cam Skattebo':           {val:3600,trend:'up'},
+  'Josh Jacobs':            {val:3500},
+  'Isiah Pacheco':          {val:3400},
+  'Chase Brown':            {val:3700,trend:'up'},
+  'Bucky Irving':           {val:3700,trend:'up'},
+  'Bhayshul Tuten':         {val:3200,trend:'up'},
+  'Tyjae Spears':           {val:3000,trend:'up'},
+  'Jaylen Wright':          {val:2600,trend:'up'},
+  'Ollie Gordon II':        {val:2500,trend:'up'},
+  'Isaac Guerendo':         {val:3200,trend:'up'},
+  'Brashard Smith':         {val:3000,trend:'up'},
+  'Dylan Sampson':          {val:3200,trend:'up'},
+  'Woody Marks':            {val:3000,trend:'up'},
+  'Tyrone Tracy':           {val:1600},
+  'Tyrone Tracy Jr.':       {val:1600},
+  'Javonte Williams':       {val:3100},
+  'Blake Corum':            {val:2800,trend:'up'},
+  'Demond Claiborne':       {val:1200,trend:'up'},
+  'Rhamondre Stevenson':    {val:1800},
+  'Zach Charbonnet':        {val:3200,trend:'up'},
+  'Jaylen Warren':          {val:1900},
+  'Jordan Mason':           {val:2400},
+  "Brian Robinson Jr.":     {val:2400},
+  'Ray Davis':              {val:2600,trend:'up'},
+  'Jonathon Brooks':        {val:2800,trend:'up'},
+  'RJ Harvey':              {val:2600,trend:'up'},
+  'Tank Bigsby':            {val:2200},
+  'J.K. Dobbins':           {val:1700},
+  'Rico Dowdle':            {val:1900},
+  'MarShawn Lloyd':         {val:2400,trend:'up'},
+  'Jaydon Blue':            {val:2200,trend:'up'},
+  'Kyle Monangai':          {val:2000},
+  'Kaytron Allen':          {val:1400,trend:'up'},
+  'LeQuint Allen Jr.':      {val:2200,trend:'up'},
+  'Kendre Miller':          {val:2000},
+  'Tyler Allgeier':         {val:2000},
+  "D'Andre Swift":          {val:2300},
+  'Chuba Hubbard':          {val:2200},
+  'Travis Etienne Jr.':     {val:3300},
+  'Travis Etienne':         {val:3300},
+  'David Montgomery':       {val:1800,trend:'down'},
+  'Alvin Kamara':           {val:1600,trend:'down'},
+  'Rachaad White':          {val:1600},
+  'Phil Mafah':             {val:1800,trend:'up'},
+  'Tony Pollard':           {val:1500,trend:'down'},
+  'Najee Harris':           {val:1400,trend:'down'},
+  'Derrick Henry':          {val:2600,trend:'down'},
+  'Devin Singletary':       {val:1200},
+  'Kareem Hunt':            {val:900,trend:'down'},
+  'Austin Ekeler':          {val:600,trend:'down'},
+  'Rashaad Penny':          {val:400},
+  // 2026 RB Rookies
+  'Jeremiyah Love':         {val:6500,trend:'up'},
+  'Jadarian Price':         {val:3200,trend:'up'},
+  'Darius Taylor':          {val:2400,trend:'up'},
+  'Jaydn Ott':              {val:2000,trend:'up'},
+  'Nicholas Singleton':     {val:1700,trend:'up'},
+  'Jonah Coleman':          {val:1700,trend:'up'},
+  'Emmett Johnson':         {val:1100,trend:'up'},
+  'DJ Giddens':             {val:1800,trend:'up'},
+  'Devin Neal':             {val:1300,trend:'up'},
+  'Kaelon Black':           {val:800,trend:'up'},
+  'Mike Washington Jr.':    {val:1000,trend:'up'},
+  "Le'Veon Moss":           {val:700,trend:'up'},
+  'Eli Heidenreich':        {val:600,trend:'up'},
+  'Adam Randall':           {val:600,trend:'up'},
+  'Seth McGowan':           {val:500,trend:'up'},
+  'Jam Miller':             {val:500,trend:'up'},
+  // 2026 WR Rookies
+  'Carnell Tate':           {val:3900,trend:'up'},
+  'Jordyn Tyson':           {val:3400,trend:'up'},
+  'Makai Lemon':            {val:3000,trend:'up'},
+  'KC Concepcion':          {val:2600,trend:'up'},
+  'Omar Cooper Jr.':        {val:2000,trend:'up'},
+  'Denzel Boston':          {val:3000,trend:'up'},
+  'Chris Bell':             {val:1400,trend:'up'},
+  'Germie Bernard':         {val:1300,trend:'up'},
+  'Elijah Sarratt':         {val:1200,trend:'up'},
+  'Chris Brazzell II':      {val:1100,trend:'up'},
+  'Antonio Williams':       {val:1100,trend:'up'},
+  'Zachariah Branch':       {val:1000,trend:'up'},
+  'Malachi Fields':         {val:1000,trend:'up'},
+  'Skyler Bell':            {val:900,trend:'up'},
+  "Ja'Kobi Lane":           {val:800,trend:'up'},
+  'Ted Hurst':              {val:700,trend:'up'},
+  "De'Zhaun Stribling":     {val:600,trend:'up'},
+  'Kevin Coleman':          {val:500,trend:'up'},
+  'Brenen Thompson':        {val:500,trend:'up'},
+  'Zavion Thomas':          {val:500,trend:'up'},
+  'Bryce Lance':            {val:400,trend:'up'},
+  'Deion Burks':            {val:400,trend:'up'},
+  'Caleb Douglas':          {val:300,trend:'up'},
+  'CJ Daniels':             {val:250,trend:'up'},
+  // 2026 TE Rookies
+  'Justin Joly':            {val:450},
+  'Michael Trigg':          {val:1185,trend:'up'},
+  // Depth RBs
+  'Dameon Pierce':          {val:1800},
+  'Samaje Perine':          {val:1400},
+  'Jaleel McLaughlin':      {val:1800,trend:'up'},
+  'Roschon Johnson':        {val:1600,trend:'up'},
+  'Hassan Haskins':         {val:1400},
+  'Clyde Edwards-Helaire':  {val:1200,trend:'down'},
+  'Elijah Mitchell':        {val:1500},
+  'Jerome Ford':            {val:1600},
   // ── WRs ──────────────────────────────────────
-  // dv = KTC SF Half PPR dynasty value (May 10 2026, live KTC) | rv = DS 1QB PPR redraft
-  "Ja'Marr Chase":          {dv:9991,rv:8949,trend:'flat'},  // KTC WR1: 9991 | DS: 94.2
-  'Jaxon Smith-Njigba':     {dv:9899,rv:7952,trend:'up'},    // KTC WR2: 9899 | DS: 83.7
-  'Puka Nacua':             {dv:8629,rv:9500,trend:'up'},    // KTC WR3: 8629 | DS: 100 (WR1!)
-  'Malik Nabers':           {dv:7859,rv:4674,trend:'up'},    // KTC WR4: 7859 | DS: 49.2
-  'Justin Jefferson':       {dv:7808,rv:6869,trend:'flat'},  // KTC WR5: 7808 | DS: 72.3
-  'Amon-Ra St. Brown':      {dv:7717,rv:7686,trend:'flat'},  // KTC WR6: 7717 | DS: 80.9
-  'CeeDee Lamb':            {dv:7305,rv:7002,trend:'flat'},  // KTC WR7: 7305 | DS: 73.7
-  'Drake London':           {dv:6883,rv:5795,trend:'up'},    // KTC WR8: 6883 | DS: 61.0
-  'Tetairoa McMillan':      {dv:6559,rv:3145,trend:'up'},    // KTC WR9: 6559 | DS: 33.1
-  'Emeka Egbuka':           {dv:6210,rv:2860,trend:'up'},    // KTC WR10: 6210 | DS: 30.1
-  'Garrett Wilson':         {dv:4200,rv:4057,trend:'flat'},  // FC: 4103 — corrected down from 5900
-  'Rashee Rice':            {dv:4200,rv:6000,trend:'up'},    // FC: 4028 — corrected down from 5800 (post-ACL)
-  'Nico Collins':           {dv:4400,rv:5200,trend:'flat'},  // FC: 4262 — corrected down from 5700
-  'George Pickens':         {dv:4700,rv:5140,trend:'up'},    // FC: 4559 — corrected down from 5700
-  'Zay Flowers':            {dv:5500,rv:4342,trend:'up'},    // DS: 45.7
-  'Luther Burden III':      {dv:5300,rv:3145,trend:'up'},    // DS: 33.1
-  'Tee Higgins':            {dv:3300,rv:4123,trend:'flat'},  // FC: 3113 — corrected down from 5200
-  'Ladd McConkey':          {dv:3800,rv:2888,trend:'up'},    // FC: 3618 — corrected down from 5100
-  'Travis Hunter':          {dv:3325,rv:800, trend:'up'},    // DS: -14.1 (rookie adjustment)
-  'Chris Olave':            {dv:4000,rv:4313,trend:'flat'},  // FC: 3935 — corrected down from 4900
-  'Rome Odunze':            {dv:3800,rv:2480,trend:'up'},    // FC: 3657 — corrected down from 4800
-  'Brian Thomas Jr.':       {dv:4700,rv:1644,trend:'up'},    // DS: 17.3
-  'Jayden Higgins':         {dv:4600,rv:865, trend:'up'},    // DS: 9.1
-  'Ricky Pearsall':         {dv:4500,rv:1644,trend:'up'},    // DS: 17.3
-  'Marvin Harrison Jr.':    {dv:3600,rv:1910,trend:'flat'},  // FC: 3555 — corrected down from 4300 (injury risk)
-  'Jameson Williams':       {dv:4200,rv:2679,trend:'up'},    // DS: 28.2
-  'Quentin Johnston':       {dv:4000,rv:1083,trend:'up'},    // DS: 11.4
-  'Jordan Addison':         {dv:3900,rv:1777,trend:'up'},    // DS: 18.7
-  'DeVonta Smith':          {dv:3700,rv:4095,trend:'flat'},  // DS: 43.1
-  'Jaylen Waddle':          {dv:3600,rv:3363,trend:'flat'},  // DS: 35.4
-  'Matthew Golden':         {dv:3500,rv:447, trend:'up'},    // DS: 4.7
-  'Adonai Mitchell':        {dv:3400,rv:500, trend:'up'},    // DS: -6.2 (floor)
-  'Khalil Shakir':          {dv:3800,rv:808, trend:'up'},    // DS: 8.5
-  'A.J. Brown':             {dv:3800,rv:5159,trend:'flat'},  // DS: 54.3
-  'AJ Brown':               {dv:3800,rv:5159,trend:'flat'},  // DS: 54.3
-  'Brandon Aiyuk':          {dv:3600,rv:846, trend:'flat'},  // DS: 8.9
-  'Josh Downs':             {dv:4000,rv:1026,trend:'up'},    // DS: 10.8
-  'Jayden Reed':            {dv:3800,rv:1843,trend:'up'},    // DS: 19.4
-  'Troy Franklin':          {dv:3800,rv:500, trend:'up'},    // DS: -21.1 (floor)
-  'DK Metcalf':             {dv:3400,rv:2527,trend:'flat'},  // DS: 26.6
-  'Keon Coleman':           {dv:3900,rv:500, trend:'up'},    // DS: -21.2 (floor)
-  'Elic Ayomanor':          {dv:3800,rv:500, trend:'up'},    // DS: -43.2 (floor)
-  'Jalen Coker':            {dv:3600,rv:500, trend:'up'},    // DS: -1.8 (floor)
-  'Parker Washington':      {dv:3600,rv:1948,trend:'up'},    // DS: 20.5
-  'Pat Bryant':             {dv:3800,rv:500, trend:'up'},    // DS: -17.1 (floor)
-  'Kyle Williams':          {dv:3800,rv:500, trend:'up'},    // DS: -33.7 (floor)
-  'Jaylin Noel':            {dv:3600,rv:500, trend:'up'},    // DS: -10.4 (floor)
-  "Wan'Dale Robinson":      {dv:3200,rv:883, trend:'flat'},  // DS: 9.3
-  'Jalen McMillan':         {dv:3400,rv:228, trend:'up'},    // DS: 2.4
-  'Chimere Dike':           {dv:3200,rv:500, trend:'up'},    // DS: -41.5 (floor)
-  'Romeo Doubs':            {dv:3000,rv:1188,trend:'flat'},  // DS: 12.5
-  'Tank Dell':              {dv:3200,rv:500, trend:'up'},    // no DS data (floor)
-  'Tez Johnson':            {dv:3400,rv:500, trend:'up'},    // DS: -47.8 (floor)
-  'Cedric Tillman':         {dv:3000,rv:500, trend:'up'},    // DS: -49.2 (floor)
-  'Jack Bech':              {dv:3600,rv:500, trend:'up'},    // DS: -11.4 (floor)
-  'Michael Wilson':         {dv:2800,rv:1045,trend:'flat'},  // DS: 11.0
-  'Christian Watson':       {dv:2800,rv:2755,trend:'flat'},  // DS: 29.0
-  'Denzel Boston':          {dv:3000,rv:57,  trend:'up'},    // DS: 0.6 (near zero)
-  'Michael Pittman Jr.':    {dv:2800,rv:1957,trend:'flat'},  // DS: 20.6
-  'Jerry Jeudy':            {dv:2800,rv:500, trend:'flat'},  // DS: -4.1 (floor)
-  'Courtland Sutton':       {dv:2600,rv:1900,trend:'down'},  // DS: 20.0
-  'Xavier Worthy':          {dv:3200,rv:903, trend:'up'},    // DS: 9.5
-  "Dont'e Thornton Jr.":    {dv:3200,rv:500, trend:'up'},    // DS: -53.7 (floor)
-  'Savion Williams':        {dv:3200,rv:500, trend:'up'},    // DS: -46.8 (floor)
-  'Terry McLaurin':         {dv:2800,rv:2898,trend:'down'},  // DS: 30.5
-  'Alec Pierce':            {dv:2600,rv:1834,trend:'flat'},  // DS: 19.3
-  'Marvin Mims Jr.':        {dv:2800,rv:500, trend:'up'},    // DS: -25.2 (floor)
-  'DJ Moore':               {dv:2400,rv:1976,trend:'flat'},  // DS: 20.8
-  'Mike Evans':             {dv:2200,rv:2442,trend:'down'},  // DS: 25.7
-  'Darnell Mooney':         {dv:2200,rv:500, trend:'flat'},  // DS: -10 (floor)
-  'Jakobi Meyers':          {dv:2200,rv:1900,trend:'flat'},  // DS: 20.0
-  'Rashod Bateman':         {dv:2200,rv:500, trend:'flat'},  // DS: -15.4 (floor)
-  'Tyreek Hill':            {dv:1800,rv:500, trend:'down'},  // DS: -2.1 (10 games, floor)
-  'Hollywood Brown':        {dv:2000,rv:500, trend:'flat'},  // no DS data (floor)
-  'Deebo Samuel Sr.':       {dv:1600,rv:304, trend:'down'},  // DS: 3.2
-  'Deebo Samuel':           {dv:1600,rv:304, trend:'down'},  // DS: 3.2
-  'Davante Adams':          {dv:1500,rv:3648,trend:'down'},  // DS: 38.4 (UP — new team)
-  'Chris Godwin':           {dv:1500,rv:1254,trend:'down'},  // DS: 13.2
-  'Stefon Diggs':           {dv:1200,rv:998, trend:'down'},  // DS: 10.5
-  'Calvin Ridley':          {dv:1200,rv:2500,trend:'down'},
-  'Cooper Kupp':            {dv:1200,rv:2500,trend:'down'},
-  'Tyler Lockett':          {dv:1000,rv:2000,trend:'down'},
-  'Keenan Allen':           {dv:800, rv:1800,trend:'down'},
-  'DeAndre Hopkins':        {dv:600, rv:1500,trend:'down'},
-  // Depth WRs — dynasty buy-low / redraft streamers
-  'Demario Douglas':        {dv:2600,rv:3000,trend:'up'},
-  'Xavier Legette':         {dv:2800,rv:2600,trend:'up'},
-  "Ja'Lynn Polk":           {dv:2600,rv:2400,trend:'up'},
-  'Javon Baker':            {dv:2400,rv:2200,trend:'up'},
-  'Tutu Atwell':            {dv:2000,rv:2200,trend:'flat'},
-  'Darius Slayton':         {dv:1800,rv:2500,trend:'flat'},
-  'Rakim Jarrett':          {dv:2200,rv:2000,trend:'up'},
-  'Josh Reynolds':          {dv:1500,rv:2000,trend:'flat'},
-  'Josh Palmer':            {dv:1800,rv:2200,trend:'flat'},
-  'Olamide Zaccheaus':      {dv:1600,rv:2000,trend:'flat'},
-  'Nathaniel Dell':         {dv:2800,rv:3000,trend:'up'},
-  'Rashid Shaheed':         {dv:2400,rv:2800,trend:'up'},
-  'Deontay Burnett':        {dv:2000,rv:1800,trend:'up'},
-  'Tre Tucker':             {dv:1800,rv:2000,trend:'up'},
+  "Ja'Marr Chase":          {val:9991},
+  'Jaxon Smith-Njigba':     {val:9899,trend:'up'},
+  'Puka Nacua':             {val:8629,trend:'up'},
+  'Malik Nabers':           {val:7859,trend:'up'},
+  'Justin Jefferson':       {val:7808},
+  'Amon-Ra St. Brown':      {val:7717},
+  'CeeDee Lamb':            {val:7305},
+  'Drake London':           {val:6883,trend:'up'},
+  'Tetairoa McMillan':      {val:6559,trend:'up'},
+  'Emeka Egbuka':           {val:6210,trend:'up'},
+  'Garrett Wilson':         {val:4200},
+  'Rashee Rice':            {val:4200,trend:'up'},
+  'Nico Collins':           {val:4400},
+  'George Pickens':         {val:4700,trend:'up'},
+  'Zay Flowers':            {val:5500,trend:'up'},
+  'Luther Burden III':      {val:5300,trend:'up'},
+  'Tee Higgins':            {val:3300},
+  'Ladd McConkey':          {val:3800,trend:'up'},
+  'Travis Hunter':          {val:3325,trend:'up'},
+  'Chris Olave':            {val:4000},
+  'Rome Odunze':            {val:3800,trend:'up'},
+  'Brian Thomas Jr.':       {val:4700,trend:'up'},
+  'Jayden Higgins':         {val:4600,trend:'up'},
+  'Ricky Pearsall':         {val:4500,trend:'up'},
+  'Marvin Harrison Jr.':    {val:3600},
+  'Jameson Williams':       {val:4200,trend:'up'},
+  'Quentin Johnston':       {val:4000,trend:'up'},
+  'Jordan Addison':         {val:3900,trend:'up'},
+  'DeVonta Smith':          {val:3700},
+  'Jaylen Waddle':          {val:3600},
+  'Matthew Golden':         {val:3500,trend:'up'},
+  'Adonai Mitchell':        {val:3400,trend:'up'},
+  'Khalil Shakir':          {val:3800,trend:'up'},
+  'A.J. Brown':             {val:3800},
+  'AJ Brown':               {val:3800},
+  'Brandon Aiyuk':          {val:3600},
+  'Josh Downs':             {val:4000,trend:'up'},
+  'Jayden Reed':            {val:3800,trend:'up'},
+  'Troy Franklin':          {val:3800,trend:'up'},
+  'DK Metcalf':             {val:3400},
+  'Keon Coleman':           {val:3900,trend:'up'},
+  'Elic Ayomanor':          {val:3800,trend:'up'},
+  'Jalen Coker':            {val:3600,trend:'up'},
+  'Parker Washington':      {val:3600,trend:'up'},
+  'Pat Bryant':             {val:3800,trend:'up'},
+  'Kyle Williams':          {val:3800,trend:'up'},
+  'Jaylin Noel':            {val:3600,trend:'up'},
+  "Wan'Dale Robinson":      {val:3200},
+  'Jalen McMillan':         {val:3400,trend:'up'},
+  'Chimere Dike':           {val:3200,trend:'up'},
+  'Romeo Doubs':            {val:3000},
+  'Tank Dell':              {val:3200,trend:'up'},
+  'Tez Johnson':            {val:3400,trend:'up'},
+  'Cedric Tillman':         {val:3000,trend:'up'},
+  'Jack Bech':              {val:3600,trend:'up'},
+  'Michael Wilson':         {val:2800},
+  'Christian Watson':       {val:2800},
+  'Michael Pittman Jr.':    {val:2800},
+  'Jerry Jeudy':            {val:2800},
+  'Courtland Sutton':       {val:2600,trend:'down'},
+  'Xavier Worthy':          {val:3200,trend:'up'},
+  "Dont'e Thornton Jr.":    {val:3200,trend:'up'},
+  'Savion Williams':        {val:3200,trend:'up'},
+  'Terry McLaurin':         {val:2800,trend:'down'},
+  'Alec Pierce':            {val:2600},
+  'Marvin Mims Jr.':        {val:2800,trend:'up'},
+  'DJ Moore':               {val:2400},
+  'Mike Evans':             {val:2200,trend:'down'},
+  'Darnell Mooney':         {val:2200},
+  'Jakobi Meyers':          {val:2200},
+  'Rashod Bateman':         {val:2200},
+  'Tyreek Hill':            {val:1800,trend:'down'},
+  'Hollywood Brown':        {val:2000},
+  'Deebo Samuel Sr.':       {val:1600,trend:'down'},
+  'Deebo Samuel':           {val:1600,trend:'down'},
+  'Davante Adams':          {val:1500,trend:'down'},
+  'Chris Godwin':           {val:1500,trend:'down'},
+  'Cooper Kupp':            {val:1200,trend:'down'},
+  'Calvin Ridley':          {val:1200,trend:'down'},
+  // Depth WRs
+  'Demario Douglas':        {val:2600,trend:'up'},
+  'Xavier Legette':         {val:2800,trend:'up'},
+  "Ja'Lynn Polk":           {val:2600,trend:'up'},
+  'Javon Baker':            {val:2400,trend:'up'},
+  'Tutu Atwell':            {val:2000},
+  'Darius Slayton':         {val:1800},
+  'Rakim Jarrett':          {val:2200,trend:'up'},
+  'Josh Reynolds':          {val:1500},
+  'Josh Palmer':            {val:1800},
+  'Olamide Zaccheaus':      {val:1600},
+  'Nathaniel Dell':         {val:2800,trend:'up'},
+  'Rashid Shaheed':         {val:2400,trend:'up'},
+  'Deontay Burnett':        {val:2000,trend:'up'},
+  'Tre Tucker':             {val:1800,trend:'up'},
   // ── TEs ──────────────────────────────────────
-  // dv = KTC Half PPR Non-TE-Premium dynasty value (May 10 2026, live KTC)
-  // rv = 2026 redraft PPR estimated value
-  // rv = DS 1QB PPR redraft value (3D Value × 95)
-  'Brock Bowers':           {dv:7948,rv:4655,trend:'up'},    // DS: 49.0 — TE1
-  'Trey McBride':           {dv:7524,rv:4655,trend:'flat'},  // DS: 49.0 — TE1
-  'Colston Loveland':       {dv:6017,rv:3848,trend:'up'},    // DS: 40.5
-  'Tyler Warren':           {dv:5684,rv:3458,trend:'up'},    // DS: 36.4
-  'Harold Fannin':          {dv:4866,rv:2518,trend:'up'},    // DS: 26.5
-  'Harold Fannin Jr.':      {dv:4866,rv:2518,trend:'up'},    // DS: 26.5
-  'Tucker Kraft':           {dv:4776,rv:2423,trend:'up'},    // DS: 25.5
-  'Sam LaPorta':            {dv:4516,rv:2565,trend:'up'},    // DS: 27.0
-  'Kyle Pitts':             {dv:4391,rv:1682,trend:'up'},    // DS: 17.7
-  'Kenyon Sadiq':           {dv:4123,rv:133, trend:'up'},    // DS: 1.4
-  'Oronde Gadsden':         {dv:3873,rv:314, trend:'up'},    // DS: 3.3
-  'Oronde Gadsden II':      {dv:3873,rv:314, trend:'up'},    // DS: 3.3
-  'Eli Stowers':            {dv:3526,rv:500, trend:'up'},    // DS: -32.6 (floor)
-  'Isaiah Likely':          {dv:3297,rv:500, trend:'up'},    // DS: -1.2 (floor)
-  'George Kittle':          {dv:3261,rv:1853,trend:'down'},  // DS: 19.5
-  'Jake Ferguson':          {dv:3251,rv:646, trend:'flat'},  // DS: 6.8
-  'Dalton Kincaid':         {dv:3233,rv:751, trend:'flat'},  // DS: 7.9
-  'Brenton Strange':        {dv:3035,rv:152, trend:'up'},    // DS: 1.6
-  'T.J. Hockenson':         {dv:2815,rv:500, trend:'flat'},  // DS: -2.7 (floor)
-  'AJ Barner':              {dv:2810,rv:500, trend:'up'},    // DS: -12.2 (floor)
-  'Mark Andrews':           {dv:2734,rv:675, trend:'flat'},  // DS: 7.1
-  'Terrance Ferguson':      {dv:2708,rv:500, trend:'up'},    // DS: -24.2 (floor)
-  'Chigoziem Okonkwo':      {dv:2700,rv:500, trend:'flat'},  // DS: -5.8 (floor)
-  'Chig Okonkwo':           {dv:2700,rv:500, trend:'flat'},  // DS: -5.8 (floor)
-  'Gunnar Helm':            {dv:2618,rv:500, trend:'up'},    // DS: -11.9 (floor)
-  'Dallas Goedert':         {dv:2572,rv:485, trend:'down'},  // DS: 5.1
-  'Elijah Arroyo':          {dv:2507,rv:500, trend:'up'},    // DS: -29.5 (floor)
-  'Mason Taylor':           {dv:2417,rv:500, trend:'up'},    // DS: -36.8 (floor)
-  'David Njoku':            {dv:2411,rv:500, trend:'flat'},  // DS: -16.7 (floor)
-  'Travis Kelce':           {dv:2387,rv:1482,trend:'down'},  // DS: 15.6
-  'Juwan Johnson':          {dv:2371,rv:86,  trend:'flat'},  // DS: 0.9
-  'Cade Otton':             {dv:2341,rv:500, trend:'flat'},  // DS: -9 (floor)
-  'Theo Johnson':           {dv:2337,rv:500, trend:'up'},    // DS: -41.6 (floor)
-  'Jake Tonges':            {dv:2301,rv:500, trend:'up'},    // DS: -58 (floor)
-  'Hunter Henry':           {dv:2274,rv:228, trend:'flat'},  // DS: 2.4
-  'Dalton Schultz':         {dv:2269,rv:500, trend:'flat'},  // DS: -2.9 (floor)
-  'Pat Freiermuth':         {dv:2194,rv:500, trend:'flat'},  // DS: -10.7 (floor)
-  'Michael Mayer':          {dv:2135,rv:500, trend:'up'},    // DS: -28.4 (floor)
-  "Ja'Tavion Sanders":      {dv:2091,rv:500, trend:'up'},    // DS: -39.9 (floor)
-  'Max Klare':              {dv:2022,rv:500, trend:'up'},    // DS: -41.7 (floor)
-  'Cole Kmet':              {dv:2000,rv:500, trend:'flat'},  // DS: -38.1 (floor)
-  'Colby Parkinson':        {dv:1956,rv:500, trend:'flat'},  // DS: -20.9 (floor)
-  'Evan Engram':            {dv:1905,rv:500, trend:'down'},  // DS: -20.9 (floor)
-  'Luke Musgrave':          {dv:1896,rv:500, trend:'up'},    // DS: -51.6 (floor)
-  'Darnell Washington':     {dv:1857,rv:500, trend:'up'},    // DS: -23.6 (floor)
-  'Ben Sinnott':            {dv:1798,rv:500, trend:'up'},    // DS: -59.2 (floor)
-  'Dawson Knox':            {dv:1761,rv:500, trend:'flat'},  // DS: -39.7 (floor)
-  'Greg Dulcich':           {dv:1717,rv:500, trend:'up'},    // DS: -24.5 (floor)
-  'Noah Gray':              {dv:1591,rv:500, trend:'flat'},  // DS: -44 (floor)
-  'Daniel Bellinger':       {dv:1470,rv:500, trend:'flat'},  // DS: -53.8 (floor)
-  'Cade Stover':            {dv:1424,rv:500, trend:'flat'},  // DS: -51.1 (floor)
-  'Noah Fant':              {dv:1423,rv:500, trend:'flat'},  // DS: -44.2 (floor)
-  'Tommy Tremble':          {dv:1357,rv:1200,trend:'flat'},
-  'Mike Gesicki':           {dv:1356,rv:1400,trend:'flat'},
-  'Tyler Higbee':           {dv:1353,rv:1400,trend:'flat'},
-  'Erick All':              {dv:1295,rv:1200,trend:'up'},
-  'Justin Joly':            {dv:450, rv:200, trend:'flat'},
-  'Elijah Higgins':         {dv:1267,rv:1200,trend:'flat'},
-  'Luke Schoonmaker':       {dv:1234,rv:1200,trend:'flat'},
-  'Michael Trigg':          {dv:1185,rv:1200,trend:'up'},
-  'Mitchell Evans':         {dv:1162,rv:1000,trend:'flat'},
-  'Jonnu Smith':            {dv:1128,rv:1200,trend:'flat'},
-  'Zach Ertz':              {dv:1095,rv:1200,trend:'down'},
-  'Eli Raridon':            {dv:1053,rv:1000,trend:'up'},
-  'Oscar Delp':             {dv:1003,rv:1000,trend:'up'},
-  'Jack Endries':           {dv:535, rv:600, trend:'up'},
-  'Taysom Hill':            {dv:520, rv:600, trend:'flat'},
-  // ── Near-zero / washed / cut players — set explicitly so they don't get 500 default ──
-  'Trey Lance':             {dv:100, rv:50,  trend:'down'},
-  'Carson Wentz':           {dv:100, rv:50,  trend:'down'},
-  'Ryan Tannehill':         {dv:100, rv:50,  trend:'down'},
-  'Jacoby Brissett':        {dv:100, rv:50,  trend:'down'},
-  'Jimmy Garoppolo':        {dv:50,  rv:50,  trend:'down'},
-  'Tyrod Taylor':           {dv:50,  rv:50,  trend:'down'},
-  'Andy Dalton':            {dv:50,  rv:50,  trend:'down'},
-  'Colt McCoy':             {dv:50,  rv:50,  trend:'down'},
-  'Nick Mullens':           {dv:50,  rv:50,  trend:'down'},
-  'Trevor Siemian':         {dv:50,  rv:50,  trend:'down'},
-  'Mike White':             {dv:50,  rv:50,  trend:'down'},
-  'Taylor Heinicke':        {dv:200, rv:200, trend:'down'},
-  'Nathan Peterman':        {dv:50,  rv:50,  trend:'down'},
-  'Devonta Freeman':        {dv:50,  rv:50,  trend:'down'},
-  'Melvin Gordon':          {dv:50,  rv:50,  trend:'down'},
-  'Adrian Peterson':        {dv:50,  rv:50,  trend:'down'},
-  'Jordan Howard':          {dv:50,  rv:50,  trend:'down'},
-  'Latavius Murray':        {dv:50,  rv:50,  trend:'down'},
-  'Le\'Veon Bell':          {dv:50,  rv:50,  trend:'down'},
-  'Darren McFadden':        {dv:50,  rv:50,  trend:'down'},
-  'Emmanuel Sanders':       {dv:50,  rv:50,  trend:'down'},
-  'Golden Tate':            {dv:50,  rv:50,  trend:'down'},
-  'Randall Cobb':           {dv:50,  rv:50,  trend:'down'},
-  'Jarvis Landry':          {dv:50,  rv:50,  trend:'down'},
-  'Adam Thielen':           {dv:200, rv:200, trend:'down'},
-  'Tyler Boyd':             {dv:800, rv:1200,trend:'down'},
-  'Odell Beckham Jr.':      {dv:200, rv:400, trend:'down'},
-  'Julio Jones':            {dv:50,  rv:50,  trend:'down'},
-  'A.J. Green':             {dv:50,  rv:50,  trend:'down'},
-  // Davante Adams — do NOT add here; real entry is in WR section (dv:1500,rv:3648) — signed LAR 2026
-  'Keenan Allen':           {dv:200, rv:800, trend:'down'},
-  'Tyler Lockett':          {dv:500, rv:800, trend:'down'},
-  'DeAndre Hopkins':        {dv:200, rv:400, trend:'down'},
-  'Stefon Diggs':           {dv:300, rv:500, trend:'down'},
-  'JuJu Smith-Schuster':    {dv:50,  rv:50,  trend:'down'},
-  // Christian McCaffrey — do NOT add here; real entry is in RB section (dv:3800,rv:8208)
+  'Brock Bowers':           {val:7948,trend:'up'},
+  'Trey McBride':           {val:7524},
+  'Colston Loveland':       {val:6017,trend:'up'},
+  'Tyler Warren':           {val:5684,trend:'up'},
+  'Harold Fannin':          {val:4866,trend:'up'},
+  'Harold Fannin Jr.':      {val:4866,trend:'up'},
+  'Tucker Kraft':           {val:4776,trend:'up'},
+  'Sam LaPorta':            {val:4516,trend:'up'},
+  'Kyle Pitts':             {val:4391,trend:'up'},
+  'Kenyon Sadiq':           {val:4123,trend:'up'},
+  'Oronde Gadsden':         {val:3873,trend:'up'},
+  'Oronde Gadsden II':      {val:3873,trend:'up'},
+  'Eli Stowers':            {val:3526,trend:'up'},
+  'Isaiah Likely':          {val:3297,trend:'up'},
+  'George Kittle':          {val:3261,trend:'down'},
+  'Jake Ferguson':          {val:3251},
+  'Dalton Kincaid':         {val:3233},
+  'Brenton Strange':        {val:3035,trend:'up'},
+  'T.J. Hockenson':         {val:2815},
+  'AJ Barner':              {val:2810,trend:'up'},
+  'Mark Andrews':           {val:2734},
+  'Terrance Ferguson':      {val:2708,trend:'up'},
+  'Chigoziem Okonkwo':      {val:2700},
+  'Chig Okonkwo':           {val:2700},
+  'Gunnar Helm':            {val:2618,trend:'up'},
+  'Dallas Goedert':         {val:2572,trend:'down'},
+  'Elijah Arroyo':          {val:2507,trend:'up'},
+  'Mason Taylor':           {val:2417,trend:'up'},
+  'David Njoku':            {val:2411},
+  'Travis Kelce':           {val:2387,trend:'down'},
+  'Juwan Johnson':          {val:2371},
+  'Cade Otton':             {val:2341},
+  'Theo Johnson':           {val:2337,trend:'up'},
+  'Jake Tonges':            {val:2301,trend:'up'},
+  'Hunter Henry':           {val:2274},
+  'Dalton Schultz':         {val:2269},
+  'Pat Freiermuth':         {val:2194},
+  'Michael Mayer':          {val:2135,trend:'up'},
+  "Ja'Tavion Sanders":      {val:2091,trend:'up'},
+  'Max Klare':              {val:2022,trend:'up'},
+  'Cole Kmet':              {val:2000},
+  'Colby Parkinson':        {val:1956},
+  'Evan Engram':            {val:1905,trend:'down'},
+  'Luke Musgrave':          {val:1896,trend:'up'},
+  'Darnell Washington':     {val:1857,trend:'up'},
+  'Ben Sinnott':            {val:1798,trend:'up'},
+  'Dawson Knox':            {val:1761},
+  'Greg Dulcich':           {val:1717,trend:'up'},
+  'Noah Gray':              {val:1591},
+  'Daniel Bellinger':       {val:1470},
+  'Cade Stover':            {val:1424},
+  'Noah Fant':              {val:1423},
+  'Tommy Tremble':          {val:1357},
+  'Mike Gesicki':           {val:1356},
+  'Tyler Higbee':           {val:1353},
+  'Erick All':              {val:1295,trend:'up'},
+  'Elijah Higgins':         {val:1267},
+  'Luke Schoonmaker':       {val:1234},
+  'Mitchell Evans':         {val:1162},
+  'Jonnu Smith':            {val:1128},
+  'Zach Ertz':              {val:1095,trend:'down'},
+  'Eli Raridon':            {val:1053,trend:'up'},
+  'Oscar Delp':             {val:1003,trend:'up'},
+  'Jack Endries':           {val:535,trend:'up'},
+  'Taysom Hill':            {val:520},
+  // ── Near-zero / washed players ──
+  'Trey Lance':             {val:100,trend:'down'},
+  'Carson Wentz':           {val:100,trend:'down'},
+  'Ryan Tannehill':         {val:100,trend:'down'},
+  'Jacoby Brissett':        {val:100,trend:'down'},
+  'Jimmy Garoppolo':        {val:50,trend:'down'},
+  'Tyrod Taylor':           {val:50,trend:'down'},
+  'Andy Dalton':            {val:50,trend:'down'},
+  'Colt McCoy':             {val:50,trend:'down'},
+  'Nick Mullens':           {val:50,trend:'down'},
+  'Trevor Siemian':         {val:50,trend:'down'},
+  'Mike White':             {val:50,trend:'down'},
+  'Taylor Heinicke':        {val:200,trend:'down'},
+  'Nathan Peterman':        {val:50,trend:'down'},
+  'Devonta Freeman':        {val:50,trend:'down'},
+  'Melvin Gordon':          {val:50,trend:'down'},
+  'Adrian Peterson':        {val:50,trend:'down'},
+  'Jordan Howard':          {val:50,trend:'down'},
+  'Latavius Murray':        {val:50,trend:'down'},
+  "Le'Veon Bell":           {val:50,trend:'down'},
+  'Darren McFadden':        {val:50,trend:'down'},
+  'Emmanuel Sanders':       {val:50,trend:'down'},
+  'Golden Tate':            {val:50,trend:'down'},
+  'Randall Cobb':           {val:50,trend:'down'},
+  'Jarvis Landry':          {val:50,trend:'down'},
+  'Adam Thielen':           {val:200,trend:'down'},
+  'Tyler Boyd':             {val:800,trend:'down'},
+  'Odell Beckham Jr.':      {val:200,trend:'down'},
+  'Julio Jones':            {val:50,trend:'down'},
+  'A.J. Green':             {val:50,trend:'down'},
+  'Keenan Allen':           {val:200,trend:'down'},
+  'Tyler Lockett':          {val:500,trend:'down'},
+  'DeAndre Hopkins':        {val:200,trend:'down'},
+  'Stefon Diggs':           {val:300,trend:'down'},
+  'JuJu Smith-Schuster':    {val:50,trend:'down'},
+  // ── KICKERS (low dynasty value; redraft value in REDRAFT_DB) ──
+  'Brandon Aubrey':         {val:400,trend:'up'},
+  "Ka'imi Fairbairn":       {val:300},
+  'Cameron Dicker':         {val:280,trend:'up'},
+  'Cam Little':             {val:260,trend:'up'},
+  'Jason Myers':            {val:240},
+  'Eddy Pineiro':           {val:220},
+  'Tyler Loop':             {val:200,trend:'up'},
+  'Evan McPherson':         {val:200},
+  'Andy Borregales':        {val:190,trend:'up'},
+  'Cairo Santos':           {val:180},
+  'Chase McLaughlin':       {val:170},
+  'Harrison Butker':        {val:300},
+  'Jake Bates':             {val:160,trend:'up'},
+  'Will Reichard':          {val:200,trend:'up'},
+  'Chris Boswell':          {val:160},
+  'Wil Lutz':               {val:150},
+  'Harrison Mevis':         {val:140,trend:'up'},
+  'Charlie Smyth':          {val:130,trend:'up'},
+  'Chad Ryland':            {val:120},
+  'Zane Gonzalez':          {val:110},
+  'Jake Elliott':           {val:110},
+  'Blake Grupe':            {val:100,trend:'up'},
+  'Joey Slye':              {val:90},
+  'Daniel Carlson':         {val:90},
+  'Nick Folk':              {val:80,trend:'down'},
+  'Ben Sauls':              {val:80,trend:'up'},
+  'Tyler Bass':             {val:80},
+  'Jake Moody':             {val:70,trend:'up'},
+  'Jason Sanders':          {val:70},
+  'Cade York':              {val:60},
+  'Andre Szmyt':            {val:60,trend:'up'},
+  'Matt Gay':               {val:60},
+  'Ryan Fitzgerald':        {val:50,trend:'up'},
+  // ── DSTs (dynasty value intentionally low) ──
+  'Houston Texans':         {val:50,trend:'up'},
+  'Denver Broncos':         {val:50,trend:'up'},
+  'Seattle Seahawks':       {val:50},
+  'Los Angeles Rams':       {val:50},
+  'Philadelphia Eagles':    {val:50},
+  'New England Patriots':   {val:50,trend:'up'},
+  'Minnesota Vikings':      {val:50},
+  'Jacksonville Jaguars':   {val:50},
+  'Pittsburgh Steelers':    {val:50},
+  'Cleveland Browns':       {val:50},
+  'Los Angeles Chargers':   {val:50},
+  'Green Bay Packers':      {val:50},
+  'Baltimore Ravens':       {val:50},
+  'Kansas City Chiefs':     {val:50},
+  'Detroit Lions':          {val:50},
+  'Buffalo Bills':          {val:50},
+  'Atlanta Falcons':        {val:50},
+  'Indianapolis Colts':     {val:50},
+  'Chicago Bears':          {val:50},
+  'San Francisco 49ers':    {val:50},
+  'New Orleans Saints':     {val:50},
+  'New York Giants':        {val:50},
+  'Carolina Panthers':      {val:50},
+  'Dallas Cowboys':         {val:50},
+  'Miami Dolphins':         {val:50},
+  'Tampa Bay Buccaneers':   {val:50},
+  'Washington Commanders':  {val:50},
+  'Tennessee Titans':       {val:50},
+  'Cincinnati Bengals':     {val:50},
+  'Las Vegas Raiders':      {val:50},
+  'New York Jets':          {val:50},
+  'Arizona Cardinals':      {val:50},
+  // ── IDP ──────────────────────────────────────
+  'Will Anderson Jr.':      {val:8000,trend:'up'},
+  'Aidan Hutchinson':       {val:7800,trend:'up'},
+  'Brian Burns':            {val:7600},
+  'Maxx Crosby':            {val:7100},
+  'Myles Garrett':          {val:6900},
+  'Nik Bonitto':            {val:6700,trend:'up'},
+  'Byron Young':            {val:850,trend:'up'},
+  'Laiatu Latu':            {val:400,trend:'up'},
+  'Micah Parsons':          {val:7300,trend:'up'},
+  'Roquan Smith':           {val:6500},
+  'Jordyn Brooks':          {val:6300},
+  'Ernest Jones IV':        {val:6100,trend:'up'},
+  'Cedric Gray':            {val:5900,trend:'up'},
+  'Nate Landman':           {val:5700},
+  'T.J. Edwards':           {val:5500},
+  'Jack Campbell':          {val:5300,trend:'up'},
+  'Fred Warner':            {val:5100},
+  'Foyesade Oluokun':       {val:4900},
+  'Carson Schwesinger':     {val:4700,trend:'up'},
+  'Zaire Franklin':         {val:4500},
+  'Nick Bolton':            {val:4300},
+  'Alex Singleton':         {val:4200},
+  'Kaden Elliss':           {val:4000},
+  'Quay Walker':            {val:3800},
+  'Quincy Williams':        {val:3600},
+  'Azeez Al-Shaair':        {val:3400},
+  'Robert Spillane':        {val:3200},
+  'Edgerrin Cooper':        {val:3000,trend:'up'},
+  'Payton Wilson':          {val:2800,trend:'up'},
+  'Daiyan Henley':          {val:2600,trend:'up'},
+  'Tyrel Dodson':           {val:2500},
+  'Blake Cashman':          {val:2400},
+  'Bobby Okereke':          {val:2200},
+  'Jihaad Campbell':        {val:2000,trend:'up'},
+  'Dre Greenlaw':           {val:1900},
+  'Zack Baun':              {val:1800},
+  'Jamien Sherwood':        {val:1600,trend:'up'},
+  'DeMarvion Overshown':    {val:1500,trend:'up'},
+  'Jack Gibbens':           {val:1400},
+  'SirVocea Dennis':        {val:1300},
+  'Divine Deablo':          {val:1200},
+  'Devin Bush Jr.':         {val:1100},
+  'Drake Thomas':           {val:1000,trend:'up'},
+  'Nakobe Dean':            {val:950,trend:'up'},
+  'Germaine Pratt':         {val:900},
+  'Nick Cross':             {val:800,trend:'up'},
+  'Nick Emmanwori':         {val:750,trend:'up'},
+  'Derwin James Jr.':       {val:700},
+  'Brian Branch':           {val:680,trend:'up'},
+  'Kyle Hamilton':          {val:660,trend:'up'},
+  'Kam Curl':               {val:640},
+  'Jessie Bates III':       {val:620},
+  'Antoine Winfield Jr.':   {val:600},
+  'Minkah Fitzpatrick':     {val:580},
+  'Jalen Pitre':            {val:560},
+  'Budda Baker':            {val:540},
+  'Harrison Smith':         {val:520},
+  'Jordan Poyer':           {val:500},
+  'Xavier McKinney':        {val:480,trend:'up'},
+  'Talanoa Hufanga':        {val:460,trend:'up'},
+  'Quentin Lake':           {val:440,trend:'up'},
+  'Reed Blankenship':       {val:420,trend:'up'},
+  'Tyler Owens':            {val:400,trend:'up'},
+  'Marcus Williams':        {val:380},
+  'Chamarri Conner':        {val:360},
+  'Kareem Jackson':         {val:340,trend:'down'},
+  'Javon Hargrave':         {val:320},
+  'Jaire Alexander':        {val:720},
+  'Sauce Gardner':          {val:700,trend:'up'},
+  'Denzel Ward':            {val:680},
+  'Devon Witherspoon':      {val:260,trend:'up'},
+};
 
+// ═══════════════════════════════════════════════════════════
+// REDRAFT VALUE DATABASE — redraft_val anchor (1QB PPR 12-team, 2026)
+// Sources: FantasyPros ECR, DraftShark PPR redraft values
+// ═══════════════════════════════════════════════════════════
+const REDRAFT_DB = {
+  // ── QBs ──────────────────────────────────────
+  'Josh Allen':             {val:4788},
+  'Drake Maye':             {val:2784},
+  'Caleb Williams':         {val:2347},
+  'Jayden Daniels':         {val:2603},
+  'Lamar Jackson':          {val:3002},
+  'Joe Burrow':             {val:2746},
+  'Justin Herbert':         {val:2233},
+  'Patrick Mahomes':        {val:1910},
+  'Jaxson Dart':            {val:2147},
+  'Trevor Lawrence':        {val:2461},
+  'Jalen Hurts':            {val:2584},
+  'Bo Nix':                 {val:1929},
+  'Brock Purdy':            {val:2271},
+  'Fernando Mendoza':       {val:800},
+  'Ty Simpson':             {val:500},
+  'Garrett Nussmeier':      {val:700},
+  'Carson Beck':            {val:800},
+  'Drew Allar':             {val:800},
+  'Cade Klubnik':           {val:1000},
+  'Cole Payton':            {val:400},
+  'Jordan Love':            {val:1368},
+  'Cam Ward':               {val:732},
+  'Dak Prescott':           {val:2128},
+  'Tyler Shough':           {val:1577},
+  'C.J. Stroud':            {val:1074},
+  'CJ Stroud':              {val:1074},
+  'Baker Mayfield':         {val:1454},
+  'Sam Darnold':            {val:665},
+  'Jared Goff':             {val:1701},
+  'Bryce Young':            {val:190},
+  'Kyler Murray':           {val:1910},
+  'Malik Willis':           {val:960},
+  'Daniel Jones':           {val:998},
+  'Matthew Stafford':       {val:1739},
+  'Michael Penix Jr.':      {val:500},
+  'J.J. McCarthy':          {val:500},
+  'JJ McCarthy':            {val:500},
+  'Shedeur Sanders':        {val:500},
+  'Tua Tagovailoa':         {val:500},
+  'Jacoby Brissett':        {val:50},
+  'Mac Jones':              {val:500},
+  'Jalen Milroe':           {val:500},
+  'Anthony Richardson':     {val:500},
+  'Geno Smith':             {val:114},
+  'Justin Fields':          {val:500},
+  'Deshaun Watson':         {val:500},
+  'Will Howard':            {val:500},
+  'Kirk Cousins':           {val:500},
+  'Quinn Ewers':            {val:500},
+  'Aaron Rodgers':          {val:570},
+  'Riley Leonard':          {val:500},
+  'Joe Milton':             {val:500},
+  'Spencer Rattler':        {val:500},
+  'Will Levis':             {val:500},
+  'Tyson Bagent':           {val:500},
+  'Dillon Gabriel':         {val:500},
+  'Jameis Winston':         {val:500},
+  'Marcus Mariota':         {val:500},
+  'Davis Mills':            {val:500},
+  'Tanner McKee':           {val:1000},
+  'Tyler Huntley':          {val:1200},
+  'Gardner Minshew':        {val:1500},
+  'Joe Flacco':             {val:1200},
+  'Trey Lance':             {val:50},
+  'Kenny Pickett':          {val:1000},
+  'Sam Howell':             {val:1000},
+  'Zach Wilson':            {val:800},
+  'Drew Lock':              {val:800},
+  "Aidan O'Connell":        {val:1000},
+  'Mason Rudolph':          {val:800},
+  'Tyrod Taylor':           {val:50},
+  'Derek Carr':             {val:500},
+  // ── RBs ──────────────────────────────────────
+  'Bijan Robinson':         {val:8700},
+  'Jahmyr Gibbs':           {val:8800},
+  'Ashton Jeanty':          {val:6400},
+  "De'Von Achane":          {val:5500},
+  'Omarion Hampton':        {val:4800},
+  'Jonathan Taylor':        {val:6800},
+  'James Cook':             {val:5800},
+  'Quinshon Judkins':       {val:2328},
+  'TreVeyon Henderson':     {val:2480},
+  'Kaleb Johnson':          {val:800},
+  'Christian McCaffrey':    {val:8208},
+  'Kenneth Walker III':     {val:4800},
+  'Breece Hall':            {val:3900},
+  'Jacory Croskey-Merritt': {val:1045},
+  'Trey Benson':            {val:500},
+  'Saquon Barkley':         {val:5501},
+  'Kyren Williams':         {val:3192},
+  'Keaton Mitchell':        {val:390},
+  'Braelon Allen':          {val:500},
+  'Cam Skattebo':           {val:3800},
+  'Josh Jacobs':            {val:4500},
+  'Isiah Pacheco':          {val:922},
+  'Chase Brown':            {val:4200},
+  'Bucky Irving':           {val:2603},
+  'Bhayshul Tuten':         {val:1967},
+  'Tyjae Spears':           {val:1340},
+  'Jaylen Wright':          {val:500},
+  'Ollie Gordon II':        {val:500},
+  'Isaac Guerendo':         {val:500},
+  'Brashard Smith':         {val:500},
+  'Dylan Sampson':          {val:903},
+  'Woody Marks':            {val:1064},
+  'Tyrone Tracy':           {val:2200},
+  'Tyrone Tracy Jr.':       {val:2200},
+  'Javonte Williams':       {val:3477},
+  'Blake Corum':            {val:1235},
+  'Demond Claiborne':       {val:500},
+  'Rhamondre Stevenson':    {val:2052},
+  'Zach Charbonnet':        {val:1045},
+  'Jaylen Warren':          {val:2233},
+  'Jordan Mason':           {val:1311},
+  "Brian Robinson Jr.":     {val:304},
+  'Ray Davis':              {val:500},
+  'Jonathon Brooks':        {val:1197},
+  'RJ Harvey':              {val:1796},
+  'Tank Bigsby':            {val:500},
+  'J.K. Dobbins':           {val:1500},
+  'Rico Dowdle':            {val:1796},
+  'MarShawn Lloyd':         {val:500},
+  'Jaydon Blue':            {val:500},
+  'Kyle Monangai':          {val:1406},
+  'Kaytron Allen':          {val:447},
+  'LeQuint Allen Jr.':      {val:500},
+  'Kendre Miller':          {val:500},
+  'Tyler Allgeier':         {val:304},
+  "D'Andre Swift":          {val:2708},
+  'Chuba Hubbard':          {val:2014},
+  'Travis Etienne Jr.':     {val:3477},
+  'Travis Etienne':         {val:3477},
+  'David Montgomery':       {val:2062},
+  'Alvin Kamara':           {val:799},
+  'Rachaad White':          {val:1606},
+  'Phil Mafah':             {val:500},
+  'Tony Pollard':           {val:1986},
+  'Najee Harris':           {val:500},
+  'Derrick Henry':          {val:4608},
+  'Devin Singletary':       {val:500},
+  'Kareem Hunt':            {val:500},
+  'Austin Ekeler':          {val:500},
+  'Rashaad Penny':          {val:1000},
+  // 2026 RB Rookies
+  'Jeremiyah Love':         {val:4845},
+  'Jadarian Price':         {val:1400},
+  'Darius Taylor':          {val:800},
+  'Jaydn Ott':              {val:500},
+  'Nicholas Singleton':     {val:500},
+  'Jonah Coleman':          {val:133},
+  'Emmett Johnson':         {val:86},
+  'DJ Giddens':             {val:500},
+  'Devin Neal':             {val:500},
+  'Kaelon Black':           {val:500},
+  'Mike Washington Jr.':    {val:500},
+  "Le'Veon Moss":           {val:500},
+  'Eli Heidenreich':        {val:500},
+  'Adam Randall':           {val:500},
+  'Seth McGowan':           {val:500},
+  'Jam Miller':             {val:500},
+  // 2026 WR Rookies
+  'Carnell Tate':           {val:1853},
+  'Jordyn Tyson':           {val:1500},
+  'Makai Lemon':            {val:900},
+  'KC Concepcion':          {val:800},
+  'Omar Cooper Jr.':        {val:257},
+  'Denzel Boston':          {val:57},
+  'Chris Bell':             {val:400},
+  'Germie Bernard':         {val:400},
+  'Elijah Sarratt':         {val:400},
+  'Chris Brazzell II':      {val:400},
+  'Antonio Williams':       {val:400},
+  'Zachariah Branch':       {val:400},
+  'Malachi Fields':         {val:400},
+  'Skyler Bell':            {val:400},
+  "Ja'Kobi Lane":           {val:400},
+  'Ted Hurst':              {val:400},
+  "De'Zhaun Stribling":     {val:400},
+  'Kevin Coleman':          {val:400},
+  'Brenen Thompson':        {val:400},
+  'Zavion Thomas':          {val:400},
+  'Bryce Lance':            {val:300},
+  'Deion Burks':            {val:600},
+  'Caleb Douglas':          {val:400},
+  'CJ Daniels':             {val:300},
+  // 2026 TE Rookies
+  'Justin Joly':            {val:200},
+  'Michael Trigg':          {val:1200},
+  // Depth RBs
+  'Dameon Pierce':          {val:500},
+  'Samaje Perine':          {val:500},
+  'Jaleel McLaughlin':      {val:500},
+  'Roschon Johnson':        {val:500},
+  'Hassan Haskins':         {val:500},
+  'Clyde Edwards-Helaire':  {val:500},
+  'Elijah Mitchell':        {val:500},
+  'Jerome Ford':            {val:500},
+  // ── WRs ──────────────────────────────────────
+  "Ja'Marr Chase":          {val:8949},
+  'Jaxon Smith-Njigba':     {val:7952},
+  'Puka Nacua':             {val:9500},
+  'Malik Nabers':           {val:4674},
+  'Justin Jefferson':       {val:6869},
+  'Amon-Ra St. Brown':      {val:7686},
+  'CeeDee Lamb':            {val:7002},
+  'Drake London':           {val:5795},
+  'Tetairoa McMillan':      {val:3145},
+  'Emeka Egbuka':           {val:2860},
+  'Garrett Wilson':         {val:4057},
+  'Rashee Rice':            {val:6000},
+  'Nico Collins':           {val:5200},
+  'George Pickens':         {val:5140},
+  'Zay Flowers':            {val:4342},
+  'Luther Burden III':      {val:3145},
+  'Tee Higgins':            {val:4123},
+  'Ladd McConkey':          {val:2888},
+  'Travis Hunter':          {val:800},
+  'Chris Olave':            {val:4313},
+  'Rome Odunze':            {val:2480},
+  'Brian Thomas Jr.':       {val:1644},
+  'Jayden Higgins':         {val:865},
+  'Ricky Pearsall':         {val:1644},
+  'Marvin Harrison Jr.':    {val:1910},
+  'Jameson Williams':       {val:2679},
+  'Quentin Johnston':       {val:1083},
+  'Jordan Addison':         {val:1777},
+  'DeVonta Smith':          {val:4095},
+  'Jaylen Waddle':          {val:3363},
+  'Matthew Golden':         {val:447},
+  'Adonai Mitchell':        {val:500},
+  'Khalil Shakir':          {val:808},
+  'A.J. Brown':             {val:5159},
+  'AJ Brown':               {val:5159},
+  'Brandon Aiyuk':          {val:846},
+  'Josh Downs':             {val:1026},
+  'Jayden Reed':            {val:1843},
+  'Troy Franklin':          {val:500},
+  'DK Metcalf':             {val:2527},
+  'Keon Coleman':           {val:500},
+  'Elic Ayomanor':          {val:500},
+  'Jalen Coker':            {val:500},
+  'Parker Washington':      {val:1948},
+  'Pat Bryant':             {val:500},
+  'Kyle Williams':          {val:500},
+  'Jaylin Noel':            {val:500},
+  "Wan'Dale Robinson":      {val:883},
+  'Jalen McMillan':         {val:228},
+  'Chimere Dike':           {val:500},
+  'Romeo Doubs':            {val:1188},
+  'Tank Dell':              {val:500},
+  'Tez Johnson':            {val:500},
+  'Cedric Tillman':         {val:500},
+  'Jack Bech':              {val:500},
+  'Michael Wilson':         {val:1045},
+  'Christian Watson':       {val:2755},
+  'Michael Pittman Jr.':    {val:1957},
+  'Jerry Jeudy':            {val:500},
+  'Courtland Sutton':       {val:1900},
+  'Xavier Worthy':          {val:903},
+  "Dont'e Thornton Jr.":    {val:500},
+  'Savion Williams':        {val:500},
+  'Terry McLaurin':         {val:2898},
+  'Alec Pierce':            {val:1834},
+  'Marvin Mims Jr.':        {val:500},
+  'DJ Moore':               {val:1976},
+  'Mike Evans':             {val:2442},
+  'Darnell Mooney':         {val:500},
+  'Jakobi Meyers':          {val:1900},
+  'Rashod Bateman':         {val:500},
+  'Tyreek Hill':            {val:500},
+  'Hollywood Brown':        {val:500},
+  'Deebo Samuel Sr.':       {val:304},
+  'Deebo Samuel':           {val:304},
+  'Davante Adams':          {val:3648},
+  'Chris Godwin':           {val:1254},
+  'Cooper Kupp':            {val:2500},
+  'Calvin Ridley':          {val:2500},
+  'Tyler Lockett':          {val:800},
+  'Keenan Allen':           {val:800},
+  'DeAndre Hopkins':        {val:400},
+  'Stefon Diggs':           {val:500},
+  // Depth WRs
+  'Demario Douglas':        {val:3000},
+  'Xavier Legette':         {val:2600},
+  "Ja'Lynn Polk":           {val:2400},
+  'Javon Baker':            {val:2200},
+  'Tutu Atwell':            {val:2200},
+  'Darius Slayton':         {val:2500},
+  'Rakim Jarrett':          {val:2000},
+  'Josh Reynolds':          {val:2000},
+  'Josh Palmer':            {val:2200},
+  'Olamide Zaccheaus':      {val:2000},
+  'Nathaniel Dell':         {val:3000},
+  'Rashid Shaheed':         {val:2800},
+  'Deontay Burnett':        {val:1800},
+  'Tre Tucker':             {val:2000},
+  // ── TEs ──────────────────────────────────────
+  'Brock Bowers':           {val:4655},
+  'Trey McBride':           {val:4655},
+  'Colston Loveland':       {val:3848},
+  'Tyler Warren':           {val:3458},
+  'Harold Fannin':          {val:2518},
+  'Harold Fannin Jr.':      {val:2518},
+  'Tucker Kraft':           {val:2423},
+  'Sam LaPorta':            {val:2565},
+  'Kyle Pitts':             {val:1682},
+  'Kenyon Sadiq':           {val:133},
+  'Oronde Gadsden':         {val:314},
+  'Oronde Gadsden II':      {val:314},
+  'Eli Stowers':            {val:500},
+  'Isaiah Likely':          {val:500},
+  'George Kittle':          {val:1853},
+  'Jake Ferguson':          {val:646},
+  'Dalton Kincaid':         {val:751},
+  'Brenton Strange':        {val:152},
+  'T.J. Hockenson':         {val:500},
+  'AJ Barner':              {val:500},
+  'Mark Andrews':           {val:675},
+  'Terrance Ferguson':      {val:500},
+  'Chigoziem Okonkwo':      {val:500},
+  'Chig Okonkwo':           {val:500},
+  'Gunnar Helm':            {val:500},
+  'Dallas Goedert':         {val:485},
+  'Elijah Arroyo':          {val:500},
+  'Mason Taylor':           {val:500},
+  'David Njoku':            {val:500},
+  'Travis Kelce':           {val:1482},
+  'Juwan Johnson':          {val:86},
+  'Cade Otton':             {val:500},
+  'Theo Johnson':           {val:500},
+  'Jake Tonges':            {val:500},
+  'Hunter Henry':           {val:228},
+  'Dalton Schultz':         {val:500},
+  'Pat Freiermuth':         {val:500},
+  'Michael Mayer':          {val:500},
+  "Ja'Tavion Sanders":      {val:500},
+  'Max Klare':              {val:500},
+  'Cole Kmet':              {val:500},
+  'Colby Parkinson':        {val:500},
+  'Evan Engram':            {val:500},
+  'Luke Musgrave':          {val:500},
+  'Darnell Washington':     {val:500},
+  'Ben Sinnott':            {val:500},
+  'Dawson Knox':            {val:500},
+  'Greg Dulcich':           {val:500},
+  'Noah Gray':              {val:500},
+  'Daniel Bellinger':       {val:500},
+  'Cade Stover':            {val:500},
+  'Noah Fant':              {val:500},
+  'Tommy Tremble':          {val:1200},
+  'Mike Gesicki':           {val:1400},
+  'Tyler Higbee':           {val:1400},
+  'Erick All':              {val:1200},
+  'Elijah Higgins':         {val:1200},
+  'Luke Schoonmaker':       {val:1200},
+  'Michael Trigg':          {val:1200},
+  'Mitchell Evans':         {val:1000},
+  'Jonnu Smith':            {val:1200},
+  'Zach Ertz':              {val:1200},
+  'Eli Raridon':            {val:1000},
+  'Oscar Delp':             {val:1000},
+  'Jack Endries':           {val:600},
+  'Taysom Hill':            {val:600},
+  // Near-zero
+  'Trey Lance':             {val:50},
+  'Carson Wentz':           {val:50},
+  'Ryan Tannehill':         {val:50},
+  'Jacoby Brissett':        {val:50},
+  'Jimmy Garoppolo':        {val:50},
+  'Tyrod Taylor':           {val:50},
+  'Andy Dalton':            {val:50},
+  'Colt McCoy':             {val:50},
+  'Nick Mullens':           {val:50},
+  'Trevor Siemian':         {val:50},
+  'Mike White':             {val:50},
+  'Taylor Heinicke':        {val:200},
+  'Nathan Peterman':        {val:50},
+  'Devonta Freeman':        {val:50},
+  'Melvin Gordon':          {val:50},
+  'Adrian Peterson':        {val:50},
+  'Jordan Howard':          {val:50},
+  'Latavius Murray':        {val:50},
+  "Le'Veon Bell":           {val:50},
+  'Darren McFadden':        {val:50},
+  'Emmanuel Sanders':       {val:50},
+  'Golden Tate':            {val:50},
+  'Randall Cobb':           {val:50},
+  'Jarvis Landry':          {val:50},
+  'Adam Thielen':           {val:200},
+  'Tyler Boyd':             {val:1200},
+  'Odell Beckham Jr.':      {val:400},
+  'Julio Jones':            {val:50},
+  'A.J. Green':             {val:50},
+  'JuJu Smith-Schuster':    {val:50},
   // ── KICKERS ──────────────────────────────────────────────
-  'Brandon Aubrey':         {dv:400, rv:4000,trend:'up'},
-  "Ka'imi Fairbairn":       {dv:300, rv:3500,trend:'flat'},
-  'Cameron Dicker':         {dv:280, rv:3200,trend:'up'},
-  'Cam Little':             {dv:260, rv:3000,trend:'up'},
-  'Jason Myers':            {dv:240, rv:2700,trend:'flat'},
-  'Eddy Pineiro':           {dv:220, rv:2400,trend:'flat'},
-  'Tyler Loop':             {dv:200, rv:2200,trend:'up'},
-  'Evan McPherson':         {dv:200, rv:2100,trend:'flat'},
-  'Andy Borregales':        {dv:190, rv:1900,trend:'up'},
-  'Cairo Santos':           {dv:180, rv:1800,trend:'flat'},
-  'Chase McLaughlin':       {dv:170, rv:1700,trend:'flat'},
-  'Harrison Butker':        {dv:300, rv:1700,trend:'flat'},
-  'Jake Bates':             {dv:160, rv:1600,trend:'up'},
-  'Will Reichard':          {dv:200, rv:1500,trend:'up'},
-  'Chris Boswell':          {dv:160, rv:1500,trend:'flat'},
-  'Wil Lutz':               {dv:150, rv:1400,trend:'flat'},
-  'Harrison Mevis':         {dv:140, rv:1300,trend:'up'},
-  'Charlie Smyth':          {dv:130, rv:1200,trend:'up'},
-  'Chad Ryland':            {dv:120, rv:1100,trend:'flat'},
-  'Zane Gonzalez':          {dv:110, rv:1000,trend:'flat'},
-  'Jake Elliott':           {dv:110, rv:1000,trend:'flat'},
-  'Blake Grupe':            {dv:100, rv:900, trend:'up'},
-  'Joey Slye':              {dv:90,  rv:800, trend:'flat'},
-  'Daniel Carlson':         {dv:90,  rv:800, trend:'flat'},
-  'Nick Folk':              {dv:80,  rv:700, trend:'down'},
-  'Ben Sauls':              {dv:80,  rv:700, trend:'up'},
-  'Tyler Bass':             {dv:80,  rv:650, trend:'flat'},
-  'Jake Moody':             {dv:70,  rv:600, trend:'up'},
-  'Jason Sanders':          {dv:70,  rv:600, trend:'flat'},
-  'Cade York':              {dv:60,  rv:500, trend:'flat'},
-  'Andre Szmyt':            {dv:60,  rv:500, trend:'up'},
-  'Matt Gay':               {dv:60,  rv:500, trend:'flat'},
-  'Ryan Fitzgerald':        {dv:50,  rv:450, trend:'up'},
-
-  // ── TEAM DEFENSES (DST) ──────────────────────────────────
-  // dv intentionally low (DST irrelevant in dynasty); rv = 2026 redraft ranking
-  'Houston Texans':         {dv:50,  rv:5000,trend:'up'},
-  'Denver Broncos':         {dv:50,  rv:4700,trend:'up'},
-  'Seattle Seahawks':       {dv:50,  rv:4400,trend:'flat'},
-  'Los Angeles Rams':       {dv:50,  rv:4100,trend:'flat'},
-  'Philadelphia Eagles':    {dv:50,  rv:3800,trend:'flat'},
-  'New England Patriots':   {dv:50,  rv:3550,trend:'up'},
-  'Minnesota Vikings':      {dv:50,  rv:3300,trend:'flat'},
-  'Jacksonville Jaguars':   {dv:50,  rv:3050,trend:'flat'},
-  'Pittsburgh Steelers':    {dv:50,  rv:2800,trend:'flat'},
-  'Cleveland Browns':       {dv:50,  rv:2600,trend:'flat'},
-  'Los Angeles Chargers':   {dv:50,  rv:2400,trend:'flat'},
-  'Green Bay Packers':      {dv:50,  rv:2200,trend:'flat'},
-  'Baltimore Ravens':       {dv:50,  rv:2000,trend:'flat'},
-  'Kansas City Chiefs':     {dv:50,  rv:1800,trend:'flat'},
-  'Detroit Lions':          {dv:50,  rv:1620,trend:'flat'},
-  'Buffalo Bills':          {dv:50,  rv:1450,trend:'flat'},
-  'Atlanta Falcons':        {dv:50,  rv:1290,trend:'flat'},
-  'Indianapolis Colts':     {dv:50,  rv:1140,trend:'flat'},
-  'Chicago Bears':          {dv:50,  rv:1000,trend:'flat'},
-  'San Francisco 49ers':    {dv:50,  rv:870, trend:'flat'},
-  'New Orleans Saints':     {dv:50,  rv:780, trend:'flat'},
-  'New York Giants':        {dv:50,  rv:700, trend:'flat'},
-  'Carolina Panthers':      {dv:50,  rv:640, trend:'flat'},
-  'Dallas Cowboys':         {dv:50,  rv:580, trend:'flat'},
-  'Miami Dolphins':         {dv:50,  rv:520, trend:'flat'},
-  'Tampa Bay Buccaneers':   {dv:50,  rv:470, trend:'flat'},
-  'Washington Commanders':  {dv:50,  rv:420, trend:'flat'},
-  'Tennessee Titans':       {dv:50,  rv:380, trend:'flat'},
-  'Cincinnati Bengals':     {dv:50,  rv:340, trend:'flat'},
-  'Las Vegas Raiders':      {dv:50,  rv:300, trend:'flat'},
-  'New York Jets':          {dv:50,  rv:260, trend:'flat'},
-  'Arizona Cardinals':      {dv:50,  rv:200, trend:'flat'},
-
-  // ── IDP — EDGE RUSHERS / DEs ─────────────────────────────
-  'Will Anderson Jr.':      {dv:8000,rv:3088,trend:'up'},
-  'Aidan Hutchinson':       {dv:7800,rv:3958,trend:'up'},
-  'Brian Burns':            {dv:7600,rv:1911,trend:'flat'},
-  'Maxx Crosby':            {dv:7100,rv:3876,trend:'flat'},
-  'Myles Garrett':          {dv:6900,rv:3835,trend:'flat'},
-  'Nik Bonitto':            {dv:6700,rv:1299,trend:'up'},
-  'Byron Young':            {dv:850, rv:1363,trend:'up'},
-  'Laiatu Latu':            {dv:400, rv:807, trend:'up'},
-  // ── IDP — LINEBACKERS ────────────────────────────────────
-  'Micah Parsons':          {dv:7300,rv:2789,trend:'up'},
-  'Roquan Smith':           {dv:6500,rv:4000,trend:'flat'},
-  'Jordyn Brooks':          {dv:6300,rv:3553,trend:'flat'},
-  'Ernest Jones IV':        {dv:6100,rv:3633,trend:'up'},
-  'Cedric Gray':            {dv:5900,rv:1532,trend:'up'},
-  'Nate Landman':           {dv:5700,rv:1805,trend:'flat'},
-  'T.J. Edwards':           {dv:5500,rv:3280,trend:'flat'},
-  'Jack Campbell':          {dv:5300,rv:3435,trend:'up'},
-  'Fred Warner':            {dv:5100,rv:3794,trend:'flat'},
-  'Foyesade Oluokun':       {dv:4900,rv:3754,trend:'flat'},
-  'Carson Schwesinger':     {dv:4700,rv:3357,trend:'up'},
-  'Zaire Franklin':         {dv:4500,rv:3673,trend:'flat'},
-  'Nick Bolton':            {dv:4300,rv:2976,trend:'flat'},
-  'Alex Singleton':         {dv:4200,rv:3474,trend:'flat'},
-  'Kaden Elliss':           {dv:4000,rv:2752,trend:'flat'},
-  'Quay Walker':            {dv:3800,rv:3165,trend:'flat'},
-  'Quincy Williams':        {dv:3600,rv:2901,trend:'flat'},
-  'Azeez Al-Shaair':        {dv:3400,rv:2394,trend:'flat'},
-  'Robert Spillane':        {dv:3200,rv:3514,trend:'flat'},
-  'Edgerrin Cooper':        {dv:3000,rv:3203,trend:'up'},
-  'Payton Wilson':          {dv:2800,rv:555, trend:'up'},
-  'Daiyan Henley':          {dv:2600,rv:3013,trend:'up'},
-  'Tyrel Dodson':           {dv:2500,rv:1632,trend:'flat'},
-  'Blake Cashman':          {dv:2400,rv:3593,trend:'flat'},
-  'Bobby Okereke':          {dv:2200,rv:2076,trend:'flat'},
-  'Jihaad Campbell':        {dv:2000,rv:262, trend:'up'},
-  'Dre Greenlaw':           {dv:1900,rv:1139,trend:'flat'},
-  'Zack Baun':              {dv:1800,rv:3917,trend:'flat'},
-  'Jamien Sherwood':        {dv:1600,rv:3713,trend:'up'},
-  'DeMarvion Overshown':    {dv:1500,rv:200, trend:'up'},
-  'Jack Gibbens':           {dv:1400,rv:200, trend:'flat'},
-  'SirVocea Dennis':        {dv:1300,rv:200, trend:'flat'},
-  'Divine Deablo':          {dv:1200,rv:250, trend:'flat'},
-  'Devin Bush Jr.':         {dv:1100,rv:955, trend:'flat'},
-  'Drake Thomas':           {dv:1000,rv:396, trend:'up'},
-  'Nakobe Dean':            {dv:950, rv:200, trend:'up'},
-  'Germaine Pratt':         {dv:900, rv:1267,trend:'flat'},
-  // ── IDP — SAFETIES ───────────────────────────────────────
-  'Nick Cross':             {dv:800, rv:2288,trend:'up'},
-  'Nick Emmanwori':         {dv:750, rv:1108,trend:'up'},
-  'Derwin James Jr.':       {dv:700, rv:3051,trend:'flat'},
-  'Brian Branch':           {dv:680, rv:2863,trend:'up'},
-  'Kyle Hamilton':          {dv:660, rv:3396,trend:'up'},
-  'Kam Curl':               {dv:640, rv:1076,trend:'flat'},
-  'Jessie Bates III':       {dv:620, rv:2715,trend:'flat'},
-  'Antoine Winfield Jr.':   {dv:600, rv:2826,trend:'flat'},
-  'Minkah Fitzpatrick':     {dv:580, rv:2699,trend:'flat'},
-  'Jalen Pitre':            {dv:560, rv:2573,trend:'flat'},
-  'Budda Baker':            {dv:540, rv:2446,trend:'flat'},
-  'Harrison Smith':         {dv:520, rv:2319,trend:'flat'},
-  'Jordan Poyer':           {dv:500, rv:2192,trend:'flat'},
-  'Xavier McKinney':        {dv:480, rv:2100,trend:'up'},
-  'Talanoa Hufanga':        {dv:460, rv:1900,trend:'up'},
-  'Quentin Lake':           {dv:440, rv:1600,trend:'up'},
-  'Reed Blankenship':       {dv:420, rv:1400,trend:'up'},
-  'Tyler Owens':            {dv:400, rv:1200,trend:'up'},
-  'Marcus Williams':        {dv:380, rv:1100,trend:'flat'},
-  'Chamarri Conner':        {dv:360, rv:1000,trend:'flat'},
-  'Kareem Jackson':         {dv:340, rv:900, trend:'down'},
-  'Javon Hargrave':         {dv:320, rv:800, trend:'flat'},
-  // ── IDP — CORNERS ────────────────────────────────────────
-  'Jaire Alexander':        {dv:720, rv:2500,trend:'flat'},
-  'Sauce Gardner':          {dv:700, rv:2400,trend:'up'},
-  'Denzel Ward':            {dv:680, rv:2200,trend:'flat'},
-  'Devon Witherspoon':      {dv:260, rv:720, trend:'up'},
+  'Brandon Aubrey':         {val:4000},
+  "Ka'imi Fairbairn":       {val:3500},
+  'Cameron Dicker':         {val:3200},
+  'Cam Little':             {val:3000},
+  'Jason Myers':            {val:2700},
+  'Eddy Pineiro':           {val:2400},
+  'Tyler Loop':             {val:2200},
+  'Evan McPherson':         {val:2100},
+  'Andy Borregales':        {val:1900},
+  'Cairo Santos':           {val:1800},
+  'Chase McLaughlin':       {val:1700},
+  'Harrison Butker':        {val:1700},
+  'Jake Bates':             {val:1600},
+  'Will Reichard':          {val:1500},
+  'Chris Boswell':          {val:1500},
+  'Wil Lutz':               {val:1400},
+  'Harrison Mevis':         {val:1300},
+  'Charlie Smyth':          {val:1200},
+  'Chad Ryland':            {val:1100},
+  'Zane Gonzalez':          {val:1000},
+  'Jake Elliott':           {val:1000},
+  'Blake Grupe':            {val:900},
+  'Joey Slye':              {val:800},
+  'Daniel Carlson':         {val:800},
+  'Nick Folk':              {val:700},
+  'Ben Sauls':              {val:700},
+  'Tyler Bass':             {val:650},
+  'Jake Moody':             {val:600},
+  'Jason Sanders':          {val:600},
+  'Cade York':              {val:500},
+  'Andre Szmyt':            {val:500},
+  'Matt Gay':               {val:500},
+  'Ryan Fitzgerald':        {val:450},
+  // ── DSTs ──────────────────────────────────────────────────
+  'Houston Texans':         {val:5000},
+  'Denver Broncos':         {val:4700},
+  'Seattle Seahawks':       {val:4400},
+  'Los Angeles Rams':       {val:4100},
+  'Philadelphia Eagles':    {val:3800},
+  'New England Patriots':   {val:3550},
+  'Minnesota Vikings':      {val:3300},
+  'Jacksonville Jaguars':   {val:3050},
+  'Pittsburgh Steelers':    {val:2800},
+  'Cleveland Browns':       {val:2600},
+  'Los Angeles Chargers':   {val:2400},
+  'Green Bay Packers':      {val:2200},
+  'Baltimore Ravens':       {val:2000},
+  'Kansas City Chiefs':     {val:1800},
+  'Detroit Lions':          {val:1620},
+  'Buffalo Bills':          {val:1450},
+  'Atlanta Falcons':        {val:1290},
+  'Indianapolis Colts':     {val:1140},
+  'Chicago Bears':          {val:1000},
+  'San Francisco 49ers':    {val:870},
+  'New Orleans Saints':     {val:780},
+  'New York Giants':        {val:700},
+  'Carolina Panthers':      {val:640},
+  'Dallas Cowboys':         {val:580},
+  'Miami Dolphins':         {val:520},
+  'Tampa Bay Buccaneers':   {val:470},
+  'Washington Commanders':  {val:420},
+  'Tennessee Titans':       {val:380},
+  'Cincinnati Bengals':     {val:340},
+  'Las Vegas Raiders':      {val:300},
+  'New York Jets':          {val:260},
+  'Arizona Cardinals':      {val:200},
+  // ── IDP ──────────────────────────────────────
+  'Will Anderson Jr.':      {val:3088},
+  'Aidan Hutchinson':       {val:3958},
+  'Brian Burns':            {val:1911},
+  'Maxx Crosby':            {val:3876},
+  'Myles Garrett':          {val:3835},
+  'Nik Bonitto':            {val:1299},
+  'Byron Young':            {val:1363},
+  'Laiatu Latu':            {val:807},
+  'Micah Parsons':          {val:2789},
+  'Roquan Smith':           {val:4000},
+  'Jordyn Brooks':          {val:3553},
+  'Ernest Jones IV':        {val:3633},
+  'Cedric Gray':            {val:1532},
+  'Nate Landman':           {val:1805},
+  'T.J. Edwards':           {val:3280},
+  'Jack Campbell':          {val:3435},
+  'Fred Warner':            {val:3794},
+  'Foyesade Oluokun':       {val:3754},
+  'Carson Schwesinger':     {val:3357},
+  'Zaire Franklin':         {val:3673},
+  'Nick Bolton':            {val:2976},
+  'Alex Singleton':         {val:3474},
+  'Kaden Elliss':           {val:2752},
+  'Quay Walker':            {val:3165},
+  'Quincy Williams':        {val:2901},
+  'Azeez Al-Shaair':        {val:2394},
+  'Robert Spillane':        {val:3514},
+  'Edgerrin Cooper':        {val:3203},
+  'Payton Wilson':          {val:555},
+  'Daiyan Henley':          {val:3013},
+  'Tyrel Dodson':           {val:1632},
+  'Blake Cashman':          {val:3593},
+  'Bobby Okereke':          {val:2076},
+  'Jihaad Campbell':        {val:262},
+  'Dre Greenlaw':           {val:1139},
+  'Zack Baun':              {val:3917},
+  'Jamien Sherwood':        {val:3713},
+  'DeMarvion Overshown':    {val:200},
+  'Jack Gibbens':           {val:200},
+  'SirVocea Dennis':        {val:200},
+  'Divine Deablo':          {val:250},
+  'Devin Bush Jr.':         {val:955},
+  'Drake Thomas':           {val:396},
+  'Nakobe Dean':            {val:200},
+  'Germaine Pratt':         {val:1267},
+  'Nick Cross':             {val:2288},
+  'Nick Emmanwori':         {val:1108},
+  'Derwin James Jr.':       {val:3051},
+  'Brian Branch':           {val:2863},
+  'Kyle Hamilton':          {val:3396},
+  'Kam Curl':               {val:1076},
+  'Jessie Bates III':       {val:2715},
+  'Antoine Winfield Jr.':   {val:2826},
+  'Minkah Fitzpatrick':     {val:2699},
+  'Jalen Pitre':            {val:2573},
+  'Budda Baker':            {val:2446},
+  'Harrison Smith':         {val:2319},
+  'Jordan Poyer':           {val:2192},
+  'Xavier McKinney':        {val:2100},
+  'Talanoa Hufanga':        {val:1900},
+  'Quentin Lake':           {val:1600},
+  'Reed Blankenship':       {val:1400},
+  'Tyler Owens':            {val:1200},
+  'Marcus Williams':        {val:1100},
+  'Chamarri Conner':        {val:1000},
+  'Kareem Jackson':         {val:900},
+  'Javon Hargrave':         {val:800},
+  'Jaire Alexander':        {val:2500},
+  'Sauce Gardner':          {val:2400},
+  'Denzel Ward':            {val:2200},
+  'Devon Witherspoon':      {val:720},
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -4391,6 +4902,7 @@ const SLOT_ELIGIBLE = {
   REC_FLEX:   ['WR','TE'],
   TE_FLEX:    ['TE','WR'],
   SUPER_FLEX: ['QB','RB','WR','TE'],
+  OP:         ['QB','RB','WR','TE'],  // Offensive Player flex (Sleeper)
   IDP_FLEX:   ['DE','DT','DL','LB','OLB','ILB','MLB','CB','S','FS','SS','DB','IDP'],
   DL:         ['DE','DT','DL'],
   LB:         ['LB','OLB','ILB','MLB'],
@@ -4404,7 +4916,7 @@ const SLOT_ELIGIBLE = {
 const SLOT_CSS = {
   QB:'is-slot-QB', RB:'is-slot-RB', WR:'is-slot-WR', TE:'is-slot-TE',
   K:'is-special', DEF:'is-special', DST:'is-special',
-  FLEX:'is-flex', WRRB_FLEX:'is-flex', REC_FLEX:'is-flex', TE_FLEX:'is-flex', SUPER_FLEX:'is-flex',
+  FLEX:'is-flex', WRRB_FLEX:'is-flex', REC_FLEX:'is-flex', TE_FLEX:'is-flex', SUPER_FLEX:'is-flex', OP:'is-flex',
   IDP_FLEX:'is-idp', DL:'is-idp', LB:'is-idp', DB:'is-idp',
   DE:'is-idp', DT:'is-idp', CB:'is-idp', S:'is-idp',
   BN:'is-bench', IR:'is-ir', TAXI:'is-taxi',
@@ -4418,7 +4930,7 @@ const SLOT_LABEL = {
 // Legacy slot-count object — still used by BSH and value calculations
 function getRosterSlots() {
   const raw      = S.connectedLeague?.rosterPositions || [];
-  const starters = raw.filter(p => !['BN','IR','TAXI'].includes(p));
+  const starters = raw.filter(p => !['BN','IR','IL','TAXI'].includes(p));
   if (starters.length) {
     const idpSlots = ['IDP_FLEX','DL','LB','DB','DE','DT','CB','S'];
     return {
@@ -4455,7 +4967,8 @@ function renderRosterList() {
   const reserveIds = league?.reserveIds || [];
   const taxiIds    = league?.taxiIds    || [];
 
-  // ── Fallback: if rosterPositions is empty (old save / non-Sleeper), build from settings ──
+  // ── Fallback: if rosterPositions is empty, use settings-based estimate ──
+  // silentSleeperRefresh runs on every load and will re-render with real positions
   if (!allPos.length) {
     const slots = getRosterSlots();
     const build = [];
@@ -4468,17 +4981,16 @@ function renderRosterList() {
     for (let i = 0; i < (slots.K||1);     i++) build.push('K');
     for (let i = 0; i < (slots.DEF||1);   i++) build.push('DEF');
     for (let i = 0; i < (slots.IDP||0);   i++) build.push('IDP_FLEX');
-    // Estimate bench size based on roster
     const benchEst = Math.max(0, S.roster.length - build.length - reserveIds.length - taxiIds.length);
     for (let i = 0; i < benchEst; i++) build.push('BN');
     allPos = build;
-    console.log('[FantasyIQ] rosterPositions empty — built fallback:', build);
   }
 
-  // Partition positions into sections
-  const starterSlots = allPos.filter(p => !['BN','IR','TAXI'].includes(p));
+  // Partition positions into sections (IL = Sleeper alias for IR)
+  const NON_STARTER = new Set(['BN','IR','IL','TAXI']);
+  const starterSlots = allPos.filter(p => !NON_STARTER.has(p));
   const benchCount   = allPos.filter(p => p === 'BN').length;
-  const irCount      = allPos.filter(p => p === 'IR').length;
+  const irCount      = allPos.filter(p => p === 'IR' || p === 'IL').length;
   const taxiCount    = allPos.filter(p => p === 'TAXI').length;
 
   // Helper: find a player by Sleeper ID
@@ -4492,6 +5004,8 @@ function renderRosterList() {
 
   const hasRealStarters = starterIds.length > 0 && starterIds.some(id => byId(id));
 
+  let useGreedy = !hasRealStarters;
+
   if (hasRealStarters) {
     // Use Sleeper's actual lineup — starters array matches starting slots positionally
     // Filter starters to just the non-BN/IR/TAXI subset
@@ -4502,9 +5016,23 @@ function renderRosterList() {
       if (p) usedIds.add(String(p.player_id || p.id));
       starterAssignments.push(p || null);
     }
-  } else {
+    // Stale-data check: if ANY slot is null a player was traded/dropped since this
+    // lineup was set (common in offseason). Fall back to greedy for a clean display.
+    const hasNullSlot = starterAssignments.some(p => p === null);
+    if (hasNullSlot) {
+      usedIds.clear();
+      starterAssignments = [];
+      useGreedy = true;
+    }
+  }
+
+  if (useGreedy) {
     // Greedy fallback: sort by value, assign best eligible to each slot in order
-    const sorted = [...S.roster].sort((a,b) => calcValue(b) - calcValue(a));
+    // Exclude IR/Taxi players — they must not appear in starter slots
+    const reserveSet = new Set([...reserveIds, ...taxiIds].map(String));
+    const sorted = [...S.roster]
+      .filter(p => !reserveSet.has(String(p.player_id || p.id)))
+      .sort((a,b) => calcValue(b) - calcValue(a));
     const pickBest = slot => {
       const eligible = SLOT_ELIGIBLE[slot] || [slot];
       for (const p of sorted) {
@@ -5655,10 +6183,10 @@ function rebuildPlayerValues() {
 
 // Build consensus value for one player across all loaded sources.
 // Uses MEDIAN — robust against outliers; one bad CSV can't dominate.
-// VALUE_DB is always included as an anchor (2 votes) so rank-inflated files get grounded.
-// Dynasty sources: KTC, FantasyCalc, VALUE_DB (all calibrated to 1QB SF baseline).
+// DYNASTY_DB/REDRAFT_DB always included as anchors (2 votes each) so rank-inflated files get grounded.
+// Dynasty sources: KTC, FantasyCalc, DYNASTY_DB (all calibrated to 1QB SF baseline).
 // Redraft sources: above + ECR redraft CSVs + DraftShark (rv-only, dv:0).
-// RANKING RULE 5 (Stability): final consensus is capped at ±25% of VALUE_DB baseline
+// RANKING RULE 5 (Stability): final consensus is capped at ±25% of DYNASTY_DB/REDRAFT_DB baseline
 // so no single upload cycle can overhaul rankings — movement is always gradual.
 function buildConsensus(p) {
   const pid  = normName(p.full_name || '');
@@ -5674,17 +6202,23 @@ function buildConsensus(p) {
     if (entry.trend) trends.push(entry.trend);
   }
 
-  // VALUE_DB always gets 2 votes — it's calibrated to KTC market values and must
+  // DYNASTY_DB/REDRAFT_DB always get 2 votes each — calibrated to KTC market values and must
   // outweigh FFC/DLF ADP-based sources that inflate speculative dynasty QBs.
   // Example: JJ McCarthy rank 80 in FFC dynasty ADP → rankToValue gives ~6,200,
   // but KTC has him at ~342 and VDB at 2,100. With VDB(2×) + KTC, the median
   // stays at 2,100 instead of being pulled to ~3,500 by FFC/DLF outliers.
-  const vdb = VALUE_DB[p.full_name];
-  if (vdb) {
-    dvArr.push(vdb.dv); dvArr.push(vdb.dv);
-    rvArr.push(vdb.rv || vdb.dv); rvArr.push(vdb.rv || vdb.dv);
-    if (vdb.trend) trends.push(vdb.trend);
-  } else if (dvArr.length === 0) {
+  const vdb_d = DYNASTY_DB[p.full_name];
+  const vdb_r = REDRAFT_DB[p.full_name];
+  if (vdb_d) {
+    dvArr.push(vdb_d.val); dvArr.push(vdb_d.val);
+    if (vdb_d.trend) trends.push(vdb_d.trend);
+  }
+  if (vdb_r) {
+    rvArr.push(vdb_r.val); rvArr.push(vdb_r.val);
+  } else if (vdb_d) {
+    rvArr.push(vdb_d.val); rvArr.push(vdb_d.val);
+  }
+  if (!vdb_d && !vdb_r && dvArr.length === 0) {
     return { dv: p.dynasty_val || 500, rv: p.redraft_val || 500, trend: 'flat', sources: 0 };
   }
 
@@ -5702,17 +6236,20 @@ function buildConsensus(p) {
   // RANKING RULE 5 — STABILITY: New CSV uploads should never overhaul full consensus
   // rankings. Like KTC, rankings move gradually — injuries/trades/trends shift a player
   // up or down incrementally, but a single upload cycle can't explode or crater a player.
-  // Implementation: cap the consensus result at ±25% of the VALUE_DB baseline.
+  // Implementation: cap the consensus result at ±25% of the DYNASTY_DB/REDRAFT_DB baseline.
   // A player ranked at 5,000 dv can move to 6,250 max or 3,750 min from one upload cycle.
-  // This ensures VALUE_DB (anchored to KTC market values) always keeps rankings stable.
+  // This ensures DYNASTY_DB (anchored to KTC market values) always keeps rankings stable.
   let rawDv = median(dvArr) || p.dynasty_val || 500;
   let rawRv = median(rvArr) || p.redraft_val || 500;
 
-  if (vdb) {
-    const CAP = 0.25; // max 25% shift per cycle from VALUE_DB baseline
-    const dvBase = vdb.dv || rawDv;
-    const rvBase = (vdb.rv || vdb.dv) || rawRv;
+  if (vdb_d) {
+    const CAP = 0.25; // max 25% shift per cycle from DYNASTY_DB baseline
+    const dvBase = vdb_d.val || rawDv;
     rawDv = Math.min(dvBase * (1 + CAP), Math.max(dvBase * (1 - CAP), rawDv));
+  }
+  if (vdb_r || vdb_d) {
+    const CAP = 0.25;
+    const rvBase = (vdb_r?.val || vdb_d?.val) || rawRv;
     rawRv = Math.min(rvBase * (1 + CAP), Math.max(rvBase * (1 - CAP), rawRv));
   }
 
@@ -6853,8 +7390,8 @@ async function fetchDynastyProcessValues() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// MERGE VALUE_DB INTO A PLAYER OBJECT
-// Priority: FantasyCalc live → hardcoded VALUE_DB → rank estimate
+// MERGE DYNASTY_DB / REDRAFT_DB INTO A PLAYER OBJECT
+// Priority: FantasyCalc live → hardcoded DYNASTY_DB/REDRAFT_DB → rank estimate
 // ═══════════════════════════════════════════════════════════
 function applyValueDB(p) {
   // 1. FantasyCalc live (by Sleeper ID, then by name)
@@ -6871,10 +7408,11 @@ function applyValueDB(p) {
       };
     }
   }
-  // 2. Hardcoded VALUE_DB (name-keyed)
-  const entry = VALUE_DB[p.full_name];
-  if (entry) {
-    return { ...p, dynasty_val: entry.dv, redraft_val: entry.rv, trend: entry.trend };
+  // 2. Hardcoded DYNASTY_DB / REDRAFT_DB (name-keyed)
+  const dEntry = DYNASTY_DB[p.full_name];
+  const rEntry = REDRAFT_DB[p.full_name];
+  if (dEntry || rEntry) {
+    return { ...p, dynasty_val: dEntry?.val ?? p.dynasty_val, redraft_val: rEntry?.val ?? dEntry?.val ?? p.redraft_val, trend: dEntry?.trend || p.trend };
   }
   // 3. Rank-based estimate
   const rank = p.search_rank || 999;
@@ -7149,6 +7687,7 @@ const FALLBACK_PLAYERS = [
 // INIT
 // ═══════════════════════════════════════════════════════════
 async function init() {
+  console.log('[FantasyIQ] v2026-05-12c — init');
   // ── 1. SYNC SETUP ────────────────────────────────────────────────
   try {
     const saved = JSON.parse(localStorage.getItem('fantasyiq_settings')||'{}');
@@ -7177,7 +7716,7 @@ async function init() {
   S.sourceStatus = {};
   S.sourceMeta   = {};
   S.sourceStatus['tiq'] = 'ok';
-  S.sourceMeta['tiq'] = { count: Object.keys(VALUE_DB).length, loaded: Date.now() };
+  S.sourceMeta['tiq'] = { count: Object.keys(DYNASTY_DB).length, loaded: Date.now() };
   restoreCSVSources();
   restoreBookmarkletSources();
 
@@ -7342,9 +7881,17 @@ function handleAuthStateChange(user) {
     btn.style.display  = 'block';
     pill.style.display = 'none';
     document.body.classList.remove('logged-in', 'premium');
+    S.auth = null;
     S.isPremium = false;
     updateChatVisibility();
-    if (document.getElementById('tab-home')?.classList.contains('active')) renderHome();
+    updateLeagueBar();
+    if (S._signingOut) {
+      S._signingOut = false;
+      switchTab('home');
+      showToast('Signed out');
+    } else if (document.getElementById('tab-home')?.classList.contains('active')) {
+      renderHome();
+    }
   }
 }
 
@@ -7438,15 +7985,12 @@ function continueAsGuest() {
 }
 
 function signOutUser() {
-  if (fbAuth) fbAuth.signOut();
-  S.auth = null;
+  S._signingOut = true;  // flag so handleAuthStateChange redirects to home
+  document.getElementById('userMenu')?.classList.remove('open');
   S.connectedLeague = null;
   S.connectedLeagues = [];
-  document.getElementById('authBtn').style.display = 'block';
-  document.getElementById('userPill').style.display = 'none';
-  updateChatVisibility();
-  updateLeagueBar();
-  showToast('Signed out');
+  if (fbAuth) fbAuth.signOut();
+  // handleAuthStateChange(null) fires after Firebase confirms — it will redirect home
 }
 
 function toggleUserMenu(e) {
@@ -7899,84 +8443,134 @@ async function loadConnectedLeagues() {
     if (S.roster.length) document.getElementById('bshBtn').disabled = false;
     // Render home with fresh league data
     if (document.getElementById('tab-home')?.classList.contains('active')) renderHome();
-    // Silently refresh Sleeper roster in background so data stays current
-    if (latest.platform === 'sleeper' && (latest.sleeperUserId || latest.sleeperUsername) && latest.leagueId) {
+    // Always refresh Sleeper leagues on load — works even without saved credentials
+    if (latest.platform === 'sleeper' && latest.leagueId) {
       silentSleeperRefresh(latest);
     }
   }
   refreshConnectedLeaguesList();
 }
 
-async function silentSleeperRefresh(lg) {
+async function silentSleeperRefresh(lg, { showToastOnSuccess = false } = {}) {
+  if (!lg?.leagueId) return;
+  if (S._sleeperRefreshing === lg.leagueId) return; // prevent concurrent refreshes
+  S._sleeperRefreshing = lg.leagueId;
   try {
     const uid = lg.sleeperUserId;
-    if (!uid && !lg.sleeperUsername) return;
     const [leagueInfo, rosters] = await Promise.all([
       fetch(`https://api.sleeper.app/v1/league/${lg.leagueId}`).then(r=>r.json()),
       fetch(`https://api.sleeper.app/v1/league/${lg.leagueId}/rosters`).then(r=>r.json()),
     ]);
-    if (!leagueInfo?.league_id) return;
-    // Find this user's roster by owner_id (sleeperUserId)
-    let userRoster = uid ? rosters.find(r => r.owner_id === uid) : null;
-    // Fallback: if only 1 roster or we have allTeams data
-    if (!userRoster && lg.allTeams) {
-      const teamEntry = lg.allTeams.find(t => t.username === lg.sleeperUsername || t.userId === uid);
-      if (teamEntry) userRoster = rosters.find(r => r.owner_id === teamEntry.userId);
+    if (!leagueInfo?.league_id || !Array.isArray(rosters)) return;
+
+    // STEP 1: Always capture rosterPositions from league info — no user credentials needed
+    const freshPositions = leagueInfo.roster_positions?.length
+      ? leagueInfo.roster_positions
+      : (lg.rosterPositions || []);
+    const freshSettings = detectSleeperSettings(leagueInfo);
+
+    // STEP 2: Find this user's roster — try multiple strategies (no credential requirement)
+    let userRoster = null;
+
+    // Strategy A: match by Sleeper owner_id
+    if (uid) userRoster = rosters.find(r => r.owner_id === uid);
+
+    // Strategy B: match via allTeams lookup
+    if (!userRoster && lg.allTeams?.length) {
+      const teamEntry = lg.allTeams.find(t =>
+        (lg.sleeperUsername && t.username === lg.sleeperUsername) ||
+        (uid && (String(t.userId) === String(uid) || String(t.ownerId) === String(uid)))
+      );
+      if (teamEntry) {
+        userRoster = rosters.find(r =>
+          String(r.owner_id) === String(teamEntry.userId) ||
+          String(r.owner_id) === String(teamEntry.ownerId)
+        );
+      }
     }
-    if (!userRoster) return;
-    const allIds = [
-      ...(userRoster.players||[]),
-      ...(userRoster.reserve||[]),
-      ...(userRoster.taxi   ||[]),
-    ].map(String);
-    const rosterPlayers = allIds.map(id => S.players.find(p=>String(p.player_id||p.id)===String(id))).filter(Boolean);
 
-    // Rebuild allTeams from ALL fresh rosters so waiver/trade filters always reflect
-    // current transactions (adds/drops/trades since the last full import).
-    // Preserve existing ownerName/displayName if we can't re-fetch it here.
-    const freshAllTeams = (rosters||[]).map(r => {
-      const teamIds = [...(r.players||[]), ...(r.reserve||[])].map(String);
-      const existing = (S.connectedLeague?.allTeams||[]).find(t => String(t.rosterId) === String(r.roster_id));
-      const teamPlayers = teamIds.map(id => S.players.find(p=>String(p.player_id||p.id)===id)).filter(Boolean);
-      return {
-        rosterId:    r.roster_id,
-        ownerId:     r.owner_id,
-        ownerName:   existing?.ownerName   || existing?.displayName || `Team ${r.roster_id}`,
-        displayName: existing?.displayName || existing?.ownerName   || `Team ${r.roster_id}`,
-        isMe:        r.owner_id === uid,
-        playerIds:   teamIds,      // raw Sleeper IDs — used by waiver/trade filter
-        players:     teamPlayers,  // resolved objects — used by league analyzer
-        wins:        r.settings?.wins   ?? existing?.wins   ?? 0,
-        losses:      r.settings?.losses ?? existing?.losses ?? 0,
-      };
-    });
+    // Strategy C: best player-ID overlap with saved rosterIds (works with zero credentials)
+    if (!userRoster && lg.rosterIds?.length) {
+      const savedSet = new Set(lg.rosterIds.map(String));
+      let bestScore = 0;
+      for (const r of rosters) {
+        const rIds = [...(r.players||[]), ...(r.reserve||[]), ...(r.taxi||[])].map(String);
+        const score = rIds.filter(id => savedSet.has(id)).length;
+        if (score > bestScore) { bestScore = score; userRoster = r; }
+      }
+      if (bestScore < 3) userRoster = null; // too few matches — don't guess
+    }
 
-    // Re-capture rosterPositions and settings from fresh leagueInfo on every refresh
-    const freshPositions = leagueInfo.roster_positions || lg.rosterPositions || [];
-    const freshSettings  = detectSleeperSettings(leagueInfo);
-    const updatedLeague  = {
+    // STEP 3: Build updated league object
+    // Even if we couldn't identify userRoster, we at least update rosterPositions + settings
+    let updatedLeague = {
       ...S.connectedLeague,
-      allTeams:        freshAllTeams,
-      rosterIds:       allIds,
       rosterPositions: freshPositions,
-      starterIds:      userRoster.starters || [],
-      reserveIds:      userRoster.reserve  || [],
-      taxiIds:         userRoster.taxi     || [],
       settings:        freshSettings,
       connectedAt:     Date.now(),
     };
+
+    if (userRoster) {
+      const allIds = [
+        ...(userRoster.players||[]),
+        ...(userRoster.reserve||[]),
+        ...(userRoster.taxi   ||[]),
+      ].map(String);
+      const rosterPlayers = allIds.map(id => S.players.find(p=>String(p.player_id||p.id)===String(id))).filter(Boolean);
+
+      const freshAllTeams = rosters.map(r => {
+        const teamIds = [...(r.players||[]), ...(r.reserve||[])].map(String);
+        const existing = (S.connectedLeague?.allTeams||[]).find(t => String(t.rosterId) === String(r.roster_id));
+        const teamPlayers = teamIds.map(id => S.players.find(p=>String(p.player_id||p.id)===id)).filter(Boolean);
+        return {
+          rosterId:    r.roster_id,
+          ownerId:     r.owner_id,
+          ownerName:   existing?.ownerName   || existing?.displayName || `Team ${r.roster_id}`,
+          displayName: existing?.displayName || existing?.ownerName   || `Team ${r.roster_id}`,
+          isMe:        r.owner_id === uid,
+          playerIds:   teamIds,
+          players:     teamPlayers,
+          wins:        r.settings?.wins   ?? existing?.wins   ?? 0,
+          losses:      r.settings?.losses ?? existing?.losses ?? 0,
+        };
+      });
+
+      updatedLeague = {
+        ...updatedLeague,
+        allTeams:    freshAllTeams,
+        rosterIds:   allIds,
+        starterIds:  userRoster.starters || [],
+        reserveIds:  userRoster.reserve  || [],
+        taxiIds:     userRoster.taxi     || [],
+        // Preserve sleeperUserId if we matched via overlap (no uid)
+        sleeperUserId: uid || (userRoster.owner_id !== undefined ? userRoster.owner_id : lg.sleeperUserId),
+      };
+
+      S.roster = rosterPlayers;
+      if (S.roster.length) document.getElementById('bshBtn').disabled = false;
+    }
+
     S.connectedLeague = updatedLeague;
-    S.roster = rosterPlayers;
     saveConnectedLeague(updatedLeague);
     applyLeagueSettings(freshSettings);
     renderRosterList();
-    if (S.roster.length) document.getElementById('bshBtn').disabled = false;
-    showToast('🏈 Roster refreshed from Sleeper');
-    // Re-render home with fresh data
+    if (showToastOnSuccess) showToast('🏈 Roster synced from Sleeper');
     if (document.getElementById('tab-home')?.classList.contains('active')) renderHome();
   } catch(e) {
-    // Silent — don't show errors for background refresh
+    console.warn('[FantasyIQ] Sleeper refresh failed:', e);
+  } finally {
+    S._sleeperRefreshing = null;
   }
+}
+
+async function manualSleeperSync() {
+  const lg = S.connectedLeague;
+  if (!lg?.leagueId) { showToast('No league connected'); return; }
+  if (lg.platform !== 'sleeper') { showToast('Manual sync only works for Sleeper leagues'); return; }
+  const btn = document.getElementById('syncRosterBtn');
+  if (btn) { btn.textContent = '⏳ Syncing…'; btn.disabled = true; }
+  await silentSleeperRefresh(lg, { showToastOnSuccess: true });
+  if (btn) { btn.textContent = '🔄 Sync'; btn.disabled = false; }
 }
 
 function refreshConnectedLeaguesList() {
@@ -8006,6 +8600,8 @@ async function switchLeague(leagueId) {
   // Re-render the home dashboard so stats/intel reflect the newly selected league
   if (document.getElementById('tab-home')?.classList.contains('active')) renderHome();
   showToast(`Switched to ${lg.leagueName}`);
+  // Always refresh Sleeper leagues when switching — keeps positions/starters current
+  if (lg.platform === 'sleeper' && lg.leagueId) silentSleeperRefresh(lg);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -9762,7 +10358,7 @@ function getBuySellReason(p, action) {
   // Check custom reason first
   if (BUYSELL_REASONS[p.full_name]) return BUYSELL_REASONS[p.full_name];
   const age = p.age || 0;
-  const trend = VALUE_DB[p.full_name]?.trend || 'flat';
+  const trend = DYNASTY_DB[p.full_name]?.trend || 'flat';
   if (action === 'BUY') {
     if (age <= 22) return 'Young talent at a value discount — window to buy is open now.';
     if (age <= 25 && trend === 'up') return 'Ascending player in prime buy window — get in before price rises.';
@@ -9806,8 +10402,7 @@ function renderBuySellTab() {
 
   for (const p of eligible) {
     const nm    = p.full_name.toLowerCase();
-    const vdb   = VALUE_DB[p.full_name];
-    const trend = vdb?.trend || 'flat';
+    const trend = DYNASTY_DB[p.full_name]?.trend || 'flat';
     const val   = calcValue(p);
     const age   = p.age || 0;
 
@@ -10457,8 +11052,7 @@ function _tiqGetBuySells() {
   );
   for (const p of eligible) {
     const nm    = p.full_name.toLowerCase();
-    const vdb   = VALUE_DB[p.full_name];
-    const trend = vdb?.trend || 'flat';
+    const trend = DYNASTY_DB[p.full_name]?.trend || 'flat';
     const val   = calcValue(p);
     const age   = p.age || 0;
     let action;
