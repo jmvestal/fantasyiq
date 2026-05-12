@@ -4967,6 +4967,15 @@ function renderRosterList() {
   const reserveIds = league?.reserveIds || [];
   const taxiIds    = league?.taxiIds    || [];
 
+  console.log('[Roster Debug]', {
+    rosterCount: S.roster.length,
+    rosterNames: S.roster.map(p=>p.full_name||p.name),
+    rosterPositions: allPos,
+    starterIds,
+    reserveIds,
+    taxiIds,
+  });
+
   // ── Fallback: if rosterPositions is empty, use settings-based estimate ──
   // silentSleeperRefresh runs on every load and will re-render with real positions
   if (!allPos.length) {
@@ -8499,7 +8508,17 @@ async function silentSleeperRefresh(lg, { showToastOnSuccess = false } = {}) {
         if (score > bestScore) { bestScore = score; userRoster = r; }
       }
       if (bestScore < 3) userRoster = null; // too few matches — don't guess
+      console.log('[Sleeper Refresh] Strategy C overlap score:', bestScore, userRoster ? 'MATCHED' : 'NO MATCH');
     }
+
+    console.log('[Sleeper Refresh]', {
+      leagueId: lg.leagueId,
+      uid,
+      userRosterFound: !!userRoster,
+      freshPositions,
+      totalRosters: rosters.length,
+      savedRosterIds: lg.rosterIds?.length,
+    });
 
     // STEP 3: Build updated league object
     // Even if we couldn't identify userRoster, we at least update rosterPositions + settings
