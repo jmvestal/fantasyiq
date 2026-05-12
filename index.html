@@ -3941,10 +3941,12 @@ function calcValue(p, _over) {
   if (pos !== 'PICK') {
     const sk  = scenarioKey({ mode, qb, scoring, te });
     const pid = normName(p.full_name || '');
-    // For dynasty QBs, use the dedicated QB source (scen_dyn_sf_hppr_note/qb.csv) as the
-    // authoritative ranking regardless of format — dynasty QB rankings are format-agnostic.
+    // For dynasty skill positions, the scen_dyn_sf_hppr_note position files are the
+    // authoritative source (rb/wr/qb/te/rookies CSVs). Always try the active scenario
+    // first, then fall back to the SF HPPR position files. This keeps QB rankings
+    // format-agnostic and ensures all positions share one consistent dynasty source.
     let se = S.sourceValues?.[sk]?.[pid];
-    if (!se && mode === 'dynasty' && pos === 'QB') {
+    if (!se && mode === 'dynasty' && ['QB','RB','WR','TE'].includes(pos)) {
       se = S.sourceValues?.['scen_dyn_sf_hppr_note']?.[pid];
     }
     if (se) {
@@ -3994,11 +3996,14 @@ function calcValue(p, _over) {
   // IDP, DST, and K still fall through to baseline (no dedicated dynasty CSV).
   if (mode === 'dynasty' && pos !== 'PICK'
       && !IDP_POS.has(pos) && !DST_POS.has(pos) && pos !== 'K') {
-    const _sk    = scenarioKey({ mode, qb, scoring, te });
-    const _scen  = S.sourceValues?.[_sk];
-    const _qbSrc = S.sourceValues?.['scen_dyn_sf_hppr_note'];
+    const _sk     = scenarioKey({ mode, qb, scoring, te });
+    const _scen   = S.sourceValues?.[_sk];
+    const _sfSrc  = S.sourceValues?.['scen_dyn_sf_hppr_note'];
+    // Guard fires if EITHER the active scenario OR the SF HPPR position files are loaded.
+    // scen_dyn_sf_hppr_note is prefetched at startup, so this gate is almost always active.
+    // A player not found in the shortcut above is unranked regardless of FantasyCalc/KTC data.
     const _loaded = (_scen  && Object.keys(_scen).length  > 20)
-                 || (pos === 'QB' && _qbSrc && Object.keys(_qbSrc).length > 20);
+                 || (_sfSrc && Object.keys(_sfSrc).length > 20);
     if (_loaded) return 0;
   }
   // ───────────────────────────────────────────────────────────────────────────
