@@ -3960,19 +3960,18 @@ function calcValue(p, _over) {
         if (IDP_POS.has(pos)) sv = Math.round(sv * (mode === 'dynasty' ? 0.30 : 0.18));
         if (DST_POS.has(pos)) sv = Math.min(sv, mode === 'dynasty' ? 200 : 2800);
         if (pos === 'K')       sv = Math.min(sv, 1600);
-        // League size modifier — scenarios don't know about size, so we apply it here
+        // League size modifier — scenarios don't know about size, so we apply it here.
+        // DYNASTY: szMod = 1.0 for all positions. The scenario CSV already encodes the
+        // correct value for the scoring format + TE premium. League size does not change
+        // dynasty rankings — only format (PPR/Half/Std) and TE premium do.
+        // REDRAFT: format and size both scale values.
         let szMod = 1.0;
-        if (pos === 'QB') {
-          // Dynasty: QB value is completely fixed — same number in every dynasty scenario
-          // (1QB/SF/2QB, any scoring, any size). The CSV value IS the dynasty QB value.
-          // Redraft: format and size both matter.
-          if (mode === 'dynasty') {
-            szMod = 1.0;
-          } else {
+        if (mode === 'dynasty') {
+          szMod = 1.0; // CSV value IS the dynasty value — no size adjustment
+        } else if (pos === 'QB') {
             szMod = qb === '2qb' ? ({ 8:0.88,10:0.94,12:1.00,14:1.10,16:1.22 }[size]||1)
                   : qb === 'sf'  ? ({ 8:0.85,10:0.92,12:1.00,14:1.10,16:1.20 }[size]||1)
                   :                ({ 8:0.78,10:0.88,12:1.00,14:1.12,16:1.26 }[size]||1);
-          }
         } else if (pos === 'TE') {
           const eTE = sv > 4000;
           szMod = eTE ? ({ 8:0.85,10:0.92,12:1.00,14:1.12,16:1.25 }[size]||1)
