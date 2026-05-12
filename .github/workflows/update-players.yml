@@ -1,4 +1,4 @@
-name: Update Players JSON
+name: Update Players + Rankings
 
 on:
   schedule:
@@ -14,81 +14,200 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fetch players from Sleeper API and write players.json
+      - name: Fetch players.json from Sleeper
         run: |
           node << 'EOF'
           const https = require('https');
-          const fs   = require('fs');
+          const fs    = require('fs');
 
-          const VALID_POS = new Set([
-            'QB','RB','WR','TE','K','DEF','DST',
-            'DE','DT','LB','CB','S','FS','SS','DB',
-            'OLB','ILB','MLB','DL','IDP'
-          ]);
+          const VALID_POS  = new Set(['QB','RB','WR','TE','K','DEF','DST','DE','DT','LB','CB','S','FS','SS','DB','OLB','ILB','MLB','DL','IDP']);
+          const SKIP_STATUS = new Set(['Inactive','Retired','Reserve/Retired','Reserve/PUP']);
 
-          const SKIP_STATUS = new Set([
-            'Inactive','Retired','Reserve/Retired','Reserve/PUP'
-          ]);
-
-          console.log('Fetching https://api.sleeper.app/v1/players/nfl …');
-
+          console.log('Fetching Sleeper players…');
           https.get('https://api.sleeper.app/v1/players/nfl', res => {
-            if (res.statusCode !== 200) {
-              console.error('HTTP ' + res.statusCode);
-              process.exit(1);
-            }
             let body = '';
-            res.on('data', chunk => body += chunk);
+            res.on('data', c => body += c);
             res.on('end', () => {
               const raw = JSON.parse(body);
-
               const players = Object.values(raw)
-                .filter(p =>
-                  p.full_name &&
-                  VALID_POS.has(p.position) &&
-                  p.active === true &&
-                  p.team &&
-                  p.team !== 'FA' &&
-                  p.team !== 'Free Agent' &&
-                  !SKIP_STATUS.has(p.status) &&
-                  (p.search_rank || 0) < 2500
-                )
+                .filter(p => p.full_name && VALID_POS.has(p.position) && p.active === true &&
+                  p.team && p.team !== 'FA' && p.team !== 'Free Agent' &&
+                  !SKIP_STATUS.has(p.status) && (p.search_rank || 0) < 2500)
                 .map(p => ({
-                  id:          p.player_id,
-                  player_id:   p.player_id,
-                  full_name:   p.full_name,
-                  position:    p.position,
-                  team:        p.team,
-                  age:         p.age        || null,
-                  years_exp:   p.years_exp  || 0,
-                  search_rank: p.search_rank || 999,
-                  trend:       'flat',
-                  rookie:      (p.years_exp || 0) === 0,
+                  id: p.player_id, player_id: p.player_id, full_name: p.full_name,
+                  position: p.position, team: p.team, age: p.age || null,
+                  years_exp: p.years_exp || 0, search_rank: p.search_rank || 999,
+                  trend: 'flat', rookie: (p.years_exp || 0) === 0,
                 }));
-
-              const out = {
-                updated: new Date().toISOString(),
-                count:   players.length,
-                players
-              };
-
-              fs.writeFileSync('players.json', JSON.stringify(out));
-              console.log('Wrote ' + players.length + ' players to players.json');
+              fs.writeFileSync('players.json', JSON.stringify({ updated: new Date().toISOString(), count: players.length, players }));
+              console.log('players.json: ' + players.length + ' players');
             });
-          }).on('error', err => {
-            console.error('Fetch failed:', err.message);
-            process.exit(1);
-          });
+          }).on('error', e => { console.error(e.message); process.exit(1); });
           EOF
+
+      - name: Fetch rankings.json from all sources
+        run: |
+          node << 'JSEOF'
+          const https = require('https');
+          const http  = require('http');
+          const fs    = require('fs');
+
+          // ── helpers ────────────────────────────────────────────
+          const norm = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+          function fetchUrl(url, timeoutMs = 15000, extraHeaders = {}) {
+            return new Promise((resolve, reject) => {
+              const lib = url.startsWith('https') ? https : http;
+              const req = lib.get(url, {
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                  'Accept': 'application/json, text/plain, */*',
+                  'Accept-Language': 'en-US,en;q=0.9',
+                  'Accept-Encoding': 'gzip, deflate, br',
+                  'Cache-Control': 'no-cache',
+                  'Pragma': 'no-cache',
+                  'Sec-Fetch-Dest': 'empty',
+                  'Sec-Fetch-Mode': 'cors',
+                  'Sec-Fetch-Site': 'same-origin',
+                  ...extraHeaders,
+                }
+              }, res => {
+                // Follow redirects
+                if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                  return fetchUrl(res.headers.location, timeoutMs, extraHeaders).then(resolve).catch(reject);
+                }
+                if (res.statusCode !== 200) return reject(new Error('HTTP ' + res.statusCode + ' — ' + url));
+                let body = '';
+                res.on('data', c => body += c);
+                res.on('end', () => resolve(body));
+              });
+              req.setTimeout(timeoutMs, () => { req.destroy(); reject(new Error('Timeout: ' + url)); });
+              req.on('error', reject);
+            });
+          }
+
+          const fetchJson = async (url, extraHeaders = {}) => JSON.parse(await fetchUrl(url, 15000, extraHeaders));
+          const rankToVal = (rank, total) => Math.round(Math.max(100, Math.min(9800, 10000 * Math.exp(-0.012 * (rank - 1)))));
+
+          // ── main ───────────────────────────────────────────────
+          async function main() {
+            const out = { updated: new Date().toISOString(), fc: {}, ktc: {}, ffc: {}, dp: {} };
+            const yr  = new Date().getFullYear();
+
+            // ── 1. FANTASYCALC ──────────────────────────────────
+            try {
+              console.log('Fetching FantasyCalc…');
+              const [dyn1, dynSF, rdf] = await Promise.all([
+                fetchJson('https://api.fantasycalc.com/values/current?isDynasty=true&numQbs=1&numTeams=12&ppr=1&includeAdp=false'),
+                fetchJson('https://api.fantasycalc.com/values/current?isDynasty=true&numQbs=2&numTeams=12&ppr=1&includeAdp=false'),
+                fetchJson('https://api.fantasycalc.com/values/current?isDynasty=false&numQbs=1&numTeams=12&ppr=1&includeAdp=false'),
+              ]);
+              const sfMap = {};
+              (dynSF || []).forEach(i => { if (i.player?.name) sfMap[norm(i.player.name)] = i.value || 0; });
+              const rdMap = {};
+              (rdf  || []).forEach(i => { if (i.player?.name) rdMap[norm(i.player.name)] = i.value || 0; });
+              (dyn1 || []).forEach(i => {
+                if (!i.player?.name) return;
+                const k = norm(i.player.name);
+                out.fc[k] = {
+                  dv:    i.value || 0,
+                  dv_sf: sfMap[k] || i.value || 0,
+                  rv:    rdMap[k] || 0,
+                  trend: (i.trend > 0 ? 'up' : i.trend < 0 ? 'down' : 'flat'),
+                  name:  i.player.name,
+                  pos:   i.player.position || '',
+                  team:  i.player.maybeTeam || '',
+                  age:   i.player.age || null,
+                  sid:   i.player.sleeperId || null,
+                };
+              });
+              console.log('FantasyCalc: ' + Object.keys(out.fc).length + ' players');
+            } catch(e) { console.error('FantasyCalc failed:', e.message); }
+
+            // ── 2. KEEPTRADECUT ────────────────────────────────
+            try {
+              console.log('Fetching KTC…');
+              const KTC = 'https://keeptradecut.com/fantasy-api/queue?format=1&filters=QB|WR|RB|TE|RDP&page=0&perPage=500&dynasty=1';
+              const ktcRaw = await fetchUrl(KTC, 15000, {
+                'Referer': 'https://keeptradecut.com/dynasty-rankings',
+                'Origin': 'https://keeptradecut.com',
+              });
+              if (ktcRaw.trimStart().startsWith('<')) throw new Error('KTC returned HTML — likely bot-blocked');
+              const data = JSON.parse(ktcRaw);
+              (data || []).forEach(p => {
+                if (!p.playerName) return;
+                const k     = norm(p.playerName);
+                const dv    = p.oneQBValues?.value       || p.superflexValues?.value || 0;
+                const dv_sf = p.superflexValues?.value   || dv;
+                const rv    = p.oneQBValues?.redraftValue || Math.round(dv * 0.82);
+                const t     = p.oneQBValues?.trend;
+                out.ktc[k]  = {
+                  dv, dv_sf, rv,
+                  trend: t > 50 ? 'up' : t < -50 ? 'down' : 'flat',
+                  name:  p.playerName,
+                  pos:   p.position || '',
+                  team:  p.teamAbv   || '',
+                  age:   p.age       || null,
+                };
+              });
+              console.log('KTC: ' + Object.keys(out.ktc).length + ' players');
+            } catch(e) { console.error('KTC failed:', e.message); }
+
+            // ── 3. FANTASY FOOTBALL CALCULATOR (redraft PPR) ──
+            try {
+              console.log('Fetching FF Calculator…');
+              const FFC = `https://fantasyfootballcalculator.com/api/v1/adp/ppr?teams=12&year=${yr}&position=all`;
+              const data = await fetchJson(FFC);
+              (data?.players || []).forEach(p => {
+                if (!p.name) return;
+                const k   = norm(p.name);
+                const adp = p.adp || p.average_pick || 999;
+                out.ffc[k] = { dv: 0, rv: rankToVal(adp, data.players.length), name: p.name, pos: (p.position||'').toUpperCase() };
+              });
+              console.log('FFC: ' + Object.keys(out.ffc).length + ' players');
+            } catch(e) { console.error('FFC failed:', e.message); }
+
+            // ── 4. DYNASTYPROCESS / FANTASYPROS ECR ───────────
+            try {
+              console.log('Fetching DynastyProcess ECR…');
+              const DP  = 'https://raw.githubusercontent.com/dynastyprocess/data/master/files/db_fpecr_latest.csv';
+              const txt = await fetchUrl(DP);
+              const lines = txt.replace(/\r\n/g,'\n').trim().split('\n');
+              const hdr   = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/"/g,''));
+              const nmIdx = hdr.findIndex(h => h.includes('player') || h === 'name' || h === 'fp_player_name');
+              const rkIdx = hdr.findIndex(h => h === 'ecr' || h.includes('rank') || h === 'avg');
+              const psIdx = hdr.findIndex(h => h === 'pos' || h === 'position');
+              if (nmIdx === -1) throw new Error('No name column');
+              const entries = [];
+              for (let i = 1; i < lines.length; i++) {
+                const cols = lines[i].split(',').map(c => c.trim().replace(/"/g,''));
+                const name = cols[nmIdx]; if (!name) continue;
+                const rank = rkIdx >= 0 ? parseFloat(cols[rkIdx]) : i;
+                const pos  = psIdx >= 0 ? (cols[psIdx]||'').toUpperCase() : '';
+                if (isNaN(rank) || pos === 'K' || pos === 'DST' || pos === 'DEF') continue;
+                entries.push({ name, rank });
+              }
+              entries.forEach(e => {
+                out.dp[norm(e.name)] = { dv: rankToVal(Math.round(e.rank), entries.length), rv: 0, name: e.name };
+              });
+              console.log('DynastyProcess: ' + Object.keys(out.dp).length + ' players');
+            } catch(e) { console.error('DynastyProcess failed:', e.message); }
+
+            fs.writeFileSync('rankings.json', JSON.stringify(out));
+            console.log('\nrankings.json written — sources: fc=' + Object.keys(out.fc).length + ' ktc=' + Object.keys(out.ktc).length + ' ffc=' + Object.keys(out.ffc).length + ' dp=' + Object.keys(out.dp).length);
+          }
+
+          main().catch(e => { console.error(e); process.exit(1); });
+          JSEOF
 
       - name: Commit and push if changed
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add players.json
+          git add players.json rankings.json
           if git diff --staged --quiet; then
-            echo "players.json unchanged — nothing to commit"
+            echo "No changes — nothing to commit"
           else
-            git commit -m "chore: update players.json [$(date -u +%Y-%m-%d)]"
+            git commit -m "chore: update players + rankings [$(date -u +%Y-%m-%d)]"
             git push
           fi

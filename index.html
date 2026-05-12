@@ -6026,6 +6026,69 @@ function restoreCSVSources() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// RANKINGS.JSON — CDN-hosted consensus data updated daily by
+// GitHub Action. Loads all 4 sources in one fast request.
+// ═══════════════════════════════════════════════════════════
+const _RNK_CACHE_KEY = 'tradeiq_rankings_v1';
+const _RNK_TTL       = 23 * 60 * 60 * 1000; // 23h
+
+async function fetchRankingsJson() {
+  // Try localStorage cache first
+  try {
+    const raw = localStorage.getItem(_RNK_CACHE_KEY);
+    if (raw) {
+      const { ts, data } = JSON.parse(raw);
+      if (Date.now() - ts < _RNK_TTL) {
+        _applyRankingsData(data);
+        console.log('Rankings loaded from cache');
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // Fetch from CDN
+  try {
+    const res = await fetch('/rankings.json', { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error('rankings.json ' + res.status);
+    const data = await res.json();
+    if (!data?.updated) throw new Error('Invalid rankings.json');
+    _applyRankingsData(data);
+    try { localStorage.setItem(_RNK_CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch(e) {}
+    console.log('Rankings loaded from CDN (updated ' + data.updated + ')');
+  } catch(e) {
+    console.warn('rankings.json unavailable — falling back to live fetches:', e.message);
+  }
+}
+
+function _applyRankingsData(data) {
+  // Each source object: { normName: { dv, dv_sf, rv, trend, name, pos, team } }
+  const sources = { fc: 'FantasyCalc', ktc: 'KTC', ffc: 'FF Calculator', dp: 'DynastyProcess' };
+  Object.entries(sources).forEach(([key, label]) => {
+    const src = data[key];
+    if (!src || !Object.keys(src).length) return;
+    S.sourceValues[key] = src;
+    S.sourceStatus[key] = 'ok';
+    S.sourceMeta[key]   = { count: Object.keys(src).length, loaded: Date.now(), file: label + ' (CDN)' };
+  });
+
+  // Also populate FC_VALUES so applyValueDB can use Sleeper IDs for player matching
+  const fcRaw = data.fc || {};
+  if (Object.keys(fcRaw).length > 50) {
+    const byId = {}, byName = {};
+    Object.values(fcRaw).forEach(p => {
+      const entry = { dv: p.dv, rv: p.rv, trend: p.trend || 'flat', team: p.team, age: p.age };
+      if (p.sid) byId[String(p.sid)] = entry;
+      if (p.name) byName[p.name.toLowerCase()] = entry;
+    });
+    FC_VALUES = { byId, byName };
+  }
+
+  rebuildPlayerValues();
+  try { renderValuesTable(); }  catch(e) {}
+  try { renderSourcesUI(); }    catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════════
 // FANTASYCALC LIVE VALUES — auto-refreshed daily
 // ═══════════════════════════════════════════════════════════
 let FC_VALUES = null; // { byId: {sleeperId→{dv,rv,trend}}, byName: {lowerName→{…}} }
@@ -7188,15 +7251,18 @@ async function init() {
   try { renderSourcesUI(); }      catch(e) { console.error('renderSourcesUI:', e); }
   try { trackEvent('app_loaded', { players: S.players.length, offline: isOffline }); } catch(e) {}
 
-  // ── 7. BACKGROUND RANKING SOURCES ─────────────────────────────────
-  // Fire after S.players is fully populated — each calls rebuildPlayerValues()
-  // on completion, updating values progressively in the background.
-  fetchFantasyCalcValues();
-  fetchKTCValues();
-  fetchFFCValues();
-  fetchDynastyProcessValues();
-  fetchDLFValues();
-  fetchCustomRankings();
+  // ── 7. RANKING SOURCES ────────────────────────────────────────────
+  // rankings.json (CDN) loads all 4 sources in one fast request.
+  // Individual live fetches run after as a fallback / refresh.
+  fetchRankingsJson().then(() => {
+    // After CDN rankings load, fire live fetches for any that are still missing/stale
+    fetchFantasyCalcValues();
+    fetchKTCValues();
+    fetchFFCValues();
+    fetchDynastyProcessValues();
+    fetchDLFValues();
+    fetchCustomRankings();
+  });
 }
 
 // ═══════════════════════════════════════════════════════════
