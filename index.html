@@ -4968,9 +4968,6 @@ function renderRosterList() {
   const reserveIds = (league?.reserveIds || []).map(String);
   const taxiIds    = (league?.taxiIds    || []).map(String);
 
-  console.log('RD_COUNT=' + S.roster.length + ' POS=' + allPos.length + ' IR=' + reserveIds.length + ' TAXI=' + taxiIds.length + ' STATUS=' + (league?.leagueStatus||'none') + ' LEAGUE=' + (league?.leagueName||'?'));
-  console.log('RD_NAMES=' + S.roster.slice(0,6).map(p=>p.full_name||'?').join('|'));
-
   // Deduplicate S.roster by player_id in case of duplicates from API
   const _seenRoster = new Set();
   const rosterUniq = S.roster.filter(p => {
@@ -5010,36 +5007,27 @@ function renderRosterList() {
   const byId = id => rosterUniq.find(p => String(p.player_id || p.id || p.sleeper_id) === String(id));
 
   // ── Determine starter assignment ──────────────────────────────
-  // Use Sleeper's actual starters only when the league is actively in season.
-  // In offseason/pre-draft/etc., always use greedy so the best available players
-  // fill each slot — Sleeper starters are stale from the previous season.
-  const isInSeason = league?.leagueStatus === 'in_season';
+  // Goal: match Sleeper's display exactly.
+  // - If Sleeper has a lineup set (any non-zero starters): use it slot-for-slot.
+  //   Slots for traded/dropped players show as Empty (matches Sleeper).
+  // - If no lineup is set at all (all zeros / empty): use greedy best-available
+  //   so the user sees a useful view instead of all-empty starters.
   const usedIds = new Set();
   let starterAssignments = [];
-  let useGreedy = true;
 
-  if (isInSeason && starterIds.length > 0) {
-    // Map Sleeper starters positionally to slot array
-    const sleeperStarters = (league?.starterIds || []).map(String);
+  const sleeperRaw = (league?.starterIds || []).map(String);
+  const hasAnyLineup = sleeperRaw.some(id => id && id !== '0');
+
+  if (hasAnyLineup) {
+    // Use Sleeper's positional mapping exactly — null for unset/'0'/traded-away slots
     for (let i = 0; i < starterSlots.length; i++) {
-      const pid = sleeperStarters[i];
+      const pid = sleeperRaw[i];
       const p   = pid && pid !== '0' ? byId(pid) : null;
       if (p) usedIds.add(String(p.player_id || p.id));
-      starterAssignments.push(p || null);
+      starterAssignments.push(p); // null = empty slot, shown as "Empty"
     }
-    // If ANY slot is empty (traded-away player), fall back to greedy for a clean display
-    if (starterAssignments.some(p => p === null)) {
-      usedIds.clear();
-      starterAssignments = [];
-      useGreedy = true;
-    } else {
-      useGreedy = false;
-    }
-  }
-
-  if (useGreedy) {
-    // Greedy: fill each slot with best eligible available player by value
-    // Exclude IR/Taxi players — they are shown in their own sections
+  } else {
+    // No lineup set — greedy best-available so slots aren't all empty
     const reserveSet = new Set([...reserveIds, ...taxiIds]);
     const sorted = rosterUniq
       .filter(p => !reserveSet.has(String(p.player_id || p.id)))
@@ -8510,10 +8498,7 @@ async function silentSleeperRefresh(lg, { showToastOnSuccess = false } = {}) {
         if (score > bestScore) { bestScore = score; userRoster = r; }
       }
       if (bestScore < 3) userRoster = null;
-      console.log('SR_C_SCORE=' + bestScore + ' MATCHED=' + !!userRoster);
     }
-
-    console.log('SR_FOUND=' + !!userRoster + ' UID=' + (uid||'none') + ' POSITIONS=' + freshPositions.length + ' ROSTERS=' + rosters.length + ' SAVED_IDS=' + (lg.rosterIds?.length||0) + ' STATUS=' + (leagueInfo.status||'?'));
 
     // STEP 3: Build updated league object
     // Even if we couldn't identify userRoster, we at least update rosterPositions + settings
