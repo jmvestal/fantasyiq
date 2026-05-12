@@ -167,31 +167,65 @@ jobs:
               console.log('FFC: ' + Object.keys(out.ffc).length + ' players');
             } catch(e) { console.error('FFC failed:', e.message); }
 
-            // ── 4. DYNASTYPROCESS / FANTASYPROS ECR ───────────
+            // ── 4. DYNASTYPROCESS values-players.csv (actual 0-10000 dynasty values) ──
             try {
-              console.log('Fetching DynastyProcess ECR…');
-              const DP  = 'https://raw.githubusercontent.com/dynastyprocess/data/master/files/db_fpecr_latest.csv';
-              const txt = await fetchUrl(DP);
+              console.log('Fetching DynastyProcess values…');
+              // values-players.csv has value_1qb / value_2qb already on 0-10000 scale
+              const DP_VAL = 'https://raw.githubusercontent.com/dynastyprocess/data/master/files/values-players.csv';
+              const txt = await fetchUrl(DP_VAL);
               const lines = txt.replace(/\r\n/g,'\n').trim().split('\n');
-              const hdr   = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/"/g,''));
-              const nmIdx = hdr.findIndex(h => h.includes('player') || h === 'name' || h === 'fp_player_name');
-              const rkIdx = hdr.findIndex(h => h === 'ecr' || h.includes('rank') || h === 'avg');
-              const psIdx = hdr.findIndex(h => h === 'pos' || h === 'position');
-              if (nmIdx === -1) throw new Error('No name column');
-              const entries = [];
+              const hdr   = lines[0].split(',').map(h => h.trim().replace(/"/g,'').toLowerCase());
+              const nmIdx  = hdr.indexOf('player');
+              const psIdx  = hdr.indexOf('pos');
+              const tmIdx  = hdr.indexOf('team');
+              const ageIdx = hdr.indexOf('age');
+              const v1Idx  = hdr.indexOf('value_1qb');
+              const v2Idx  = hdr.indexOf('value_2qb');
+              const e1Idx  = hdr.indexOf('ecr_1qb');
+              if (nmIdx === -1 || v1Idx === -1) throw new Error('Unexpected CSV columns: ' + hdr.join(','));
               for (let i = 1; i < lines.length; i++) {
                 const cols = lines[i].split(',').map(c => c.trim().replace(/"/g,''));
                 const name = cols[nmIdx]; if (!name) continue;
-                const rank = rkIdx >= 0 ? parseFloat(cols[rkIdx]) : i;
-                const pos  = psIdx >= 0 ? (cols[psIdx]||'').toUpperCase() : '';
-                if (isNaN(rank) || pos === 'K' || pos === 'DST' || pos === 'DEF') continue;
-                entries.push({ name, rank });
+                const pos  = (cols[psIdx] || '').toUpperCase();
+                if (pos === 'K' || pos === 'DST' || pos === 'DEF' || pos === 'PICK') continue;
+                const dv   = parseFloat(cols[v1Idx]) || 0;
+                const dv_sf= v2Idx >= 0 ? parseFloat(cols[v2Idx]) || dv : dv;
+                const age  = ageIdx >= 0 ? parseFloat(cols[ageIdx]) || null : null;
+                const k    = norm(name);
+                out.dp[k]  = { dv, dv_sf, rv: 0, name, pos, team: cols[tmIdx]||'', age };
+                // Note: ktc slot left empty — KTC /fantasy-api/queue is 404 (API removed)
               }
-              entries.forEach(e => {
-                out.dp[norm(e.name)] = { dv: rankToVal(Math.round(e.rank), entries.length), rv: 0, name: e.name };
-              });
-              console.log('DynastyProcess: ' + Object.keys(out.dp).length + ' players');
+              console.log('DynastyProcess values: dp=' + Object.keys(out.dp).length + ' ktc-backfill=' + Object.keys(out.ktc).length);
             } catch(e) { console.error('DynastyProcess failed:', e.message); }
+
+            // ── 4b. DYNASTYPROCESS ECR (redraft rv) ────────────
+            try {
+              console.log('Fetching DynastyProcess ECR for redraft rv…');
+              const DP_ECR = 'https://raw.githubusercontent.com/dynastyprocess/data/master/files/db_fpecr_latest.csv';
+              const txt2   = await fetchUrl(DP_ECR);
+              const lines2 = txt2.replace(/\r\n/g,'\n').trim().split('\n');
+              const hdr2   = lines2[0].toLowerCase().split(',').map(h => h.trim().replace(/"/g,''));
+              const nmIdx2 = hdr2.findIndex(h => h.includes('player') || h === 'name' || h === 'fp_player_name');
+              const rkIdx2 = hdr2.findIndex(h => h === 'ecr' || h.includes('rank') || h === 'avg');
+              const psIdx2 = hdr2.findIndex(h => h === 'pos' || h === 'position');
+              const entries2 = [];
+              for (let i = 1; i < lines2.length; i++) {
+                const cols = lines2[i].split(',').map(c => c.trim().replace(/"/g,''));
+                const name = cols[nmIdx2]; if (!name) continue;
+                const rank = rkIdx2 >= 0 ? parseFloat(cols[rkIdx2]) : i;
+                const pos  = psIdx2 >= 0 ? (cols[psIdx2]||'').toUpperCase() : '';
+                if (isNaN(rank) || pos === 'K' || pos === 'DST' || pos === 'DEF') continue;
+                entries2.push({ name, rank });
+              }
+              // Patch rv into existing dp entries
+              entries2.forEach(e => {
+                const k = norm(e.name);
+                const rv = rankToVal(Math.round(e.rank), entries2.length);
+                if (out.dp[k]) out.dp[k].rv = rv;
+                else out.dp[k] = { dv: 0, dv_sf: 0, rv, name: e.name };
+              });
+              console.log('DynastyProcess ECR: patched rv for ' + entries2.length + ' players');
+            } catch(e) { console.error('DynastyProcess ECR failed:', e.message); }
 
             fs.writeFileSync('rankings.json', JSON.stringify(out));
             console.log('\nrankings.json written — sources: fc=' + Object.keys(out.fc).length + ' ktc=' + Object.keys(out.ktc).length + ' ffc=' + Object.keys(out.ffc).length + ' dp=' + Object.keys(out.dp).length);
