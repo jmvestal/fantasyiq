@@ -3963,10 +3963,11 @@ function calcValue(p, _over) {
         // League size modifier — scenarios don't know about size, so we apply it here
         let szMod = 1.0;
         if (pos === 'QB') {
-          // Dynasty: QB rankings are format-agnostic — same player order in 1QB/SF/2QB.
-          // Only scale by league size (how scarce QBs are across more teams).
+          // Dynasty: QB value is completely fixed — same number in every dynasty scenario
+          // (1QB/SF/2QB, any scoring, any size). The CSV value IS the dynasty QB value.
+          // Redraft: format and size both matter.
           if (mode === 'dynasty') {
-            szMod = ({ 8:0.85, 10:0.92, 12:1.00, 14:1.10, 16:1.20 }[size] || 1);
+            szMod = 1.0;
           } else {
             szMod = qb === '2qb' ? ({ 8:0.88,10:0.94,12:1.00,14:1.10,16:1.22 }[size]||1)
                   : qb === 'sf'  ? ({ 8:0.85,10:0.92,12:1.00,14:1.10,16:1.20 }[size]||1)
