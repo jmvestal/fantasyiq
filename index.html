@@ -5387,6 +5387,151 @@ function removeSugGive(id) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// SCENARIO AUTO-FETCH
+// Fetches CSV files from /rankings/scenarios/{folder}/ on GitHub Pages.
+// Triggered on settings change + on startup for the initial scenario.
+// Cached in localStorage for SCENARIO_CACHE_TTL ms — no re-download needed.
+// ═══════════════════════════════════════════════════════════
+
+const SCENARIO_BASE    = '/rankings/scenarios';
+const SCENARIO_MANIFEST_URL = '/rankings/scenarios/scenarios.json';
+const SCENARIO_CACHE_TTL    = 7 * 24 * 60 * 60 * 1000; // 7 days
+const SCENARIO_CACHE_PREFIX = 'fhq_scen_v1_'; // bump to invalidate all caches
+
+// Manifest cache (avoid refetching scenarios.json on every settings change)
+let _scenManifest = null;
+
+async function getScenManifest() {
+  if (_scenManifest) return _scenManifest;
+  try {
+    const res = await fetch(SCENARIO_MANIFEST_URL + '?v=' + Math.floor(Date.now()/86400000));
+    if (!res.ok) return null;
+    _scenManifest = await res.json();
+    return _scenManifest;
+  } catch(e) { return null; }
+}
+
+// Fetch and load rankings for the given scenario key (e.g. scen_dyn_sf_ppr_note).
+// Silent = true suppresses toast notifications (used for background/startup loads).
+async function fetchScenario(sk, silent = false) {
+  if (!sk?.startsWith('scen_')) return;
+  const folder = sk.replace('scen_', ''); // e.g. "dyn_sf_ppr_note"
+
+  // Already loaded in memory with real data → skip
+  const existing = S.sourceValues?.[sk];
+  if (existing && Object.keys(existing).length > 20) return;
+
+  // ── Check localStorage cache ──────────────────────────────
+  const cacheKey = SCENARIO_CACHE_PREFIX + sk;
+  try {
+    const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+    if (cached?.ts && (Date.now() - cached.ts) < SCENARIO_CACHE_TTL && cached.parsed) {
+      S.sourceValues[sk] = cached.parsed;
+      S.sourceStatus[sk] = 'ok';
+      S.sourceMeta = S.sourceMeta || {};
+      S.sourceMeta[sk] = cached.meta || { count: Object.keys(cached.parsed).length, file: 'cached' };
+      if (!RANKING_SOURCES.find(s => s.key === sk)) {
+        const isDyn = sk.startsWith('scen_dyn_');
+        RANKING_SOURCES.push({ key: sk, name: scenarioLabel(sk), type: 'auto', dynasty: isDyn, redraft: !isDyn, color: isDyn ? '#3b82f6' : '#22c55e' });
+      }
+      rebuildPlayerValues();
+      renderSourcesUI();
+      return;
+    }
+  } catch(e) {}
+
+  // ── Fetch manifest to see what files exist for this scenario ─
+  const manifest = await getScenManifest();
+  if (!manifest) return; // offline or no manifest
+  const files = manifest[folder];
+  if (!files?.length) return; // no files for this scenario
+
+  // ── Fetch each CSV file and merge ────────────────────────────
+  if (!silent) {
+    S.sourceStatus[sk] = 'loading';
+    renderSourcesUI();
+  }
+
+  let loadedCount = 0;
+  for (const file of files) {
+    try {
+      const url = `${SCENARIO_BASE}/${folder}/${file}?v=${Math.floor(Date.now()/86400000)}`;
+      const res  = await fetch(url);
+      if (!res.ok) continue;
+      const text = await res.text();
+      const raw  = parseRankingsCSV(text);
+      if (!raw || Object.keys(raw).length < 5) continue;
+
+      const isDynasty = sk.startsWith('scen_dyn_');
+      const values = {};
+      Object.entries(raw).forEach(([k, v]) => {
+        const r = v.dv || v.rv || 0;
+        values[k] = isDynasty ? { dv: r, rv: 0, trend: v.trend } : { dv: 0, rv: r, trend: v.trend };
+      });
+
+      // Use loadSourceValues to merge (averages if multiple files); silent + no persist
+      loadSourceValues(sk, values, file, { silent: true, skipPersist: true });
+      loadedCount++;
+    } catch(e) { /* network error for this file — skip */ }
+  }
+
+  if (loadedCount === 0) {
+    S.sourceStatus[sk] = 'err';
+    renderSourcesUI();
+    return;
+  }
+
+  // Register in RANKING_SOURCES if not already there
+  if (!RANKING_SOURCES.find(s => s.key === sk)) {
+    const isDyn = sk.startsWith('scen_dyn_');
+    RANKING_SOURCES.push({ key: sk, name: scenarioLabel(sk), type: 'auto', dynasty: isDyn, redraft: !isDyn, color: isDyn ? '#3b82f6' : '#22c55e' });
+  }
+
+  // ── Persist to localStorage cache (separate from user-upload CSV_STORE_KEY) ─
+  try {
+    localStorage.setItem(cacheKey, JSON.stringify({
+      parsed: S.sourceValues[sk],
+      meta:   S.sourceMeta?.[sk],
+      ts:     Date.now(),
+    }));
+  } catch(e) {}
+
+  rebuildPlayerValues();
+  renderSourcesUI();
+  if (!silent) showToast(`✅ Loaded ${scenarioLabel(sk)} rankings`);
+}
+
+// Prefetch both the current scenario and a few likely-needed neighbors.
+// Called on init and after settings changes so the next scenario is warm.
+function prefetchCurrentScenario() {
+  const sk = scenarioKey();
+  fetchScenario(sk, /* silent= */ true);
+}
+
+// Clear all auto-fetched scenario caches (but not user-uploaded ones)
+function clearScenarioCache() {
+  const toRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k?.startsWith(SCENARIO_CACHE_PREFIX)) toRemove.push(k);
+  }
+  toRemove.forEach(k => localStorage.removeItem(k));
+  _scenManifest = null;
+  // Also clear from memory
+  const autoKeys = RANKING_SOURCES.filter(s => s.type === 'auto').map(s => s.key);
+  autoKeys.forEach(k => {
+    delete S.sourceValues[k];
+    delete S.sourceStatus[k];
+    delete S.sourceMeta?.[k];
+    const idx = RANKING_SOURCES.findIndex(s => s.key === k);
+    if (idx >= 0) RANKING_SOURCES.splice(idx, 1);
+  });
+  rebuildPlayerValues();
+  renderSourcesUI();
+  showToast('Scenario cache cleared — will re-fetch on next load');
+}
+
+// ═══════════════════════════════════════════════════════════
 // SETTINGS
 // ═══════════════════════════════════════════════════════════
 // UI wrapper — checks premium before calling setSetting (for mobile onclick buttons)
@@ -5422,6 +5567,12 @@ function setSetting(key, val) {
   }
 
   localStorage.setItem('fantasyiq_settings', JSON.stringify(S.settings));
+
+  // Auto-fetch scenario rankings for the new setting combination.
+  // Only fires when a scenario-relevant setting changes (not size or rookieOpt).
+  if (['mode','qb','scoring','te'].includes(key)) {
+    fetchScenario(scenarioKey(), /* silent= */ true);
+  }
 }
 
 function updateModeChip() {
@@ -6222,19 +6373,20 @@ function parseRankingsCSV(text) {
 // promptSourceType — replaced by promptScenarioModal above
 
 // Load values from a parsed CSV into S.sourceValues and rebuild consensus.
-// If the source already has data (e.g. multiple DLF position files), values are merged by averaging.
-function loadSourceValues(key, parsed, fileName) {
+// If the source already has data (e.g. multiple files for same scenario), values are merged by averaging.
+// silent=true suppresses toast (used by auto-fetch system).
+// skipPersist=true skips writing to CSV_STORE_KEY (auto-fetched files use their own cache).
+function loadSourceValues(key, parsed, fileName, { silent = false, skipPersist = false } = {}) {
   S.sourceMeta = S.sourceMeta || {};
   const existing = S.sourceValues[key];
   const meta = S.sourceMeta[key] || {};
   const prevCount = meta.fileCount || 0;
 
   if (existing && prevCount > 0) {
-    // Merge: average with existing values
+    // Merge: running average with existing values
     const merged = { ...existing };
     Object.entries(parsed).forEach(([name, entry]) => {
       if (merged[name]) {
-        // Running average: blend new values in
         if (entry.dv > 0) merged[name].dv = Math.round((merged[name].dv * prevCount + entry.dv) / (prevCount + 1));
         if (entry.rv > 0) merged[name].rv = Math.round((merged[name].rv * prevCount + entry.rv) / (prevCount + 1));
         if (entry.trend && entry.trend !== 'flat') merged[name].trend = entry.trend;
@@ -6258,23 +6410,27 @@ function loadSourceValues(key, parsed, fileName) {
 
   S.sourceStatus[key] = 'ok';
 
-  // Persist all files for this source in localStorage
-  try {
-    const stored = JSON.parse(localStorage.getItem(CSV_STORE_KEY)||'{}');
-    stored[key] = {
-      parsed: S.sourceValues[key],
-      fileName: S.sourceMeta[key].file,
-      fileCount: S.sourceMeta[key].fileCount,
-      loaded: Date.now(),
-    };
-    localStorage.setItem(CSV_STORE_KEY, JSON.stringify(stored));
-  } catch(e) {}
+  // Persist user-uploaded CSVs to localStorage (auto-fetched files handle their own cache)
+  if (!skipPersist) {
+    try {
+      const stored = JSON.parse(localStorage.getItem(CSV_STORE_KEY)||'{}');
+      stored[key] = {
+        parsed: S.sourceValues[key],
+        fileName: S.sourceMeta[key].file,
+        fileCount: S.sourceMeta[key].fileCount,
+        loaded: Date.now(),
+      };
+      localStorage.setItem(CSV_STORE_KEY, JSON.stringify(stored));
+    } catch(e) {}
+  }
 
   rebuildPlayerValues();
   renderSourcesUI();
-  const fc = S.sourceMeta[key].fileCount;
-  const label = fc > 1 ? ` (file ${fc} merged)` : '';
-  showToast(`Loaded ${Object.keys(parsed).length} players from ${fileName}${label}`, 'ok');
+  if (!silent) {
+    const fc = S.sourceMeta[key].fileCount;
+    const label = fc > 1 ? ` (file ${fc} merged)` : '';
+    showToast(`Loaded ${Object.keys(parsed).length} players from ${fileName}${label}`, 'ok');
+  }
 }
 
 // Rebuild all player dynasty_val / redraft_val from consensus of loaded sources
@@ -8106,9 +8262,10 @@ async function init() {
   try { trackEvent('app_loaded', { players: S.players.length, offline: isOffline }); } catch(e) {}
 
   // ── 7. RANKING SOURCES ────────────────────────────────────────────
-  // All auto-fetch sources disabled. Rankings come solely from user-uploaded CSVs
-  // (restored above via restoreCSVSources). Users upload one dynasty CSV and one
-  // redraft CSV through the Sources panel → drag-drop or click to upload.
+  // Auto-fetch scenario rankings from /rankings/scenarios/ on GitHub Pages.
+  // Fetches the current scenario immediately; re-fetches on every settings change.
+  // Results are cached in localStorage for 7 days — no re-download on every visit.
+  prefetchCurrentScenario();
 }
 
 // ═══════════════════════════════════════════════════════════

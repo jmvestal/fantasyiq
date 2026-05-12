@@ -1,0 +1,12 @@
+{
+  "dyn_1qb_ppr_note": ["draftshark.csv", "peaked.csv", "ktc.csv", "dlf.csv"],
+  "dyn_sf_ppr_note":  ["draftshark.csv", "peaked.csv", "ktc.csv", "dlf.csv"],
+  "rd_1qb_ppr_note":  ["tradeiq.csv", "draftshark.csv"],
+  "rd_1qb_hppr_note": ["tradeiq.csv", "draftshark.csv"],
+  "rd_1qb_std_note":  ["tradeiq.csv", "draftshark.csv"],
+  "rd_1qb_ppr_te":    ["draftshark.csv"],
+  "rd_sf_ppr_note":   ["tradeiq.csv", "draftshark.csv"],
+  "rd_sf_hppr_note":  ["tradeiq.csv", "draftshark.csv"],
+  "rd_sf_std_note":   ["tradeiq.csv", "draftshark.csv"],
+  "rd_sf_ppr_te":     ["draftshark.csv"]
+}
