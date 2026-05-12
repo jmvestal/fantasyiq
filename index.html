@@ -2442,7 +2442,7 @@ const S = {
   tablePos: 'ALL',
   tableSort: { col:'value', dir:'desc' },
   wireMode: 'dynasty',
-  wireFilter: 'all',
+  wireFilter: 'league',  // default ON — filter out rostered players when league connected
   myTeamMode: 'dynasty',
   bsView: 'BUY',
   bshData: [],
@@ -5184,13 +5184,18 @@ function renderHome() {
     .sort((a,b) => b.v - a.v)
     .slice(0, 4);
 
-  // Waiver adds
+  // Waiver adds — exclude players rostered on ANY team in the league (not just yours)
+  const _allRosteredIds = new Set();
+  if (S.connectedLeague?.allTeams?.length) {
+    S.connectedLeague.allTeams.forEach(t => (t.playerIds||[]).forEach(id => _allRosteredIds.add(String(id))));
+  } else {
+    roster.forEach(r => _allRosteredIds.add(String(r.player_id||r.id)));
+  }
   const wireTargets = [...S.players]
     .filter(p => {
       const val = calcValue(p);
       if (val < 500) return false;
-      const onRoster = roster.find(r => String(r.player_id||r.id) === String(p.player_id||p.id));
-      return !onRoster && ['RB','WR','TE','QB'].includes(p.position);
+      return !_allRosteredIds.has(String(p.player_id||p.id)) && ['RB','WR','TE','QB'].includes(p.position);
     })
     .map(p => ({ p, v: calcValue(p) }))
     .sort((a,b) => b.v - a.v)
@@ -9593,7 +9598,7 @@ function renderWireTab() {
   if (leagueBtn) {
     leagueBtn.style.display = S.connectedLeague ? 'inline-block' : 'none';
     leagueBtn.classList.toggle('on', filterLeague);
-    leagueBtn.textContent = filterLeague ? '🏆 My League Wire ✓' : '🏆 My League Wire';
+    leagueBtn.textContent = filterLeague ? '🏆 Free Agents Only ✓' : '🏆 Show All Players';
   }
 
   // Header subtitle
