@@ -5927,21 +5927,11 @@ function showToast(msg, type='ok') {
 // MULTI-SOURCE CONSENSUS ENGINE
 // ═══════════════════════════════════════════════════════════
 
-// Source registry — each entry describes one ranking provider
+// Source registry — three slots only: built-in baseline + one dynasty upload + one redraft upload
 const RANKING_SOURCES = [
-  { key:'fc',  name:'FantasyCalc',         type:'auto',       dynasty:true,  redraft:true,  color:'#22c55e' },
-  { key:'ktc', name:'KeepTradeCut',        type:'auto',       dynasty:true,  redraft:true,  color:'#3b82f6' },
-  { key:'ffc', name:'FF Calculator',       type:'auto',       dynasty:true,  redraft:true,  color:'#10b981' },
-  { key:'dp',  name:'FantasyPros ECR',     type:'auto',       dynasty:true,  redraft:false, color:'#f59e0b' },
-  { key:'dyz', name:'Dynatyze',            type:'bookmarklet',dynasty:true,  redraft:false, color:'#14b8a6', bmUrl:'https://dynatyze.com/football' },
-  { key:'fp',  name:'FantasyPros (CSV)',   type:'csv',        dynasty:false, redraft:true,  color:'#d97706' },
-  { key:'dlf', name:'Dynasty LF',           type:'auto',       dynasty:true,  redraft:false, color:'#8b5cf6' },
-  { key:'ds',  name:'DraftShark',          type:'csv',        dynasty:true,  redraft:true,  color:'#ec4899' },
-  { key:'dn',  name:'Dynasty Nerds',       type:'csv',        dynasty:true,  redraft:false, color:'#06b6d4' },
-  { key:'espn',name:'ESPN',                type:'csv',        dynasty:false, redraft:true,  color:'#ef4444' },
-  { key:'fan', name:'Fantrax',             type:'csv',        dynasty:true,  redraft:true,  color:'#f97316' },
-  { key:'cbs', name:'CBS Sports',          type:'csv',        dynasty:false, redraft:true,  color:'#6366f1' },
-  { key:'tiq', name:'Fantasy HQ Baseline', type:'builtin',    dynasty:true,  redraft:true,  color:'#7c3aed' },
+  { key:'tiq',      name:'Fantasy HQ Baseline', type:'builtin', dynasty:true,  redraft:true,  color:'#7c3aed' },
+  { key:'user_dyn', name:'Dynasty Rankings',    type:'csv',     dynasty:true,  redraft:false, color:'#3b82f6' },
+  { key:'user_rd',  name:'Redraft Rankings',    type:'csv',     dynasty:false, redraft:true,  color:'#22c55e' },
 ];
 
 // S.sourceValues = { [key]: { [normalizedName]: { dv, rv, trend } } }
@@ -6079,38 +6069,14 @@ function parseRankingsCSV(text) {
   return Object.keys(values).length >= 10 ? values : null;
 }
 
-// Detect which site a CSV came from based on headers/content
-function detectSourceFromCSV(text) {
-  const head = text.slice(0, 400).toLowerCase();
-  if (head.includes('keeptradecut') || head.includes('ktc'))  return 'ktc';
-  if (head.includes('fantasypros') || head.includes('ecr'))   return 'fp';
-  if (head.includes('dynastyleague') || head.includes('dlf')) return 'dlf';
-  if (head.includes('draftshark'))                            return 'ds';
-  if (head.includes('dynasty nerds') || head.includes('dn'))  return 'dn';
-  if (head.includes('espn'))                                  return 'espn';
-  if (head.includes('fantrax'))                               return 'fan';
-  if (head.includes('cbs'))                                   return 'cbs';
-  return null; // unknown — ask user
-}
-
-// Ask user to name an unknown source (simple prompt for now)
-function promptSourceName(text, parsed) {
-  const names = RANKING_SOURCES.filter(s => s.type === 'csv').map(s => s.name);
-  const choice = prompt(
-    `Recognized ${Object.keys(parsed).length} players.\nWhich site is this from?\n\n` +
-    RANKING_SOURCES.filter(s=>s.type==='csv').map((s,i)=>`${i+1}. ${s.name}`).join('\n') +
-    '\n\nEnter a number (or a custom name):',
-    '1'
+// Ask user whether the uploaded CSV is dynasty or redraft rankings
+function promptSourceType(playerCount) {
+  const isDynasty = confirm(
+    `Recognized ${playerCount} players.\n\n` +
+    'Click OK  →  Dynasty Rankings\n' +
+    'Click Cancel  →  Redraft Rankings'
   );
-  if (!choice) return null;
-  const num = parseInt(choice);
-  if (num >= 1 && num <= RANKING_SOURCES.filter(s=>s.type==='csv').length) {
-    return RANKING_SOURCES.filter(s=>s.type==='csv')[num-1].key;
-  }
-  // Custom name — create a temp source
-  const key = 'custom_' + Date.now();
-  RANKING_SOURCES.push({ key, name: choice.trim(), type:'csv', dynasty:true, redraft:true, color:'#64748b' });
-  return key;
+  return isDynasty ? 'user_dyn' : 'user_rd';
 }
 
 // Load values from a parsed CSV into S.sourceValues and rebuild consensus.
@@ -6152,14 +6118,14 @@ function loadSourceValues(key, parsed, fileName) {
 
   // Persist all files for this source in localStorage
   try {
-    const stored = JSON.parse(localStorage.getItem('tradeiq_csv_sources_v2')||'{}');
+    const stored = JSON.parse(localStorage.getItem(CSV_STORE_KEY)||'{}');
     stored[key] = {
       parsed: S.sourceValues[key],
       fileName: S.sourceMeta[key].file,
       fileCount: S.sourceMeta[key].fileCount,
       loaded: Date.now(),
     };
-    localStorage.setItem('tradeiq_csv_sources_v2', JSON.stringify(stored));
+    localStorage.setItem(CSV_STORE_KEY, JSON.stringify(stored));
   } catch(e) {}
 
   rebuildPlayerValues();
@@ -6191,95 +6157,58 @@ function rebuildPlayerValues() {
   renderLandingWidgets();
 }
 
-// Build consensus value for one player across all loaded sources.
-// Uses MEDIAN — robust against outliers; one bad CSV can't dominate.
-// DYNASTY_DB/REDRAFT_DB always included as anchors (2 votes each) so rank-inflated files get grounded.
-// Dynasty sources: KTC, FantasyCalc, DYNASTY_DB (all calibrated to 1QB SF baseline).
-// Redraft sources: above + ECR redraft CSVs + DraftShark (rv-only, dv:0).
-// RANKING RULE 5 (Stability): final consensus is capped at ±25% of DYNASTY_DB/REDRAFT_DB baseline
-// so no single upload cycle can overhaul rankings — movement is always gradual.
+// Build value for one player using a simple priority chain.
+// Priority: user-uploaded CSV → DYNASTY_DB/REDRAFT_DB → applyValueDB estimate
+// No median/consensus math — the uploaded ranking IS the value.
 function buildConsensus(p) {
-  const pid  = normName(p.full_name || '');
-  const dvArr = [], rvArr = [], trends = [];
-
-  // Collect all source values
-  for (const [key, vals] of Object.entries(S.sourceValues || {})) {
-    if (!vals) continue;
-    const entry = vals[pid];
-    if (!entry) continue;
-    if (entry.dv > 0) dvArr.push(entry.dv);
-    if (entry.rv > 0) rvArr.push(entry.rv);
-    if (entry.trend) trends.push(entry.trend);
-  }
-
-  // DYNASTY_DB/REDRAFT_DB always get 2 votes each — calibrated to KTC market values and must
-  // outweigh FFC/DLF ADP-based sources that inflate speculative dynasty QBs.
-  // Example: JJ McCarthy rank 80 in FFC dynasty ADP → rankToValue gives ~6,200,
-  // but KTC has him at ~342 and VDB at 2,100. With VDB(2×) + KTC, the median
-  // stays at 2,100 instead of being pulled to ~3,500 by FFC/DLF outliers.
+  const pid   = normName(p.full_name || '');
   const vdb_d = DYNASTY_DB[p.full_name];
   const vdb_r = REDRAFT_DB[p.full_name];
-  if (vdb_d) {
-    dvArr.push(vdb_d.val); dvArr.push(vdb_d.val);
-    if (vdb_d.trend) trends.push(vdb_d.trend);
-  }
-  if (vdb_r) {
-    rvArr.push(vdb_r.val); rvArr.push(vdb_r.val);
+
+  // ── Dynasty value ──────────────────────────────────────────────────
+  // Priority 1: user-uploaded dynasty CSV
+  // Priority 2: DYNASTY_DB hardcoded value
+  // Priority 3: applyValueDB estimate (search_rank-based, already on p)
+  const dynEntry = S.sourceValues['user_dyn']?.[pid];
+  let dv, dvTrend = 'flat';
+  if (dynEntry?.dv > 0) {
+    dv = dynEntry.dv;
+    dvTrend = dynEntry.trend || 'flat';
   } else if (vdb_d) {
-    rvArr.push(vdb_d.val); rvArr.push(vdb_d.val);
-  }
-  if (!vdb_d && !vdb_r && dvArr.length === 0) {
-    return { dv: p.dynasty_val || 500, rv: p.redraft_val || 500, trend: 'flat', sources: 0 };
-  }
-
-  const median = arr => {
-    if (!arr.length) return 0;
-    const s = [...arr].sort((a,b) => a-b);
-    const m = Math.floor(s.length / 2);
-    return s.length % 2 ? s[m] : Math.round((s[m-1] + s[m]) / 2);
-  };
-
-  const upCt = trends.filter(t=>t==='up').length;
-  const dnCt = trends.filter(t=>t==='down').length;
-  const trend = upCt > dnCt ? 'up' : dnCt > upCt ? 'down' : 'flat';
-
-  // RANKING RULE 5 — STABILITY: New CSV uploads should never overhaul full consensus
-  // rankings. Like KTC, rankings move gradually — injuries/trades/trends shift a player
-  // up or down incrementally, but a single upload cycle can't explode or crater a player.
-  // Implementation: cap the consensus result at ±25% of the DYNASTY_DB/REDRAFT_DB baseline.
-  // A player ranked at 5,000 dv can move to 6,250 max or 3,750 min from one upload cycle.
-  // This ensures DYNASTY_DB (anchored to KTC market values) always keeps rankings stable.
-  let rawDv = median(dvArr) || p.dynasty_val || 500;
-  let rawRv = median(rvArr) || p.redraft_val || 500;
-
-  if (vdb_d) {
-    const CAP = 0.25; // max 25% shift per cycle from DYNASTY_DB baseline
-    const dvBase = vdb_d.val || rawDv;
-    rawDv = Math.min(dvBase * (1 + CAP), Math.max(dvBase * (1 - CAP), rawDv));
-  }
-  if (vdb_r || vdb_d) {
-    const CAP = 0.25;
-    const rvBase = (vdb_r?.val || vdb_d?.val) || rawRv;
-    rawRv = Math.min(rvBase * (1 + CAP), Math.max(rvBase * (1 - CAP), rawRv));
+    dv = vdb_d.val;
+    dvTrend = vdb_d.trend || 'flat';
+  } else {
+    dv = p.dynasty_val || 500;
   }
 
-  // SAFETY CAP: Players not in DYNASTY_DB have no market-calibrated anchor.
-  // Without this, a backup QB included in ANY external source at a high rank
-  // will inflate uncapped to 10,000. Cap consensus at 4× the rank-based estimate
-  // (floor 2500/1500) so depth players never hit elite tier from stray source data.
-  if (!vdb_d && !vdb_r) {
-    const srank = p.search_rank || 999;
-    const baseDv = Math.max(150, Math.min(8500, 9000 - srank * 30));
-    const baseRv = Math.max(100, Math.min(8500, 8600 - srank * 28));
-    rawDv = Math.min(rawDv, Math.max(baseDv * 4, 2500));
-    rawRv = Math.min(rawRv, Math.max(baseRv * 4, 1500));
+  // ── Redraft value ──────────────────────────────────────────────────
+  // Priority 1: user-uploaded redraft CSV
+  // Priority 2: REDRAFT_DB hardcoded value
+  // Priority 3: DYNASTY_DB as redraft proxy
+  // Priority 4: applyValueDB estimate
+  const rdEntry = S.sourceValues['user_rd']?.[pid];
+  let rv;
+  if (rdEntry?.rv > 0) {
+    rv = rdEntry.rv;
+  } else if (vdb_r) {
+    rv = vdb_r.val;
+  } else if (vdb_d) {
+    rv = vdb_d.val;
+  } else {
+    rv = p.redraft_val || p.dynasty_val || 500;
   }
+
+  // Position-aware safety ceiling — backup QBs can never hit elite territory
+  const pos = (p.position || '').toUpperCase();
+  const posMax = POS_RANK_MAX[pos] || 9800;
+  dv = Math.min(Math.round(dv), posMax);
+  rv = Math.min(Math.round(rv), posMax);
 
   return {
-    dv: Math.round(rawDv),
-    rv: Math.round(rawRv),
-    trend,
-    sources: dvArr.length,
+    dv,
+    rv,
+    trend:   dvTrend,
+    sources: (dynEntry?.dv > 0 ? 1 : 0) + (rdEntry?.rv > 0 ? 1 : 0),
   };
 }
 
@@ -6368,9 +6297,9 @@ function removeSource(key) {
   delete S.sourceStatus[key];
   delete S.sourceMeta?.[key];
   try {
-    const stored = JSON.parse(localStorage.getItem('tradeiq_csv_sources_v2')||'{}');
+    const stored = JSON.parse(localStorage.getItem(CSV_STORE_KEY)||'{}');
     delete stored[key];
-    localStorage.setItem('tradeiq_csv_sources_v2', JSON.stringify(stored));
+    localStorage.setItem(CSV_STORE_KEY, JSON.stringify(stored));
   } catch(e) {}
   rebuildPlayerValues();
   renderSourcesUI();
@@ -6399,47 +6328,34 @@ function handleCSVFile(input) {
   input.value = '';
 }
 
-// Process one or many CSV files sequentially
+// Process one or many CSV files — always ask dynasty vs redraft for each
 async function processCSVFiles(files) {
-  // If multiple files, group them by detected source key so we can ask once
-  // then load them all for that source
-  const pendingByKey = {};
-  const unknowns = [];
-
   for (const file of files) {
     await new Promise(resolve => {
       const reader = new FileReader();
       reader.onload = e => {
         const text = e.target.result;
-        const parsed = parseRankingsCSV(text);
-        if (!parsed || Object.keys(parsed).length < 10) {
-          showToast(`Could not parse ${file.name} — skipping`, 'err');
+        const rawParsed = parseRankingsCSV(text);
+        if (!rawParsed || Object.keys(rawParsed).length < 10) {
+          showToast(`Could not parse ${file.name} — check format`, 'err');
           resolve(); return;
         }
-        let key = detectSourceFromCSV(text);
-        if (key) {
-          if (!pendingByKey[key]) pendingByKey[key] = [];
-          pendingByKey[key].push({ parsed, name: file.name });
-        } else {
-          unknowns.push({ text, parsed, name: file.name });
-        }
+        const key = promptSourceType(Object.keys(rawParsed).length);
+        // Remap so each slot only holds the relevant value type:
+        //   Dynasty CSV  → { dv: <rank value>, rv: 0 }
+        //   Redraft CSV  → { dv: 0, rv: <rank value> }
+        const values = {};
+        Object.entries(rawParsed).forEach(([k, v]) => {
+          const raw = v.dv || v.rv || 0;
+          values[k] = key === 'user_dyn'
+            ? { dv: raw, rv: 0, trend: v.trend }
+            : { dv: 0, rv: raw, trend: v.trend };
+        });
+        loadSourceValues(key, values, file.name);
         resolve();
       };
       reader.readAsText(file);
     });
-  }
-
-  // Load all auto-detected files grouped by source
-  for (const [key, items] of Object.entries(pendingByKey)) {
-    for (const item of items) {
-      loadSourceValues(key, item.parsed, item.name);
-    }
-  }
-
-  // Handle unknowns — ask user once per group
-  for (const item of unknowns) {
-    let key = promptSourceName(item.text, item.parsed);
-    if (key) loadSourceValues(key, item.parsed, item.name);
   }
 }
 
@@ -6574,26 +6490,21 @@ function handleBookmarkletImport() {
   }
 }
 
-// Restore CSV sources from localStorage on startup
+// Restore user-uploaded CSV sources from localStorage on startup
+const CSV_STORE_KEY = 'tradeiq_csv_sources_v3'; // bumped to clear legacy multi-source data
 function restoreCSVSources() {
   try {
-    const stored = JSON.parse(localStorage.getItem('tradeiq_csv_sources_v2')||'{}');
-    Object.entries(stored).forEach(([key, data]) => {
-      if (data?.parsed) {
+    const stored = JSON.parse(localStorage.getItem(CSV_STORE_KEY)||'{}');
+    ['user_dyn','user_rd'].forEach(key => {
+      const data = stored[key];
+      if (data?.parsed && Object.keys(data.parsed).length > 5) {
         S.sourceValues[key] = data.parsed;
         S.sourceStatus[key] = 'ok';
         S.sourceMeta = S.sourceMeta || {};
         S.sourceMeta[key] = { file: data.fileName, loaded: data.loaded, count: Object.keys(data.parsed).length };
-        // Ensure custom sources are in RANKING_SOURCES list
-        if (!RANKING_SOURCES.find(s=>s.key===key)) {
-          RANKING_SOURCES.push({ key, name: key, type:'csv', dynasty:true, redraft:true, color:'#64748b' });
-        }
       }
     });
   } catch(e) {}
-  // Restore FP API key
-  const fpKey = localStorage.getItem('tradeiq_fp_key');
-  if (fpKey) document.getElementById('fpApiKey').value = fpKey;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -7327,22 +7238,11 @@ async function fetchCustomRankings() {
   }
 }
 
-// Force-refresh all custom rankings (clears cache, re-fetches manifest + all CSVs)
+// Clear all user-uploaded rankings and reset to DB baseline
 function forceRefreshCustomRankings() {
-  localStorage.removeItem(CUSTOM_CACHE_KEY);
-  localStorage.removeItem(CUSTOM_TS_KEY);
-  // Clear any loaded custom source keys
-  for (const key of Object.keys(S.sourceValues||{})) {
-    if (!['tiq','fc','ktc','ffc','dlf'].includes(key)) {
-      delete S.sourceValues[key];
-      delete S.sourceStatus[key];
-      delete S.sourceMeta?.[key];
-    }
-  }
-  fetchCustomRankings().then(() => {
-    rebuildPlayerValues();
-    showToast('✅ Rankings refreshed from latest sources');
-  });
+  removeSource('user_dyn');
+  removeSource('user_rd');
+  showToast('✅ Rankings cleared — drop new CSV files to reload');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -7943,18 +7843,9 @@ async function init() {
   try { trackEvent('app_loaded', { players: S.players.length, offline: isOffline }); } catch(e) {}
 
   // ── 7. RANKING SOURCES ────────────────────────────────────────────
-  // rankings.json (CDN) loads all 4 sources in one fast request.
-  // Individual live fetches run after as a fallback / refresh.
-  fetchRankingsJson().then(() => {
-    // After CDN rankings load, fire live fetches for any that are still missing/stale
-    fetchFantasyCalcValues();
-    fetchKTCValues();
-    fetchFFCValues();
-    fetchDynastyProcessValues();
-    fetchDLFValues();
-    fetchFantasyProsValues();
-    fetchCustomRankings();
-  });
+  // All auto-fetch sources disabled. Rankings come solely from user-uploaded CSVs
+  // (restored above via restoreCSVSources). Users upload one dynasty CSV and one
+  // redraft CSV through the Sources panel → drag-drop or click to upload.
 }
 
 // ═══════════════════════════════════════════════════════════
