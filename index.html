@@ -4969,6 +4969,10 @@ function renderRosterList() {
   const taxiIds    = (league?.taxiIds    || []).map(String);
 
   // Deduplicate S.roster by player_id in case of duplicates from API
+  const _rdLeagueId = league?.leagueName || league?.leagueId || '?';
+  const _rdPos = allPos.length;
+  const _rdStarters = (league?.starterIds||[]).filter(id=>id&&id!=='0').length;
+  console.log('[FIQ] League=' + _rdLeagueId + ' roster=' + S.roster.length + ' positions=' + _rdPos + ' status=' + (league?.leagueStatus||'?') + ' startersSet=' + _rdStarters);
   const _seenRoster = new Set();
   const rosterUniq = S.roster.filter(p => {
     const pid = String(p.player_id || p.id);
@@ -5044,6 +5048,10 @@ function renderRosterList() {
     };
     starterAssignments = starterSlots.map(slot => pickBest(slot));
   }
+
+  // Diagnostic: log slot-by-slot starter resolution so we can confirm accuracy
+  console.log('[FIQ] mode=' + (hasAnyLineup?'SLEEPER':'GREEDY') + ' ' +
+    starterAssignments.map((p,i) => starterSlots[i]+':'+(p ? (p.full_name||p.id||'?').split(' ').pop() : 'EMPTY')).join(' '));
 
   // Bench: all players not used as starters, not on IR, not on taxi
   const reserveSet2 = new Set([...reserveIds, ...taxiIds]);
@@ -8517,7 +8525,37 @@ async function silentSleeperRefresh(lg, { showToastOnSuccess = false } = {}) {
         ...(userRoster.players||[]),
         ...(userRoster.taxi   ||[]),
       ].map(String))];
-      const rosterPlayers = allIds.map(id => S.players.find(p=>String(p.player_id||p.id)===String(id))).filter(Boolean);
+
+      // Build roster players — fall back to stub for FA/cut players not yet in S.players
+      // (players.json excludes FA players; dynasty rosters commonly hold cut assets)
+      let rosterPlayers = allIds.map(id =>
+        S.players.find(p => String(p.player_id||p.id) === id) || { _stub: true, player_id: id, id, sleeper_id: id }
+      );
+      const missingIds = rosterPlayers.filter(p => p._stub).map(p => p.id);
+
+      // If any players are missing, fetch the full Sleeper player DB in background to resolve them.
+      // S._sleeperFaLoaded prevents multiple fetches per session.
+      if (missingIds.length > 0 && !S._sleeperFaLoaded) {
+        S._sleeperFaLoaded = true;
+        _fetchSleeperFresh().then(freshPlayers => {
+          const existingIds = new Set(S.players.map(p => String(p.player_id||p.id)));
+          const newPlayers = freshPlayers.filter(p => !existingIds.has(String(p.player_id||p.id)));
+          if (newPlayers.length > 0) S.players = [...S.players, ...newPlayers];
+          // Re-sync now that FA players are in S.players
+          silentSleeperRefresh(lg);
+        }).catch(() => {});
+      }
+
+      // Replace stubs with real players where possible after the above eagerly resolves;
+      // for the current render pass, keep stubs so the slot count is correct.
+      rosterPlayers = rosterPlayers.map(p => {
+        if (!p._stub) return p;
+        // Already in S.players now? (if _fetchSleeperFresh resolved synchronously — unlikely but safe)
+        return S.players.find(q => String(q.player_id||q.id) === p.id) || p;
+      });
+
+      // Remove pure stubs that have zero info (keeps real players + any enriched stubs)
+      rosterPlayers = rosterPlayers.filter(p => p.full_name || !p._stub);
 
       const freshAllTeams = rosters.map(r => {
         const teamIds = [...(r.players||[]), ...(r.reserve||[])].map(String);
