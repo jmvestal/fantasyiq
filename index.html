@@ -4961,19 +4961,20 @@ function renderRosterList() {
   }
   btn.disabled = false;
 
-  const league    = S.connectedLeague;
-  let   allPos    = league?.rosterPositions || [];   // full positions array incl BN/IR/TAXI
-  const starterIds = (league?.starterIds || []).filter(id => id && id !== '0');
-  const reserveIds = league?.reserveIds || [];
-  const taxiIds    = league?.taxiIds    || [];
+  const league     = S.connectedLeague;
+  let   allPos     = league?.rosterPositions || [];
+  // Normalize all IDs to strings to prevent type-mismatch bugs
+  const starterIds = (league?.starterIds || []).map(String).filter(id => id && id !== '0');
+  const reserveIds = (league?.reserveIds || []).map(String);
+  const taxiIds    = (league?.taxiIds    || []).map(String);
 
-  console.log('[Roster Debug]', {
-    rosterCount: S.roster.length,
-    rosterNames: S.roster.map(p=>p.full_name||p.name),
-    rosterPositions: allPos,
-    starterIds,
-    reserveIds,
-    taxiIds,
+  // Deduplicate S.roster by player_id in case of duplicates from API
+  const _seenRoster = new Set();
+  const rosterUniq = S.roster.filter(p => {
+    const pid = String(p.player_id || p.id);
+    if (_seenRoster.has(pid)) return false;
+    _seenRoster.add(pid);
+    return true;
   });
 
   // ── Fallback: if rosterPositions is empty, use settings-based estimate ──
@@ -5002,44 +5003,42 @@ function renderRosterList() {
   const irCount      = allPos.filter(p => p === 'IR' || p === 'IL').length;
   const taxiCount    = allPos.filter(p => p === 'TAXI').length;
 
-  // Helper: find a player by Sleeper ID
-  const byId = id => S.roster.find(p => String(p.player_id || p.id || p.sleeper_id) === String(id));
+  // Helper: find a player by Sleeper ID from deduplicated roster
+  const byId = id => rosterUniq.find(p => String(p.player_id || p.id || p.sleeper_id) === String(id));
 
   // ── Determine starter assignment ──────────────────────────────
-  // Priority 1: use Sleeper's actual starters array (maps 1:1 with starter slots)
-  // Priority 2: greedy by value (offseason / no active matchup)
+  // Use Sleeper's actual starters only when the league is actively in season.
+  // In offseason/pre-draft/etc., always use greedy so the best available players
+  // fill each slot — Sleeper starters are stale from the previous season.
+  const isInSeason = league?.leagueStatus === 'in_season';
   const usedIds = new Set();
-  let starterAssignments = []; // array parallel to starterSlots
+  let starterAssignments = [];
+  let useGreedy = true;
 
-  const hasRealStarters = starterIds.length > 0 && starterIds.some(id => byId(id));
-
-  let useGreedy = !hasRealStarters;
-
-  if (hasRealStarters) {
-    // Use Sleeper's actual lineup — starters array matches starting slots positionally
-    // Filter starters to just the non-BN/IR/TAXI subset
-    const sleeperStarters = (league?.starterIds || []);
+  if (isInSeason && starterIds.length > 0) {
+    // Map Sleeper starters positionally to slot array
+    const sleeperStarters = (league?.starterIds || []).map(String);
     for (let i = 0; i < starterSlots.length; i++) {
       const pid = sleeperStarters[i];
       const p   = pid && pid !== '0' ? byId(pid) : null;
       if (p) usedIds.add(String(p.player_id || p.id));
       starterAssignments.push(p || null);
     }
-    // Stale-data check: if ANY slot is null a player was traded/dropped since this
-    // lineup was set (common in offseason). Fall back to greedy for a clean display.
-    const hasNullSlot = starterAssignments.some(p => p === null);
-    if (hasNullSlot) {
+    // If ANY slot is empty (traded-away player), fall back to greedy for a clean display
+    if (starterAssignments.some(p => p === null)) {
       usedIds.clear();
       starterAssignments = [];
       useGreedy = true;
+    } else {
+      useGreedy = false;
     }
   }
 
   if (useGreedy) {
-    // Greedy fallback: sort by value, assign best eligible to each slot in order
-    // Exclude IR/Taxi players — they must not appear in starter slots
-    const reserveSet = new Set([...reserveIds, ...taxiIds].map(String));
-    const sorted = [...S.roster]
+    // Greedy: fill each slot with best eligible available player by value
+    // Exclude IR/Taxi players — they are shown in their own sections
+    const reserveSet = new Set([...reserveIds, ...taxiIds]);
+    const sorted = rosterUniq
       .filter(p => !reserveSet.has(String(p.player_id || p.id)))
       .sort((a,b) => calcValue(b) - calcValue(a));
     const pickBest = slot => {
@@ -5055,13 +5054,14 @@ function renderRosterList() {
     starterAssignments = starterSlots.map(slot => pickBest(slot));
   }
 
-  // All remaining players (not starters) go to bench
-  const benchPlayers = S.roster.filter(p => {
+  // Bench: all players not used as starters, not on IR, not on taxi
+  const reserveSet2 = new Set([...reserveIds, ...taxiIds]);
+  const benchPlayers = rosterUniq.filter(p => {
     const pid = String(p.player_id || p.id);
-    return !usedIds.has(pid) && !reserveIds.includes(pid) && !taxiIds.includes(pid);
+    return !usedIds.has(pid) && !reserveSet2.has(pid);
   }).sort((a,b) => calcValue(b) - calcValue(a));
 
-  // IR and taxi players
+  // IR and taxi — look up by ID
   const irPlayers   = reserveIds.map(id => byId(id)).filter(Boolean);
   const taxiPlayers = taxiIds.map(id => byId(id)).filter(Boolean);
 
@@ -7433,7 +7433,7 @@ function applyValueDB(p) {
 // ═══════════════════════════════════════════════════════════
 // FETCH SLEEPER PLAYERS  (stale-while-revalidate)
 // ═══════════════════════════════════════════════════════════
-const _SLEEPER_CACHE_KEY = 'tradeiq_sleeper_players_v8';
+const _SLEEPER_CACHE_KEY = 'tradeiq_sleeper_players_v9';
 const _SLEEPER_REFRESH_TTL = 24 * 60 * 60 * 1000; // 24h before background refresh
 
 // Raw fetch + cache write — shared by fetchPlayers() and refreshSleeperCache()
@@ -7445,32 +7445,31 @@ async function _fetchSleeperFresh() {
   const data = await res.json();
   const players = Object.values(data)
     .filter(p =>
+      // Require a name and a recognized fantasy position
       p.full_name &&
       VALID_POS.has(p.position) &&
-      p.active === true &&
-      p.team &&
-      p.team !== 'FA' &&
-      p.team !== 'Free Agent' &&
-      p.status !== 'Inactive' &&
+      // Exclude permanently retired / never-played entries
       p.status !== 'Retired' &&
       p.status !== 'Reserve/Retired' &&
-      p.status !== 'Reserve/PUP' &&
       !RETIRED_PLAYERS.has(p.full_name) &&
-      (p.search_rank || 0) < 2500
+      // Include FA/cut players — dynasty rosters hold them; exclude only truly inactive
+      p.status !== 'Inactive' &&
+      // Broad search_rank cut — dynasty handcuffs can rank > 2500
+      (p.search_rank == null || p.search_rank < 9999)
     )
     .map(p => ({
-      id: p.player_id,
-      player_id: p.player_id,
-      full_name: p.full_name,
-      position: p.position,
-      team: p.team,
-      age: p.age,
-      height: p.height,
-      weight: p.weight,
-      years_exp: p.years_exp || 0,
-      search_rank: p.search_rank || 999,
-      trend: 'flat',
-      rookie: (p.years_exp || 0) === 0,
+      id:          p.player_id,
+      player_id:   p.player_id,
+      full_name:   p.full_name,
+      position:    p.position,
+      team:        p.team || 'FA',
+      age:         p.age,
+      height:      p.height,
+      weight:      p.weight,
+      years_exp:   p.years_exp || 0,
+      search_rank: p.search_rank || 9999,
+      trend:       'flat',
+      rookie:      (p.years_exp || 0) === 0,
     }));
   try { localStorage.setItem(_SLEEPER_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: players })); } catch(e) {}
   return players.map(p => applyValueDB(p));
@@ -8223,12 +8222,11 @@ async function importSleeperLeague(leagueId) {
     };
   });
 
-  // My roster players — include players + reserve + taxi
-  const allIds = [
-    ...(userRoster.players  || []),
-    ...(userRoster.reserve  || []),
-    ...(userRoster.taxi     || []),
-  ];
+  // My roster players — deduplicated (Sleeper's players[] already includes reserve)
+  const allIds = [...new Set([
+    ...(userRoster.players || []),
+    ...(userRoster.taxi    || []),
+  ].map(String))];
   const rosterPlayers = allIds.map(id => S.players.find(p=>String(p.player_id||p.id)===String(id))).filter(Boolean);
 
   // Build league data object
@@ -8237,13 +8235,14 @@ async function importSleeperLeague(leagueId) {
     leagueId,
     leagueName:      leagueInfo.name || 'Sleeper League',
     season:          leagueInfo.season,
+    leagueStatus:    leagueInfo.status || 'complete',
     settings:        detectedSettings,
     rosterIds:       allIds,
     rosterPositions: leagueInfo.roster_positions || [],
     // Sleeper lineup data — starters[i] maps to rosterPositions[i]; "0" = empty slot
-    starterIds:      userRoster.starters || [],
-    reserveIds:      userRoster.reserve  || [],
-    taxiIds:         userRoster.taxi     || [],
+    starterIds:      (userRoster.starters || []).map(String),
+    reserveIds:      (userRoster.reserve  || []).map(String),
+    taxiIds:         (userRoster.taxi     || []).map(String),
     allTeams,
     totalTeams:      leagueInfo.settings?.num_teams || 12,
     connectedAt:     Date.now(),
@@ -8522,19 +8521,21 @@ async function silentSleeperRefresh(lg, { showToastOnSuccess = false } = {}) {
 
     // STEP 3: Build updated league object
     // Even if we couldn't identify userRoster, we at least update rosterPositions + settings
+    const leagueStatus = leagueInfo.status || 'complete'; // 'in_season' | 'pre_draft' | 'complete' | etc.
     let updatedLeague = {
       ...S.connectedLeague,
       rosterPositions: freshPositions,
+      leagueStatus,
       settings:        freshSettings,
       connectedAt:     Date.now(),
     };
 
     if (userRoster) {
-      const allIds = [
+      // Deduplicate: Sleeper's `players` already includes reserve players; use Set to avoid dupes
+      const allIds = [...new Set([
         ...(userRoster.players||[]),
-        ...(userRoster.reserve||[]),
         ...(userRoster.taxi   ||[]),
-      ].map(String);
+      ].map(String))];
       const rosterPlayers = allIds.map(id => S.players.find(p=>String(p.player_id||p.id)===String(id))).filter(Boolean);
 
       const freshAllTeams = rosters.map(r => {
@@ -8556,13 +8557,13 @@ async function silentSleeperRefresh(lg, { showToastOnSuccess = false } = {}) {
 
       updatedLeague = {
         ...updatedLeague,
-        allTeams:    freshAllTeams,
-        rosterIds:   allIds,
-        starterIds:  userRoster.starters || [],
-        reserveIds:  userRoster.reserve  || [],
-        taxiIds:     userRoster.taxi     || [],
+        allTeams:     freshAllTeams,
+        rosterIds:    allIds,
+        starterIds:   (userRoster.starters || []).map(String),
+        reserveIds:   (userRoster.reserve  || []).map(String),
+        taxiIds:      (userRoster.taxi     || []).map(String),
         // Preserve sleeperUserId if we matched via overlap (no uid)
-        sleeperUserId: uid || (userRoster.owner_id !== undefined ? userRoster.owner_id : lg.sleeperUserId),
+        sleeperUserId: uid || String(userRoster.owner_id || lg.sleeperUserId || ''),
       };
 
       S.roster = rosterPlayers;
