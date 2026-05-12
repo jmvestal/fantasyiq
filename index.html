@@ -3989,22 +3989,13 @@ function calcValue(p, _over) {
   }
 
   // ── DYNASTY GUARD ──────────────────────────────────────────────────────────
-  // If a dynasty scenario CSV is loaded and this skill-position player was NOT
-  // found in it, they are unranked — return 0 instead of falling back to the
-  // built-in baseline DB. This prevents retired/irrelevant players (e.g. Ezekiel
-  // Elliott) from surfacing just because they exist in the player database.
-  // IDP, DST, and K still fall through to baseline (no dedicated dynasty CSV).
+  // Dynasty skill positions (QB/RB/WR/TE) ONLY get values from uploaded CSV files.
+  // No fallback to FantasyCalc, KTC, or any external database — ever.
+  // This fires unconditionally so timing/loading state can never let a player slip through.
+  // IDP, DST, and K are exempt (no dedicated dynasty CSV for those positions).
   if (mode === 'dynasty' && pos !== 'PICK'
       && !IDP_POS.has(pos) && !DST_POS.has(pos) && pos !== 'K') {
-    const _sk     = scenarioKey({ mode, qb, scoring, te });
-    const _scen   = S.sourceValues?.[_sk];
-    const _sfSrc  = S.sourceValues?.['scen_dyn_sf_hppr_note'];
-    // Guard fires if EITHER the active scenario OR the SF HPPR position files are loaded.
-    // scen_dyn_sf_hppr_note is prefetched at startup, so this gate is almost always active.
-    // A player not found in the shortcut above is unranked regardless of FantasyCalc/KTC data.
-    const _loaded = (_scen  && Object.keys(_scen).length  > 20)
-                 || (_sfSrc && Object.keys(_sfSrc).length > 20);
-    if (_loaded) return 0;
+    return 0;
   }
   // ───────────────────────────────────────────────────────────────────────────
 
