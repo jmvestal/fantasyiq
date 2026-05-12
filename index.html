@@ -10945,10 +10945,11 @@ function renderDsimBoard() {
       const cellClass = [isMine ? 'my-col' : '', isCurrent ? 'dsim-cur-cell' : ''].filter(Boolean).join(' ');
 
       if (pick) {
-        const pos = pick.player.position || '?';
+        const pos  = pick.player.position || '?';
+        const team = pick.player.team || '';
         html += `<td class="${cellClass}">
           <div class="dsim-pick pnr-name" data-pcname="${escHtml(pick.player.full_name||pick.player.name||'')}" onclick="_openPc(event)">${escHtml(pick.player.full_name || pick.player.name || '?')}</div>
-          <div class="dsim-pick-pos" style="color:${_posColor(pos)}">${pos}</div>
+          <div class="dsim-pick-pos" style="color:${_posColor(pos)}">${pos}${team ? ' · ' + team : ''}</div>
         </td>`;
       } else {
         html += `<td class="${cellClass}"></td>`;
@@ -10990,9 +10991,10 @@ function renderDsimMyRoster() {
   el.innerHTML = myPicks.map(pk => {
     const p   = pk.player;
     const pos = p.position || '?';
+    const teamTxt = p.team ? `<span style="font-size:10px;color:var(--text3);margin-left:4px">${p.team}</span>` : '';
     return `<div class="dsim-roster-pick">
       <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
-      <span class="dsim-roster-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name || p.name || '?')}</span>
+      <span class="dsim-roster-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name || p.name || '?')}</span>${teamTxt}
       <span class="dsim-roster-round">R${pk.round}</span>
     </div>`;
   }).join('');
@@ -11009,10 +11011,11 @@ function renderDsimPickHistory() {
     const isMe = pk.teamIdx === DSIM.mySlot;
     const p    = pk.player;
     const pos  = p.position || '?';
+    const teamTxt = p.team ? `<span style="font-size:10px;color:var(--text3);margin-left:3px">${p.team}</span>` : '';
     return `<div class="dsim-hist-row">
       <span class="dsim-hist-pick">${pk.overall}.</span>
       <span class="pb pb-${pos}" style="font-size:9px;padding:1px 4px">${pos}</span>
-      <span class="dsim-hist-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name || p.name || '?')}</span>
+      <span class="dsim-hist-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name || p.name || '?')}</span>${teamTxt}
       ${isMe ? '<span class="dsim-cpu-badge" style="background:var(--primary-d);color:var(--primary-l)">YOU</span>' : '<span class="dsim-cpu-badge">CPU</span>'}
     </div>`;
   }).join('');
@@ -11060,6 +11063,7 @@ function renderDsimRec() {
       const vRank = item.rank + 1;
       reason = `Value Pick — ranked #${vRank} overall`;
     }
+    const recMeta = [p.team || '', p.age ? p.age + 'yo' : ''].filter(Boolean).join(' · ');
     html += `<div class="dsim-rec-card${i === 0 ? ' top-rec' : ''}" onclick="dsimUserPick('${pid}')">
       <div class="dsim-rec-rank">#${i+1} Recommendation</div>
       <div class="dsim-rec-name">
@@ -11067,6 +11071,7 @@ function renderDsimRec() {
         <span class="pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name || p.name || '?')}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}
         <span style="font-size:11px;font-weight:400;color:var(--text3);margin-left:4px">${fmtVal(item.v)}</span>
       </div>
+      ${recMeta ? `<div style="font-size:10px;color:var(--text3);margin:1px 0 2px 0">${recMeta}</div>` : ''}
       <div class="dsim-rec-why">${reason}</div>
     </div>`;
   });
@@ -11343,6 +11348,28 @@ function dsimFinalGrade() {
 function dsimExportRoster() {
   const myPicks = DSIM.picks.filter(pk => pk.teamIdx === DSIM.mySlot);
   if (!myPicks.length) return;
+
+  // Build sim-appropriate rosterPositions so renderRosterList() uses greedy
+  // assignment (QB to QB slot, RB to RB slot, etc.) instead of the real
+  // Sleeper lineup which would put sim players on bench.
+  const isSF = DSIM.qb === 'sf';
+  const simPositions = ['QB'];
+  if (isSF) simPositions.push('SUPER_FLEX');
+  simPositions.push('RB', 'RB', 'WR', 'WR', 'TE', 'FLEX');
+  if (DSIM.type === 'redraft') { simPositions.push('K'); simPositions.push('DEF'); }
+  const benchCount = Math.max(0, myPicks.length - simPositions.length);
+  for (let i = 0; i < benchCount; i++) simPositions.push('BN');
+
+  // Override connectedLeague with sim structure — clears real starterIds so
+  // hasRealStarters is false and greedy slot assignment takes over.
+  S.connectedLeague = {
+    ...(S.connectedLeague || {}),
+    rosterPositions: simPositions,
+    starterIds:  [],
+    reserveIds:  [],
+    taxiIds:     [],
+  };
+
   S.roster = myPicks.map(pk => pk.player);
   renderRosterList();
   switchTab('roster');
