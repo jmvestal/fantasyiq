@@ -3312,13 +3312,13 @@ const WEEKLY_WIRE = {
      reason:'Top-5 TE talent at a major value gap. Dynasty and redraft value — if he\'s available, he shouldn\'t be.'},
     {name:'Colston Loveland',   pos:'TE', team:'CHI', owned:'44%', priority:'must-add', mode:'both',
      reason:'Caleb Williams\' safety valve with TE1 upside. Dynasty must-add; redraft leagues should be adding now.'},
-    {name:'Harold Fannin Jr.',  pos:'TE', team:'CLE', owned:'38%', priority:'must-add', mode:'both',
+    {name:'Harold Fannin',      pos:'TE', team:'CLE', owned:'38%', priority:'must-add', mode:'both',
      reason:'Volume monster at a position with no established starter above him. Starter from Day 1 in camp.'},
     {name:'Jayden Daniels',     pos:'QB', team:'WAS', owned:'72%', priority:'streamer', mode:'both',
      reason:'Year 2 leap candidate with elite legs. Top-5 QB in dynasty; strong streaming value in redraft too.'},
-    {name:'Demario Douglas',    pos:'WR', team:'NE',  owned:'29%', priority:'streamer', mode:'redraft',
+    {name:'DeMario Douglas',    pos:'WR', team:'NE',  owned:'29%', priority:'streamer', mode:'redraft',
      reason:'Target hog in NE\'s slot — quietly led the team in targets last season. Cheap in redraft leagues.'},
-    {name:'Nathaniel Dell',     pos:'WR', team:'HOU', owned:'33%', priority:'stash', mode:'both',
+    {name:'Tank Dell',          pos:'WR', team:'HOU', owned:'33%', priority:'stash', mode:'both',
      reason:'Post-ACL recovery — if healthy in camp, grab him before the news breaks. High ceiling with CJ Stroud.'},
     {name:'Darius Taylor',      pos:'RB', team:'MIN', owned:'18%', priority:'stash', mode:'dynasty',
      reason:'2026 rookie RB with a path to early-down carries in MIN. Stash in dynasty leagues before he pops.'},
@@ -9669,8 +9669,11 @@ function renderWireTab() {
     (S.connectedLeague.rosterIds || []).forEach(id => claimed.add(String(id)));
     const before = picks.length;
     picks = picks.filter(pick => {
-      const player = S.players.find(p => p.full_name === pick.name);
-      if (!player) return true; // name not in players list — show anyway
+      // Try exact match first, then normalized (handles Jr./Sr., caps differences)
+      const normPick = normName(pick.name);
+      const player = S.players.find(p => p.full_name === pick.name)
+                  || S.players.find(p => normName(p.full_name) === normPick);
+      if (!player) return true; // truly unknown player (e.g. pre-draft rookie) — show
       return !claimed.has(String(player.player_id || player.id || ''));
     });
     claimedCount = before - picks.length;
