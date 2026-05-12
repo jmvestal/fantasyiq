@@ -1,12 +1,15 @@
 {
-  "dyn_1qb_ppr_note": ["draftshark.csv", "peaked.csv", "ktc.csv", "dlf.csv"],
-  "dyn_sf_ppr_note":  ["draftshark.csv", "peaked.csv", "ktc.csv", "dlf.csv"],
-  "rd_1qb_ppr_note":  ["tradeiq.csv", "draftshark.csv"],
-  "rd_1qb_hppr_note": ["tradeiq.csv", "draftshark.csv"],
-  "rd_1qb_std_note":  ["tradeiq.csv", "draftshark.csv"],
-  "rd_1qb_ppr_te":    ["draftshark.csv"],
-  "rd_sf_ppr_note":   ["tradeiq.csv", "draftshark.csv"],
-  "rd_sf_hppr_note":  ["tradeiq.csv", "draftshark.csv"],
-  "rd_sf_std_note":   ["tradeiq.csv", "draftshark.csv"],
-  "rd_sf_ppr_te":     ["draftshark.csv"]
+  "dyn_1qb_ppr_note":  ["draftshark.csv", "peaked.csv", "ktc.csv", "dlf.csv", "fantasypros.csv"],
+  "dyn_sf_ppr_note":   ["draftshark.csv", "peaked.csv", "ktc.csv", "dlf.csv", "fantasypros.csv"],
+  "dyn_sf_hppr_note":  ["rb.csv", "wr.csv", "qb.csv", "te.csv", "rookies.csv"],
+  "dyn_sf_hppr_te":    ["rb.csv", "wr.csv", "qb.csv", "te.csv"],
+  "dyn_idp":           ["fantasypros.csv"],
+  "rd_1qb_ppr_note":   ["tradeiq.csv", "draftshark.csv"],
+  "rd_1qb_hppr_note":  ["tradeiq.csv", "draftshark.csv"],
+  "rd_1qb_std_note":   ["tradeiq.csv", "draftshark.csv"],
+  "rd_1qb_ppr_te":     ["draftshark.csv"],
+  "rd_sf_ppr_note":    ["tradeiq.csv", "draftshark.csv"],
+  "rd_sf_hppr_note":   ["tradeiq.csv", "draftshark.csv"],
+  "rd_sf_std_note":    ["tradeiq.csv", "draftshark.csv"],
+  "rd_sf_ppr_te":      ["draftshark.csv"]
 }
