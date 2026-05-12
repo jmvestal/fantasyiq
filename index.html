@@ -3985,6 +3985,24 @@ function calcValue(p, _over) {
       }
     }
   }
+
+  // ── DYNASTY GUARD ──────────────────────────────────────────────────────────
+  // If a dynasty scenario CSV is loaded and this skill-position player was NOT
+  // found in it, they are unranked — return 0 instead of falling back to the
+  // built-in baseline DB. This prevents retired/irrelevant players (e.g. Ezekiel
+  // Elliott) from surfacing just because they exist in the player database.
+  // IDP, DST, and K still fall through to baseline (no dedicated dynasty CSV).
+  if (mode === 'dynasty' && pos !== 'PICK'
+      && !IDP_POS.has(pos) && !DST_POS.has(pos) && pos !== 'K') {
+    const _sk    = scenarioKey({ mode, qb, scoring, te });
+    const _scen  = S.sourceValues?.[_sk];
+    const _qbSrc = S.sourceValues?.['scen_dyn_sf_hppr_note'];
+    const _loaded = (_scen  && Object.keys(_scen).length  > 20)
+                 || (pos === 'QB' && _qbSrc && Object.keys(_qbSrc).length > 20);
+    if (_loaded) return 0;
+  }
+  // ───────────────────────────────────────────────────────────────────────────
+
   let v;
   if (mode === 'dynasty') {
     v = p.dynasty_val || 500;
