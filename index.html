@@ -247,6 +247,17 @@
     .srch{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:border-color .15s}
     .srch:focus{border-color:var(--primary)}
     .srch::placeholder{color:var(--text3)}
+    /* Global header search */
+    .glb-srch-wrap{position:relative;flex:1;max-width:240px;min-width:0}
+    .glb-srch{width:100%;padding:7px 12px 7px 30px;background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:20px;color:var(--text);font-size:12px;font-family:inherit;outline:none;transition:all .2s;box-sizing:border-box}
+    .glb-srch:focus{background:var(--bg3);border-color:var(--primary)}
+    .glb-srch::placeholder{color:var(--text3)}
+    .glb-srch-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;pointer-events:none;color:var(--text3)}
+    .glb-dd{position:absolute;top:calc(100% + 6px);left:0;right:0;min-width:280px;background:var(--bg2);border:1px solid var(--border2);border-radius:9px;z-index:500;max-height:360px;overflow-y:auto;box-shadow:var(--shadow);display:none}
+    .glb-dd.open{display:block}
+    @media(max-width:900px){.glb-srch-wrap{max-width:170px}}
+    @media(max-width:660px){.glb-srch-wrap{max-width:130px}}
+    @media(max-width:480px){.glb-srch-wrap{display:none}}
     .dd{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:9px;z-index:250;max-height:300px;overflow-y:auto;box-shadow:var(--shadow);display:none}
     .dd.open{display:block}
     .dd-item{display:flex;align-items:center;gap:9px;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s}
@@ -1039,6 +1050,14 @@
         Draft HQ <span class="pro-badge">PRO</span>
       </button>
     </nav>
+
+    <!-- Global Player Search -->
+    <div class="glb-srch-wrap">
+      <span class="glb-srch-icon">🔍</span>
+      <input class="glb-srch" id="srchGlobal" placeholder="Search players…" autocomplete="off" autocorrect="off" spellcheck="false">
+      <div class="glb-dd" id="ddGlobal"></div>
+    </div>
+
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
       <div class="pc-badge" id="pcBadge">Loading players…</div>
       <!-- Sources button hidden from public UI — access via Ctrl+Shift+S -->
@@ -4744,7 +4763,10 @@ function selectPlayer(id, inputId, ddId) {
   if (inp) { inp.value = ''; inp.classList.remove('has-results'); }
   document.getElementById(ddId).classList.remove('open');
 
-  if (inputId === 'srchA') {
+  if (inputId === 'srchGlobal') {
+    // Global search — open player card directly
+    try { showPlayerCard(p.full_name); } catch(e) {}
+  } else if (inputId === 'srchA') {
     if (!S.tradeA.find(x=>x.id===id)) S.tradeA.push(p);
     renderTrade();
   } else if (inputId === 'srchB') {
@@ -7105,6 +7127,7 @@ async function init() {
   try { renderHome(); } catch(e) { console.error('renderHome failed:', e); }
   handleBookmarkletImport();
   try { rebuildPlayerValues(); } catch(e) { console.error('rebuildPlayerValues failed:', e); }
+  buildSearch('srchGlobal',  'ddGlobal',  null, null);
   buildSearch('srchA',       'ddA',       null, null);
   buildSearch('srchB',       'ddB',       null, null);
   buildSearch('srchSugGive', 'ddSugGive', null, null);
