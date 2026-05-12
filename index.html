@@ -4968,6 +4968,9 @@ function renderRosterList() {
   const reserveIds = (league?.reserveIds || []).map(String);
   const taxiIds    = (league?.taxiIds    || []).map(String);
 
+  console.log('RD_COUNT=' + S.roster.length + ' POS=' + allPos.length + ' IR=' + reserveIds.length + ' TAXI=' + taxiIds.length + ' STATUS=' + (league?.leagueStatus||'none') + ' LEAGUE=' + (league?.leagueName||'?'));
+  console.log('RD_NAMES=' + S.roster.slice(0,6).map(p=>p.full_name||'?').join('|'));
+
   // Deduplicate S.roster by player_id in case of duplicates from API
   const _seenRoster = new Set();
   const rosterUniq = S.roster.filter(p => {
@@ -8506,18 +8509,11 @@ async function silentSleeperRefresh(lg, { showToastOnSuccess = false } = {}) {
         const score = rIds.filter(id => savedSet.has(id)).length;
         if (score > bestScore) { bestScore = score; userRoster = r; }
       }
-      if (bestScore < 3) userRoster = null; // too few matches — don't guess
-      console.log('[Sleeper Refresh] Strategy C overlap score:', bestScore, userRoster ? 'MATCHED' : 'NO MATCH');
+      if (bestScore < 3) userRoster = null;
+      console.log('SR_C_SCORE=' + bestScore + ' MATCHED=' + !!userRoster);
     }
 
-    console.log('[Sleeper Refresh]', {
-      leagueId: lg.leagueId,
-      uid,
-      userRosterFound: !!userRoster,
-      freshPositions,
-      totalRosters: rosters.length,
-      savedRosterIds: lg.rosterIds?.length,
-    });
+    console.log('SR_FOUND=' + !!userRoster + ' UID=' + (uid||'none') + ' POSITIONS=' + freshPositions.length + ' ROSTERS=' + rosters.length + ' SAVED_IDS=' + (lg.rosterIds?.length||0) + ' STATUS=' + (leagueInfo.status||'?'));
 
     // STEP 3: Build updated league object
     // Even if we couldn't identify userRoster, we at least update rosterPositions + settings
