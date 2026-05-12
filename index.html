@@ -10172,6 +10172,20 @@ function onScoutLeagueChange(leagueId) {
 // GLOBAL LEAGUE SWITCHER — shared across all tabs
 // ═══════════════════════════════════════════════════════════
 function switchLeagueGlobal(leagueId) {
+  // "No League" — detach active league so settings can be adjusted manually
+  if (!leagueId) {
+    S.connectedLeague = null;
+    S.roster = [];
+    updateLeagueBar();
+    updateModeChip();
+    renderTrade();
+    renderRosterList();
+    if (document.getElementById('tab-wire')?.classList.contains('active')) renderWireTab();
+    if (document.getElementById('tab-league')?.classList.contains('active')) renderLeagueAnalyzer();
+    _refreshLeagueSels();
+    showToast('League detached — settings are now manual');
+    return;
+  }
   const found = (S.connectedLeagues || []).find(l => l.leagueId === leagueId);
   if (!found) return;
   S.connectedLeague = found;
@@ -10208,11 +10222,16 @@ function switchTradeLeague(leagueId) {
 function _refreshLeagueSels() {
   const leagues = S.connectedLeagues || [];
   const cur = S.connectedLeague?.leagueId;
-  const opts = leagues.map(l =>
+
+  // Base options — always include "No League" first so users can detach
+  const noLeagueOpt = `<option value=""${!cur ? ' selected' : ''}>— No League —</option>`;
+  const leagueOpts  = leagues.map(l =>
     `<option value="${escHtml(l.leagueId || '')}"${l.leagueId === cur ? ' selected' : ''}>${escHtml(l.leagueName || 'League')}</option>`
   ).join('');
+  const optsWithNone = noLeagueOpt + leagueOpts;
+  const optsOnly     = leagueOpts; // for selectors that don't need "No League"
 
-  // Sidebar selector
+  // Sidebar selector — show when 2+ leagues (league-switcher role only)
   const sbSec = document.getElementById('sbLgSection');
   const sbDiv = document.getElementById('sbLgDiv');
   const sbSel = document.getElementById('sbLgSel');
@@ -10220,7 +10239,7 @@ function _refreshLeagueSels() {
     const show = leagues.length > 1;
     sbSec.style.display = show ? '' : 'none';
     if (sbDiv) sbDiv.style.display = show ? '' : 'none';
-    if (show) sbSel.innerHTML = opts;
+    if (show) sbSel.innerHTML = optsOnly;
   }
 
   // Trade HQ My League mode selector
@@ -10229,7 +10248,7 @@ function _refreshLeagueSels() {
   if (tgWrap && tgSel) {
     const show = leagues.length > 1 && S_tradeMode === 'league';
     tgWrap.style.display = show ? 'flex' : 'none';
-    if (show) tgSel.innerHTML = opts;
+    if (show) tgSel.innerHTML = optsOnly;
   }
 
   // Tab-level selectors (Waiver HQ, Team HQ, League HQ) — show when 2+ leagues
@@ -10237,17 +10256,18 @@ function _refreshLeagueSels() {
     const el = document.getElementById(id);
     if (el) {
       el.style.display = leagues.length > 1 ? '' : 'none';
-      if (leagues.length > 1) el.innerHTML = opts;
+      if (leagues.length > 1) el.innerHTML = optsOnly;
     }
   });
 
-  // Mobile settings sheet league selector
+  // Mobile settings sheet — show when any league is connected (even 1),
+  // includes "No League" so users can detach and adjust settings manually
   const mobLgSec = document.getElementById('mobLgSection');
   const mobLgSel = document.getElementById('mobLgSel');
   if (mobLgSec && mobLgSel) {
-    const show = leagues.length > 1;
+    const show = leagues.length >= 1;
     mobLgSec.style.display = show ? '' : 'none';
-    if (show) mobLgSel.innerHTML = opts;
+    if (show) mobLgSel.innerHTML = optsWithNone;
   }
 
   // Scout HQ chat dropdown
