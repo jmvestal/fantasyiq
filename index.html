@@ -3989,13 +3989,19 @@ function calcValue(p, _over) {
   }
 
   // ── DYNASTY GUARD ──────────────────────────────────────────────────────────
-  // Dynasty skill positions (QB/RB/WR/TE) ONLY get values from uploaded CSV files.
-  // No fallback to FantasyCalc, KTC, or any external database — ever.
-  // This fires unconditionally so timing/loading state can never let a player slip through.
-  // IDP, DST, and K are exempt (no dedicated dynasty CSV for those positions).
+  // If a dynasty scenario CSV is loaded and this skill-position player was NOT
+  // found in it, they are unranked — return 0 instead of falling back to the
+  // built-in baseline DB. This prevents retired/irrelevant players (e.g. Ezekiel
+  // Elliott) from surfacing just because they exist in the player database.
+  // IDP, DST, and K still fall through to baseline (no dedicated dynasty CSV).
   if (mode === 'dynasty' && pos !== 'PICK'
       && !IDP_POS.has(pos) && !DST_POS.has(pos) && pos !== 'K') {
-    return 0;
+    const _sk     = scenarioKey({ mode, qb, scoring, te });
+    const _scen   = S.sourceValues?.[_sk];
+    const _sfSrc  = S.sourceValues?.['scen_dyn_sf_hppr_note'];
+    const _loaded = (_scen  && Object.keys(_scen).length  > 20)
+                 || (_sfSrc && Object.keys(_sfSrc).length > 20);
+    if (_loaded) return 0;
   }
   // ───────────────────────────────────────────────────────────────────────────
 
@@ -6936,6 +6942,32 @@ function restoreCSVSources() {
   } catch(e) {}
 }
 
+// Restore auto-fetched scenario caches from localStorage synchronously.
+// Called at init BEFORE rebuildPlayerValues() so the dynasty guard fires
+// from the very first render — no window where external players can slip through.
+function restoreScenarioCaches() {
+  // Always restore the current scenario + the SF HPPR fallback source
+  const keys = new Set([scenarioKey(), 'scen_dyn_sf_hppr_note']);
+  keys.forEach(sk => {
+    if (S.sourceValues[sk] && Object.keys(S.sourceValues[sk]).length > 20) return; // already loaded
+    try {
+      const cached = JSON.parse(localStorage.getItem(SCENARIO_CACHE_PREFIX + sk) || 'null');
+      if (cached?.ts && (Date.now() - cached.ts) < SCENARIO_CACHE_TTL
+          && cached.parsed && Object.keys(cached.parsed).length > 20) {
+        S.sourceValues[sk] = cached.parsed;
+        S.sourceStatus[sk] = 'ok';
+        S.sourceMeta = S.sourceMeta || {};
+        S.sourceMeta[sk] = cached.meta || { count: Object.keys(cached.parsed).length, file: 'cached' };
+        if (!RANKING_SOURCES.find(s => s.key === sk)) {
+          const isDyn = sk.startsWith('scen_dyn_');
+          RANKING_SOURCES.push({ key: sk, name: scenarioLabel(sk), type: 'auto',
+            dynasty: isDyn, redraft: !isDyn, color: isDyn ? '#3b82f6' : '#22c55e' });
+        }
+      }
+    } catch(e) {}
+  });
+}
+
 // ═══════════════════════════════════════════════════════════
 // RANKINGS.JSON — CDN-hosted consensus data updated daily by
 // GitHub Action. Loads all 4 sources in one fast request.
@@ -8203,6 +8235,7 @@ async function init() {
   S.sourceMeta['tiq'] = { count: Object.keys(DYNASTY_DB).length, loaded: Date.now() };
   restoreCSVSources();
   restoreBookmarkletSources();
+  restoreScenarioCaches();   // ← restore auto-fetched CSVs BEFORE first render
 
   // ── 2. INSTANT BOOTSTRAP — render in <100ms from built-in data ───
   try {
