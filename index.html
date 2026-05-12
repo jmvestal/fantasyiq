@@ -6914,10 +6914,6 @@ const DLF_TS_KEY    = 'tradeiq_dlf_ts_v2';
 const DLF_TTL       = 7 * 24 * 60 * 60 * 1000; // 7 days (static files, update manually)
 
 async function fetchDLFValues() {
-  // DLF excluded from dynasty consensus — CSV ranking format adds noise.
-  // Keeping the function stub so the UI source list doesn't break.
-  S.sourceStatus['dlf'] = 'none';
-  return;
   const ts = parseInt(localStorage.getItem(DLF_TS_KEY) || '0');
   if (Date.now() - ts < DLF_TTL) {
     try {
@@ -7041,8 +7037,8 @@ async function fetchDLFValues() {
 // Dynasty only — rv:0 so redraft values are never affected.
 // ═══════════════════════════════════════════════════════════
 const CUSTOM_BASE     = 'https://raw.githubusercontent.com/jmvestal/fantasyiq/main/rankings/';
-const CUSTOM_CACHE_KEY = 'tradeiq_custom_v15';
-const CUSTOM_TS_KEY    = 'tradeiq_custom_ts_v5';
+const CUSTOM_CACHE_KEY = 'tradeiq_custom_v16';
+const CUSTOM_TS_KEY    = 'tradeiq_custom_ts_v6';
 const CUSTOM_TTL       = 24 * 60 * 60 * 1000; // 24 hours
 
 // ── Shared CSV parser for all creator sources ──────────────
@@ -7310,7 +7306,7 @@ function forceRefreshCustomRankings() {
   localStorage.removeItem(CUSTOM_TS_KEY);
   // Clear any loaded custom source keys
   for (const key of Object.keys(S.sourceValues||{})) {
-    if (!['tiq','fc','ktc','ffc','dlf','dp'].includes(key)) {
+    if (!['tiq','fc','ktc','ffc','dlf','dp','fp_rd','fp_dyn'].includes(key)) {
       delete S.sourceValues[key];
       delete S.sourceStatus[key];
       delete S.sourceMeta?.[key];
@@ -7331,10 +7327,6 @@ const DP_TS_KEY    = 'tradeiq_dp_ts';
 const DP_TTL       = 23 * 60 * 60 * 1000;
 
 async function fetchDynastyProcessValues() {
-  // DP uses FantasyPros dynasty ECR which is SuperFlex-weighted — excluded from dynasty consensus.
-  // Keeping the function stub so the UI source list doesn't break.
-  S.sourceStatus['dp'] = 'none';
-  return;
   const ts = parseInt(localStorage.getItem(DP_TS_KEY) || '0');
   if (Date.now() - ts < DP_TTL) {
     try {
@@ -7394,6 +7386,109 @@ async function fetchDynastyProcessValues() {
   } catch(e) {
     console.warn('DynastyProcess fetch failed:', e);
     S.sourceStatus['dp'] = 'err';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// FANTASYPROS ECR AUTO-FETCH — live redraft + dynasty ECR
+// Uses the FantasyPros partners API; CORS proxy fallback.
+// Redraft: current-season PPR ECR → rv
+// Dynasty: dynasty ECR (HALF scoring) → dv
+// ═══════════════════════════════════════════════════════════
+const FP_CACHE_KEY = 'tradeiq_fp_values_v2';
+const FP_TS_KEY    = 'tradeiq_fp_ts_v2';
+const FP_TTL       = 23 * 60 * 60 * 1000;
+
+async function fetchFantasyProsValues() {
+  const ts = parseInt(localStorage.getItem(FP_TS_KEY) || '0');
+  if (Date.now() - ts < FP_TTL) {
+    try {
+      const cached = JSON.parse(localStorage.getItem(FP_CACHE_KEY) || 'null');
+      if (cached) {
+        if (cached.rd  && Object.keys(cached.rd).length  > 20) { S.sourceValues['fp_rd']  = cached.rd;  S.sourceStatus['fp_rd']  = 'ok'; S.sourceMeta['fp_rd']  = { count: Object.keys(cached.rd).length,  loaded: ts, file: 'FantasyPros ECR Redraft (cached)'  }; }
+        if (cached.dyn && Object.keys(cached.dyn).length > 20) { S.sourceValues['fp_dyn'] = cached.dyn; S.sourceStatus['fp_dyn'] = 'ok'; S.sourceMeta['fp_dyn'] = { count: Object.keys(cached.dyn).length, loaded: ts, file: 'FantasyPros ECR Dynasty (cached)' }; }
+        if (cached.rd || cached.dyn) return;
+      }
+    } catch(e) {}
+  }
+
+  const PROXY = 'https://api.allorigins.win/raw?url=';
+  const BASE  = 'https://partners.fantasypros.com/api/v1/consensus-rankings.php';
+
+  // Fetch one FP endpoint, falling back through CORS proxy
+  const fetchFP = async (params) => {
+    const url = BASE + '?' + new URLSearchParams({ sport:'NFL', year:'2026', week:'0', position:'ALL', platform:'3', ...params }).toString();
+    for (const u of [url, PROXY + encodeURIComponent(url)]) {
+      try {
+        const r = await fetch(u, { signal: AbortSignal.timeout(9000) });
+        if (r.ok) return await r.json();
+      } catch(e) {}
+    }
+    return null;
+  };
+
+  // Rank → value: same exponential curve as parseCreatorCSV
+  const rankToVal = r => Math.round(Math.min(9800, Math.max(200, 10200 * Math.exp(-0.015 * (r - 1)))));
+
+  const parseFP = (data, mode) => {
+    const players = data?.players || data?.data || [];
+    if (!Array.isArray(players) || players.length < 10) return {};
+    const out = {};
+    players.forEach((p, i) => {
+      const name = p.player_name || p.name;
+      if (!name) return;
+      const rank = parseFloat(p.rank_avg ?? p.rank_ecr ?? p.ecr ?? i + 1) || i + 1;
+      const val  = rankToVal(rank);
+      const key  = normName(name);
+      if (key) out[key] = mode === 'redraft' ? { dv: 0, rv: val } : { dv: val, rv: 0 };
+    });
+    return out;
+  };
+
+  try {
+    const [rdRes, dynRes] = await Promise.allSettled([
+      fetchFP({ type: 'ROS',     scoring: 'PPR'  }),
+      fetchFP({ type: 'DYNASTY', scoring: 'HALF' }),
+    ]);
+
+    const cacheObj = {};
+    let anyLoaded = false;
+
+    const rd = rdRes.status === 'fulfilled' ? rdRes.value : null;
+    if (rd) {
+      const rdSource = parseFP(rd, 'redraft');
+      if (Object.keys(rdSource).length > 20) {
+        S.sourceValues['fp_rd'] = rdSource;
+        S.sourceStatus['fp_rd'] = 'ok';
+        S.sourceMeta['fp_rd']   = { count: Object.keys(rdSource).length, loaded: Date.now(), file: 'FantasyPros ECR (PPR)' };
+        cacheObj.rd = rdSource;
+        anyLoaded = true;
+        console.log('FantasyPros ECR redraft: ' + Object.keys(rdSource).length + ' players');
+      }
+    }
+    if (!cacheObj.rd) S.sourceStatus['fp_rd'] = 'err';
+
+    const dyn = dynRes.status === 'fulfilled' ? dynRes.value : null;
+    if (dyn) {
+      const dynSource = parseFP(dyn, 'dynasty');
+      if (Object.keys(dynSource).length > 20) {
+        S.sourceValues['fp_dyn'] = dynSource;
+        S.sourceStatus['fp_dyn'] = 'ok';
+        S.sourceMeta['fp_dyn']   = { count: Object.keys(dynSource).length, loaded: Date.now(), file: 'FantasyPros ECR (Dynasty)' };
+        cacheObj.dyn = dynSource;
+        anyLoaded = true;
+        console.log('FantasyPros ECR dynasty: ' + Object.keys(dynSource).length + ' players');
+      }
+    }
+    if (!cacheObj.dyn) S.sourceStatus['fp_dyn'] = 'err';
+
+    if (anyLoaded) {
+      try { localStorage.setItem(FP_CACHE_KEY, JSON.stringify(cacheObj)); localStorage.setItem(FP_TS_KEY, String(Date.now())); } catch(e) {}
+      rebuildPlayerValues();
+    }
+  } catch(e) {
+    console.warn('FantasyPros ECR fetch failed:', e);
+    S.sourceStatus['fp_rd'] = S.sourceStatus['fp_dyn'] = 'err';
   }
 }
 
@@ -7819,6 +7914,7 @@ async function init() {
     fetchFFCValues();
     fetchDynastyProcessValues();
     fetchDLFValues();
+    fetchFantasyProsValues();
     fetchCustomRankings();
   });
 }

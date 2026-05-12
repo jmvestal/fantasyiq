@@ -13,14 +13,43 @@
   },
   {
     "key": "tradeiq_rd_ds",
-    "name": "DS Redraft 2026",
-    "draftsharkFiles": [
+    "name": "DraftShark Redraft 2026",
+    "redraftFiles": [
       "1qb Redraft 2026 PPR rankings.csv",
       "1qb Redraft 2026 Half PPR rankings.csv",
       "1qb Redraft 2026 Non PPR rankings.csv",
+      "1qb Redraft 2026 TE Premium rankings.csv",
       "SF Redraft 2026 PPR rankings.csv",
       "SF Redraft 2026 Half PPR rankings.csv",
-      "SF Redraft 2026 Non PPR rankings.csv"
+      "SF Redraft 2026 Non PPR rankings.csv",
+      "SF Redraft 2026 TE Premium rankings.csv"
+    ]
+  },
+  {
+    "key": "ds_dyn",
+    "name": "DraftShark Dynasty",
+    "1qb": "1QB PPR Dynasty rankings.csv",
+    "sf": "SF PPR Dynasty Rankings.csv"
+  },
+  {
+    "key": "peaked",
+    "name": "Peaked Fantasy",
+    "1qb": "peaked-1qb.csv",
+    "sf": "peaked-sf.csv"
+  },
+  {
+    "key": "ds_idp_dyn",
+    "name": "DraftShark IDP Dynasty",
+    "dynastyFile": "2026 Dynasty IDP Rankings.csv"
+  },
+  {
+    "key": "ds_rd_extra",
+    "name": "DraftShark Extras",
+    "redraftFiles": [
+      "2026 Redraft IDP Rankings.csv",
+      "2026 Redraft DST Rankings.csv",
+      "2026 Redraft K Rankings.csv",
+      "2026 Redraft PPR Rookie Rankings.csv"
     ]
   }
 ]
