@@ -5339,6 +5339,7 @@ function openMobSettings() {
   if (lockNote) lockNote.style.display = locked ? '' : 'none';
   document.getElementById('mobSettingsSheet').classList.add('open');
   syncMobToggles();
+  _refreshLeagueSels(); // ensure Active League dropdown reflects current state
 }
 function closeMobSettings() {
   document.getElementById('mobSettingsSheet').classList.remove('open');
