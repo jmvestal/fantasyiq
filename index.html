@@ -5175,29 +5175,31 @@ function renderHome() {
         .slice(0, 4)
     : [];
 
-  // Buy low
-  const buyCandidates = [...S.players]
-    .filter(p => !roster.find(r => String(r.player_id||r.id) === String(p.player_id||p.id)))
-    .map(p => ({ p, v: calcValue(p) }))
-    .filter(({v}) => v >= 2000 && v <= 7000)
-    .filter(({p}) => p.trend === 'up' || (p.age && p.age <= 25))
-    .sort((a,b) => b.v - a.v)
-    .slice(0, 4);
-
-  // Waiver adds — exclude players rostered on ANY team in the league (not just yours)
+  // Build set of ALL rostered player IDs across every team — used by both buy-low and waiver adds
   const _allRosteredIds = new Set();
   if (S.connectedLeague?.allTeams?.length) {
     S.connectedLeague.allTeams.forEach(t => (t.playerIds||[]).forEach(id => _allRosteredIds.add(String(id))));
   } else {
+    // Fallback: only your roster (allTeams not loaded yet)
     roster.forEach(r => _allRosteredIds.add(String(r.player_id||r.id)));
   }
-  const wireTargets = [...S.players]
-    .filter(p => {
-      const val = calcValue(p);
-      if (val < 500) return false;
-      return !_allRosteredIds.has(String(p.player_id||p.id)) && ['RB','WR','TE','QB'].includes(p.position);
-    })
+  const _notRostered = p => !_allRosteredIds.has(String(p.player_id||p.id));
+
+  // Buy low — exclude ALL rostered players, not just yours
+  const buyCandidates = [...S.players]
+    .filter(_notRostered)
     .map(p => ({ p, v: calcValue(p) }))
+    .filter(({v}) => v >= 2500 && v <= 7000)
+    .filter(({p}) => p.trend === 'up' || (p.age && p.age <= 25))
+    .sort((a,b) => b.v - a.v)
+    .slice(0, 4);
+
+  // Waiver adds — true free agents only, must have meaningful value
+  const wireMinVal = S.settings.mode === 'dynasty' ? 2000 : 1500;
+  const wireTargets = [...S.players]
+    .filter(p => _notRostered(p) && ['RB','WR','TE','QB'].includes(p.position))
+    .map(p => ({ p, v: calcValue(p) }))
+    .filter(({v}) => v >= wireMinVal)
     .sort((a,b) => b.v - a.v)
     .slice(0, 4);
 
@@ -7923,11 +7925,33 @@ async function silentSleeperRefresh(lg) {
       ...(userRoster.taxi   ||[]),
     ].map(String);
     const rosterPlayers = allIds.map(id => S.players.find(p=>String(p.player_id||p.id)===String(id))).filter(Boolean);
+
+    // Rebuild allTeams from ALL fresh rosters so waiver/trade filters always reflect
+    // current transactions (adds/drops/trades since the last full import).
+    // Preserve existing ownerName/displayName if we can't re-fetch it here.
+    const freshAllTeams = (rosters||[]).map(r => {
+      const teamIds = [...(r.players||[]), ...(r.reserve||[])].map(String);
+      const existing = (S.connectedLeague?.allTeams||[]).find(t => String(t.rosterId) === String(r.roster_id));
+      const teamPlayers = teamIds.map(id => S.players.find(p=>String(p.player_id||p.id)===id)).filter(Boolean);
+      return {
+        rosterId:    r.roster_id,
+        ownerId:     r.owner_id,
+        ownerName:   existing?.ownerName   || existing?.displayName || `Team ${r.roster_id}`,
+        displayName: existing?.displayName || existing?.ownerName   || `Team ${r.roster_id}`,
+        isMe:        r.owner_id === uid,
+        playerIds:   teamIds,      // raw Sleeper IDs — used by waiver/trade filter
+        players:     teamPlayers,  // resolved objects — used by league analyzer
+        wins:        r.settings?.wins   ?? existing?.wins   ?? 0,
+        losses:      r.settings?.losses ?? existing?.losses ?? 0,
+      };
+    });
+
     // Re-capture rosterPositions and settings from fresh leagueInfo on every refresh
     const freshPositions = leagueInfo.roster_positions || lg.rosterPositions || [];
     const freshSettings  = detectSleeperSettings(leagueInfo);
     const updatedLeague  = {
       ...S.connectedLeague,
+      allTeams:        freshAllTeams,
       rosterIds:       allIds,
       rosterPositions: freshPositions,
       starterIds:      userRoster.starters || [],
@@ -9632,15 +9656,21 @@ function renderWireTab() {
   if (filterLeague && S.connectedLeague) {
     // Build a Set of all claimed player IDs across every team
     const claimed = new Set();
+    // Primary: playerIds (raw Sleeper IDs) stored per team
     (S.connectedLeague.allTeams || []).forEach(t => {
       (t.playerIds || []).forEach(id => claimed.add(String(id)));
+      // Also cover legacy data where only players (objects) were saved
+      (t.players || []).forEach(p => {
+        const pid = p.player_id || p.id;
+        if (pid) claimed.add(String(pid));
+      });
     });
-    // Also cover rosterIds in case allTeams wasn't populated
+    // Fallback: user's own rosterIds
     (S.connectedLeague.rosterIds || []).forEach(id => claimed.add(String(id)));
     const before = picks.length;
     picks = picks.filter(pick => {
       const player = S.players.find(p => p.full_name === pick.name);
-      if (!player) return true; // unknown — show anyway
+      if (!player) return true; // name not in players list — show anyway
       return !claimed.has(String(player.player_id || player.id || ''));
     });
     claimedCount = before - picks.length;
