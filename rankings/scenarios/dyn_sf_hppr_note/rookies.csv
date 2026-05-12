@@ -1,66 +1,56 @@
-RANK                PLAYER NAME                                                                                                                         POS                                       TIER                                   30DT,,,,,,,,,,,,,VALUE,,,
-,1,Jeremiyah Love,,,,R,RB3,,,,Tier 1,0,,7650,,
-,2,Carnell Tate   R,,,,WR12,,,,,Tier 2,1,,5825,,
-,3              Fernando Mendoza,,,,,,R,QB14,,,Tier 2,1,,5671,,
-,4              Jordyn Tyson   R,,,,,,,WR18,,,Tier 2,1,,5336,,
-,5              Makai Lemon   R,,,,,,,WR23,,,Tier 2,1,,5015,,
-,6              Jadarian Price   R,,,,,,,RB18,,,Tier 2,5,,4714,,
-,7              Kenyon Sadiq   R,,,,,,,TE9,,,Tier 2,2,,4634,,
-,8,KC Concepcion,,,,R,WR30,,,,Tier 2,0,,4479,,
-,9,Eli Stowers   R,,,,,TE11,,,,Tier 3,2,,3987,,
-,10,Omar Cooper Jr.,,,,R                                                                                                                   WR33,,,,,Tier 3,1,,3864,,
-,11,Ty  Simpson   R,,,,QB27,,,,,Tier 3,0,,3685,,
-,12             Denzel Boston   R,,,,,,WR45,,,,Tier 3,3,,3450,,
-,13             Jonah Coleman,,,,,R,RB35,,,,Tier 4,1,,3031,,
-,14             Chris Bell   R,,,,,,WR59,,,,Tier 4,8,,2987,,
-,15,Nicholas Singleton,,,,,R,RB39,,,Tier 4,0,,2910,,
-,16,Germie Bernard,,,,R,WR62,,,,Tier 4,9,,2909,,
-,17,Elijah Sarratt,,R,,WR65,,,,,Tier 5,3,,2783,,
-,18             Chris Brazzell II,,,,,R,,WR73,,,Tier 6,1,,2638,,
-,19             Antonio Williams,,,,,,R,WR74,,,Tier 6,10,,2635,,
-,20             Zachariah Branch,,,,,,R,WR76,,,Tier 6,1,,2605,,
-,21             Malachi Fields   R,,,,,,,WR77,,,Tier 6,2,,2596,,
-,22             Emmett Johnson,,,,,,R,RB52,,,Tier 7,4,,2461,,
-,23,Mike Washington Jr.,,,,,,R,,RB53,Tier 7,7,,2444,,
-,24,Skyler Bell   R,,WR85,,,,,,,Tier 7,3,,2432,,
-,25,Kaytron Allen,,R,,RB54,,,,,Tier 7,1,,2423,,
-,26,Max Klare,R,TE37,,,,,,,Tier 7,1,,2411,,
-,27,Ja'Kobi Lane,,R,,WR89,,,,,Tier 7,0,,2336,,
-,28,Ted Hurst,R,WR104,,,,,,,Tier 8,6,,1966,,
-,29,De'Zhaun Stribling,,,,,R,WR108,,,Tier 9,21,,1851,,
-,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,
-,30,Garrett Nussmeier,,,,,R,,QB45,,Tier 10,10,,1710,,
-,31,Kevin Coleman,,,R,,WR118,,,,Tier 10,0,,1679,,
-,32,Cade Klubnik,,,R,QB48,,,,,Tier 10,3,,1674,,
-,33,Justin Joly   R,,,,TE54,,,,,Tier 10,15,,1658,,
-,34,Demond Claiborne,,,,,R,,RB83,,Tier 10,1,,1585,,
-,35,Michael Trigg   R,,,,,,,TE57,,Tier 10,7,,1552,,
-,36,Eli Raridon   R,,,,,,,TE61,,Tier 11,15,,1419,,
-,37,Oscar Delp   R,,,,,,,TE64,,Tier 11,4,,1371,,
-,,,,,,,,,,,,,,,,
-,38,Carson Beck   R,,,,,,,QB55,,Tier 12,11,,1242,,
-,39,Brenen Thompson,,,,,R,,WR147,,Tier 12,17,,1219,,
-,40,Drew Allar   R,,,,,,,QB58,,Tier 12,7,,1181,,
-,41,Zavion Thomas   R,,,,,,,WR151,,Tier 12,11,,1151,,
-,42,Kaelon Black   R,,,,,,,RB103,,Tier 12,11,,1145,,
-,,,,,,,,,,,,,,,,
-,43,Bryce Lance   R,,,,,,,WR158,,Tier 13,5,,1043,,
-,44,Deion Burks   R,,,,,,,WR163,,Tier 13,4,,1008,,
-,45,Le'Veon Moss   R,,,,,,,RB110,,Tier 13,12,,997,,
-,,,,,,,,,,,,,,,,
-,46,Jack Endries   R,,,,,,,TE70,,Tier 14,13,,880,,
-,47,Eli Heidenreich   R,,,,,,,RB118,,Tier 14,13,,861,,
-,48,Caleb Douglas   R,,,,,,,WR176,,Tier 14,13,,814,,
-,49,Adam Randall   R,,,,,,,RB122,,Tier 14,10,,803,,
-,50,Seth McGowan   R,,,,,,,RB124,,Tier 14,11,,774,,
-,51,Jam Miller   R,,,,,,,RB125,,Tier 14,14,,762,,
-,52,J'Mari Taylor   R,,,,,,,RB126,,Tier 14,14,,713,,
-,53,Cole Payton   R,,,,,,,QB67,,Tier 14,8,,706,,
-,,,,,,,,,,,,,,,,
-,56,CJ Daniels   R,,,,,,,WR178,,Tier 15,13,,577,,
-,,,,,,,,,,,,,,,,
-,57,Luke Altmyer   R,,,,,,,QB70,,Tier 16,12,,512,,
-,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,
+ï»¿Rank,Name,Position,Value
+1,Jeremiyah Love,ROOK,7650
+2,Carnell Tate,ROOK,5825
+3,Fernando Mendoza,ROOK,5671
+4,Jordyn Tyson,ROOK,5336
+5,Makai Lemon,ROOK,5015
+6,Jadarian Price,ROOK,4714
+7,Kenyon Sadiq,ROOK,4634
+8,KC Concepcion,ROOK,4479
+9,Eli Stowers,ROOK,3987
+10,Omar Cooper Jr.,ROOK,3864
+11,Ty Simpson,ROOK,3685
+12,Denzel Boston,ROOK,3450
+13,Jonah Coleman,ROOK,3031
+14,Chris Bell,ROOK,2987
+15,Nicholas Singleton,ROOK,2910
+16,Germie Bernard,ROOK,2909
+17,Elijah Sarratt,ROOK,2783
+18,Chris Brazzell II,ROOK,2638
+19,Antonio Williams,ROOK,2635
+20,Zachariah Branch,ROOK,2605
+21,Malachi Fields,ROOK,2596
+22,Emmett Johnson,ROOK,2461
+23,Mike Washington Jr.,ROOK,2444
+24,Skyler Bell,ROOK,2432
+25,Kaytron Allen,ROOK,2423
+26,Max Klare,ROOK,2411
+27,Ja'Kobi Lane,ROOK,2336
+28,Ted Hurst,ROOK,1966
+29,De'Zhaun Stribling,ROOK,1851
+30,Garrett Nussmeier,ROOK,1710
+31,Kevin Coleman,ROOK,1679
+32,Cade Klubnik,ROOK,1674
+33,Justin Joly,ROOK,1658
+34,Demond Claiborne,ROOK,1585
+35,Michael Trigg,ROOK,1552
+36,Eli Raridon,ROOK,1419
+37,Oscar Delp,ROOK,1371
+38,Carson Beck,ROOK,1242
+39,Brenen Thompson,ROOK,1219
+40,Drew Allar,ROOK,1181
+41,Zavion Thomas,ROOK,1151
+42,Kaelon Black,ROOK,1145
+43,Bryce Lance,ROOK,1043
+44,Deion Burks,ROOK,1008
+45,Le'Veon Moss,ROOK,997
+46,Jack Endries,ROOK,880
+47,Eli Heidenreich,ROOK,861
+48,Caleb Douglas,ROOK,814
+49,Adam Randall,ROOK,803
+50,Seth McGowan,ROOK,774
+51,Jam Miller,ROOK,762
+52,J'Mari Taylor,ROOK,713
+53,Cole Payton,ROOK,706
+54,CJ Daniels,ROOK,577
+55,Luke Altmyer,ROOK,512

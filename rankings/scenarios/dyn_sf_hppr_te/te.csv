@@ -1,90 +1,71 @@
-RANK              PLAYER NAME                                                                                                            POS                                   TIER                               30DT,,,,,,,,,,,VALUE,,
-,1              Brock Bowers,,,,,TE1,Tier 1,,0,,,8797,
-,2              Trey  McBride,,,,,TE2,Tier 1,,0,,,8335,
-,,,,,,,,,,,,,
-,3              Colston Loveland,,,,,TE3,Tier 2,,0,,,6686,
-,4              Tyler Warren,,,,,TE4,Tier 2,,0,,,6322,
-,,,,,,,,,,,,,
-,5              Harold Fannin,,,,,TE5,Tier 3,,0,,,5437,
-,6              Tucker Kraft,,,,,TE6,Tier 3,,0,,,5341,
-,7              Sam LaPorta,,,,,TE7,Tier 3,,0,,,5059,
-,8              Kyle Pitts,,,,,TE8,Tier 3,,0,,,4925,
-,9              Kenyon Sadiq   R,,,,,TE9,Tier 3,,0,,,4631,
-,10             Oronde Gadsden,,,,,TE10,Tier 3,,0,,,4361,
-,,,,,,,,,,,,,
-,11             Eli Stowers   R,,,,,TE11,Tier 4,,12,,,3987,
-,,,,,,,,,,,,,
-,12             Isaiah Likely,,,,,TE12,Tier 5,,1,,,3743,
-,13             George Kittle,,,,,TE13,Tier 5,,1,,,3705,
-,14             Jake Ferguson,,,,,TE14,Tier 5,,1,,,3695,
-,15             Dalton Kincaid,,,,,TE15,Tier 5,,3,,,3675,
-,,,,,,,,,,,,,
-,16             Brenton Strange,,,,,TE16,Tier 6,,1,,,3463,
-,,,,,,,,,,,,,
-,17             T.J. Hockenson,,,,,TE17,Tier 7,,4,,,3230,
-,18             AJ Barner,,,,,TE18,Tier 7,,1,,,3226,
-,19             Mark Andrews,,,,,TE19,Tier 7,,1,,,3147,
-,20             Terrance Ferguson,,,,,TE20,Tier 7,,2,,,3121,
-,21             Chigoziem Okonkwo,,,,,TE21,Tier 7,,2,,,3113,
-,,,,,,,,,,,,,
-,22             Gunnar Helm,,,,,TE22,Tier 8,,3,,,3028,
-,23             Dallas Goedert,,,,,TE23,Tier 8,,1,,,2981,
-,,,,,,,,,,,,,
-,24             Elijah Arroyo,,,,,TE24,Tier 9,,2,,,2911,
-,,,,,,,,,,,,,
-,25             Mason Taylor,,,,,TE25,Tier 10,,9,,,2819,
-,26             David Njoku,,,,,TE26,Tier 10,,4,,,2813,
-,27             Travis Kelce,,,,,TE27,Tier 10,,0,,,2788,
-,28             Juwan Johnson,,,,,TE28,Tier 10,,2,,,2772,
-,29             Cade Otton,,,,,TE29,Tier 10,,1,,,2740,
-,,,,,,,,,,,,,
-,,,,,,,,,,,,,
-"30             Theo Johnson                                                                                           TE30                         Tier 10                          1                                                          2736
-31             Jake Tonges                                                                                              TE31                         Tier 10                         0                                                            2698
-32             Hunter Henry                                                                                             TE32                         Tier 10                          2                                                          2671
-33             Dalton Schultz                                                                                           TE33                         Tier 10                         0                                                            2667",,,,,,,,,,,,,
-34             Pat Freiermuth                                                                                          TE34                         Tier 11,,,,,,,,,,1                                         2587,,,
-35             Michael Mayer                                                                                           TE35                         Tier 11,,,,,,,,3                                         2526,,,,,
-36             Ja'Tavion Sanders                                                                                    TE36                         Tier 11,,,,,,,,1                                         2481,,,,,
-37             Max Klare   R,,,TE37                         Tier 12,,,,,16                                         2411,,,,,
-38             Cole Kmet                                                                                                  TE38                         Tier 12,,,,,,,,0                                          2388,,,,,
-39             Colby  Parkinson                                                                                       TE39                         Tier 12,,,,,,,,3                                         2343,,,,,
-40             Evan Engram                                                                                             TE40                         Tier 12,,,,,,,,2                                         2289,,,,,
-41             Luke Musgrave                                                                                          TE41                         Tier 12,,,,,,,,1                                         2280,,,,,
-42             Darnell Washington                                                                                  TE42                         Tier 12,,,,,,,,3                                         2239,,,,,
-43             Ben Sinnott                                                                                                TE43                         Tier 12,,,,,,,,2                                         2178,,,,,
-44             Dawson Knox                                                                                            TE44                         Tier 12,,,,,,,,1                                         2141,,,,,
-45             Greg Dulcich                                                                                             TE45                         Tier 12,,,,,,,,0                                          2094,,,,,
-46             Noah Gray                                                                                                  TE46                         Tier 13,,,,,,,,2                                         1966,,,,,
-47             Daniel Bellinger                                                                                         TE47                         Tier 14,,,,,,,,1                                         1843,,,,,
-47             Cade Stover                                                                                               TE47                         Tier 14,,,,,,,,0                                          1795,,,,,
-49             Noah Fant                                                                                                  TE49                         Tier 14,,,,,,,,2                                         1795,,,,,
-51             Tommy  Tremble                                                                                         TE51                         Tier 15,,,,,,,,1                                         1726,,,,,
-51             Mike Gesicki                                                                                              TE51                         Tier 15,,,,,,,,1                                         1726,,,,,
-52             Tyler Higbee                                                                                               TE52                         Tier 15,,,,,,,,0                                          1723,,,,,
-53             Erick All                                                                                                      TE53                         Tier 16,,,,,,,,3                                         1663,,,,,
-54             Justin Joly   R,,,TE54                         Tier 16,,,,,61                                        1658,,,,,
-55             Elijah Higgins                                                                                            TE55                         Tier 16,,,,,,,,0                                          1635,,,,,
-56             Luke Schoonmaker                                                                                   TE56                         Tier 16,,,,,,,,2                                         1601,,,,,
-57             Michael Trigg   R,,,,TE57                         Tier 16,,,,0                                          1552,,,,,
-58             Mitchell Evans                                                                                           TE58                         Tier 16,,,,,,,,1                                         1531,,,,,
-,,,,,,,,,,,,,
-,,,,,,,,,,,,,
-,,,,,,,,,,,,,
-,59,Jonnu Smith,,,TE59,,Tier 16,,8,,,1497,
-,60,Zach Ertz,,,TE60,,Tier 16,,4,,,1462,
-,61,Eli Raridon,R,,TE61,,Tier 16,,57,,,1419,
-,62,Brock Wright,,,TE62,,Tier 16,,3,,,1390,
-,64,Oscar Delp,R,,TE64,,Tier 16,,50,,,1371,
-,64,Charlie Kolar,,,TE64,,Tier 16,,2,,,1370,
-,65,Jared Wiley,,,TE65,,Tier 16,,2,,,1347,
-,66,Brevin Jordan,,,TE66,,Tier 16,,5,,,1312,
-,67,Davis Allen,,,TE67,,Tier 16,,7,,,1286,
-,68,Darren Waller,,,TE68,,Tier 16,,10,,,1268,
-,69,Grant Calcaterra,,,TE69,,Tier 17,,2,,,1059,
-,,,,,,,,,,,,,
-,70,Jack Endries   R,,,TE70,,Tier 18,,2,,,880,
-,75,Adam Trautman,,,TE75,,Tier 18,,1,,,867,
-,76,Taysom Hill,,,TE76,,Tier 18,,1,,,866,
-,78,Foster Moreau,,,TE78,,Tier 18,,4,,,866,
-,,,,,,,,,,,,,
+ï»¿Rank,Name,Position,Value
+1,Brock Bowers,TE,8797
+2,Trey McBride,TE,8335
+3,Colston Loveland,TE,6686
+4,Tyler Warren,TE,6322
+5,Harold Fannin,TE,5437
+6,Tucker Kraft,TE,5341
+7,Sam LaPorta,TE,5059
+8,Kyle Pitts,TE,4925
+9,Kenyon Sadiq,TE,4631
+10,Oronde Gadsden,TE,4361
+11,Eli Stowers,TE,3987
+12,Dalton Schultz,TE,3773
+13,Isaiah Likely,TE,3743
+14,George Kittle,TE,3705
+15,Jake Ferguson,TE,3695
+16,Dalton Kincaid,TE,3675
+17,Pat Freiermuth,TE,3660
+18,Michael Mayer,TE,3550
+19,Brenton Strange,TE,3463
+20,Ja'Tavion Sanders,TE,3444
+21,Max Klare,TE,3340
+22,Cole Kmet,TE,3240
+23,T.J. Hockenson,TE,3230
+24,AJ Barner,TE,3226
+25,Mark Andrews,TE,3147
+26,Colby Parkinson,TE,3143
+27,Terrance Ferguson,TE,3121
+28,Chigoziem Okonkwo,TE,3113
+29,Evan Engram,TE,3049
+30,Gunnar Helm,TE,3028
+31,Dallas Goedert,TE,2981
+32,Luke Musgrave,TE,2957
+33,Elijah Arroyo,TE,2911
+34,Darnell Washington,TE,2868
+35,Mason Taylor,TE,2819
+36,David Njoku,TE,2813
+37,Travis Kelce,TE,2788
+38,Ben Sinnott,TE,2782
+39,Juwan Johnson,TE,2772
+40,Cade Otton,TE,2740
+41,Dawson Knox,TE,2699
+42,Greg Dulcich,TE,2618
+43,Noah Gray,TE,2539
+44,Cade Stover,TE,2463
+45,Daniel Bellinger,TE,2463
+46,Noah Fant,TE,2318
+47,Mike Gesicki,TE,2181
+48,Tommy Tremble,TE,2181
+49,Tyler Higbee,TE,2115
+50,Erick All,TE,2052
+51,Justin Joly,TE,1990
+52,Elijah Higgins,TE,1931
+53,Luke Schoonmaker,TE,1873
+54,Michael Trigg,TE,1816
+55,Mitchell Evans,TE,1762
+56,Jonnu Smith,TE,1497
+57,Zach Ertz,TE,1462
+58,Eli Raridon,TE,1419
+59,Brock Wright,TE,1390
+60,Oscar Delp,TE,1371
+61,Charlie Kolar,TE,1370
+62,Jared Wiley,TE,1347
+63,Brevin Jordan,TE,1312
+64,Davis Allen,TE,1286
+65,Darren Waller,TE,1268
+66,Grant Calcaterra,TE,1059
+67,Jack Endries,TE,880
+68,Adam Trautman,TE,867
+69,Foster Moreau,TE,866
+70,Taysom Hill,TE,866

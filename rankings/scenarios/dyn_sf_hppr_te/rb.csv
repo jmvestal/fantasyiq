@@ -1,153 +1,134 @@
-RANK                PLAYER NAME                                                                                                                        POS                                       TIER                                   30DT,,,,,,,,,,,,,,,VALUE,,,
-,1              Bijan Robinson,,,,,,,,,,RB1,Tier 1,0,,,9998,,
-,2              Jahmyr Gibbs,,,,,,,,,,RB2,Tier 1,0,,,9559,,
-,3              Jeremiyah Love,,R,,,,,,,,RB3,Tier 2,0,,,7650,,
-,4,Ashton Jeanty,,,,,,,,,RB4,Tier 2,0,,,7559,,
-,5,De'Von Achane,,,,,,,,,RB5,Tier 2,0,,,6871,,
-,6,Omarion Hampton,,,,,,,,,RB6,Tier 2,0,,,6712,,
-,7,Jonathan Taylor,,,,,,,,,RB7,Tier 3,1,,,6060,,
-,8,James Cook,,,,,,,,,RB8,Tier 3,1,,,6052,,
-,,,,,,,,,,,,,,,,,,
-,9,Quinshon Judkins,,,,,,,,,RB9,Tier 4,3,,,5468,,
-,10,Kenneth Walker III,,,,,,,,,RB10,Tier 4,1,,,5452,,
-,11,TreVeyon Henderson,,,,,,,,,RB11,Tier 4,1,,,5379,,
-,12,Breece Hall,,,,,,,,,RB12,Tier 4,1,,,5370,,
-,,,,,,,,,,,,,,,,,,
-,13,Christian McCaffrey,,,,,,,,,RB13,Tier 5,0,,,5009,,
-,14,Bucky  Irving,,,,,,,,,RB14,Tier 5,0,,,4920,,
-,15,Chase Brown,,,,,,,,,RB15,Tier 5,0,,,4912,,
-,16,Saquon Barkley,,,,,,,,,RB16,Tier 5,0,,,4883,,
-,17,Kyren Williams,,,,,,,,,RB17,Tier 5,0,,,4854,,
-,18,Jadarian Price,R,RB18,,,,,,,,Tier 6,16,,,4714,,
-,19,Cam Skattebo,,RB19,,,,,,,,Tier 7,2,,,4553,,
-,20,Josh Jacobs,,RB20,,,,,,,,Tier 7,1,,,4477,,
-,21,Travis Etienne,,RB21,,,,,,,,Tier 7,3,,,4434,,
-,22,Javonte Williams,,,,,,,,,RB22,Tier 7,2,,,4425,,
-,23,Bhayshul Tuten,,,,,,,,,RB23,Tier 8,1,,,3964,,
-,24,Derrick Henry,,,,,,,,,RB24,Tier 8,1,,,3820,,
-,,,,,,,,,,,,,,,,,,
-,25,Kyle Monangai,,,,,,,,,RB25,Tier 9,1,,,3577,,
-,26,RJ Harvey,,,,,,,,,RB26,Tier 9,2,,,3512,,
-,27,D'Andre Swift,,,,,,,,,RB27,Tier 9,0,,,3484,,
-,28,Chuba Hubbard,,,,,,,,,RB28,Tier 9,2,,,3392,,
-,29,David Montgomery,,,,,,,,,RB29,Tier 9,0,,,3367,,
-,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,
-30             Zach Charbonnet                                                                                      RB30                            Tier 9                             5                                                          3346,,,,,,,,,,,,,,,,,,
-31             Blake Corum                                                                                             RB31                           Tier 10                                    1,,,,,,,,,,,,,,,,,3208,
-,,,,,,,,,,,,,,,,,,
-32             Jaylen Warren                                                                                           RB32                           Tier 10                                    1,,,,,,,,,,,,,,3194,,,,
-33             Rico Dowdle                                                                                              RB33                           Tier 10                                    2,,,,,,,,,,,,,,3163,,,,
-34             Jonathon Brooks                                                                                      RB34                           Tier 11                                    3,,,,,,,,,,,,,,3065,,,,
-35             Jonah Coleman   R,,,,,RB35                           Tier 11                                    6,,,,,,,,,3031,,,,
-36             J.K. Dobbins                                                                                              RB36                           Tier 11                                    1,,,,,,,,,,,,,,3003,,,,
-37             Jacory  Croskey-Merritt                                                                            RB37                           Tier 11                                    3,,,,,,,,,,,,,,2976,,,,
-38             Rhamondre Stevenson                                                                            RB38                           Tier 11                                    2,,,,,,,,,,,,,,2935,,,,
-39             Nicholas Singleton   R,,,,,,,RB39                           Tier 11                                   16,,,,,,,,2910,,,
-40             Woody  Marks                                                                                            RB40                           Tier 11                                    1,,,,,,,,,,,,,,2898,,,,
-41             Tony  Pollard                                                                                              RB41                           Tier 11                                    5,,,,,,,,,,,,,,2877,,,,
-42             Kenneth Gainwell                                                                                     RB42                           Tier 12                                    4,,,,,,,,,,,,,,2758,,,,
-43             Tyler Allgeier                                                                                             RB43                           Tier 12                                   15,,,,,,,,,,,,,,,2756,,,
-44             Rachaad White                                                                                          RB44                           Tier 12                                    3,,,,,,,,,,,,,,2725,,,,
-45             Dylan Sampson                                                                                         RB45                           Tier 12                                    3,,,,,,,,,,,,,,2708,,,,
-46             Braelon Allen                                                                                             RB46                           Tier 12                                    3,,,,,,,,,,,,,,2689,,,,
-47             Ty jae Spears                                                                                              RB47                           Tier 12                                    1,,,,,,,,,,,,,,2675,,,,
-48             Jordan Mason                                                                                           RB48                           Tier 12                                    3,,,,,,,,,,,,,,2656,,,,
-49             Tyrone Tracy                                                                                              RB49                           Tier 12                                   0,,,,,,,,,,,,,,2617,,,,
-50             Chris Rodriguez                                                                                        RB50                           Tier 13                                    9,,,,,,,,,,,,,,2501,,,,
-51             Tank Bigsby                                                                                               RB51                           Tier 13                                    1,,,,,,,,,,,,,,2474,,,,
-52             Emmett Johnson   R,,,,,,RB52                           Tier 13                                   13,,,,,,,,,2461,,,
-53             Mike Washington Jr.   R,,,,,,,,RB53                           Tier 13                                    7,,,,,,2444,,,,
-54             Kaytron Allen   R,,,RB54                           Tier 13                                   23,,,,,,,,,,,,2423,,,
-55             Kaleb Johnson                                                                                          RB55                           Tier 13                                    1,,,,,,,,,,,,,,2412,,,,
-56             Ollie Gordon                                                                                              RB56                           Tier 13                                    5,,,,,,,,,,,,,,2411,,,,
-57             Brian Robinson                                                                                         RB57                           Tier 13                                    4,,,,,,,,,,,,,,2381,,,,
-58             Keaton Mitchell                                                                                         RB58                           Tier 13                                    5,,,,,,,,,,,,,,2380,,,,
-,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,
-,59             Trey  Benson,,,,,,,,,,RB59,Tier 14,15,,,2304,,
-,60             Isiah Pacheco,,,,,,,,,,RB60,Tier 14,3,,,2286,,
-,61             Aaron Jones,,,,,,,,,,RB61,Tier 14,8,,,2273,,
-,62             Jaylen Wright,,,,,,,,,,RB62,Tier 14,4,,,2231,,
-,63             Kimani Vidal,,,,,,,,,,RB63,Tier 14,11,,,2228,,
-,64             Sean Tucker,,,,,,,,,,RB64,Tier 14,10,,,2197,,
-,,,,,,,,,,,,,,,,,,
-,65             Trevor Etienne,,,,,,,,,,RB65,Tier 15,6,,,2138,,
-,66             Devin Neal,,,,,,,,,,RB66,Tier 15,4,,,2135,,
-,67             Jordan James,,,,,,,,,,RB67,Tier 15,6,,,2116,,
-,68             LeQuint Allen,,,,,,,,,,RB68,Tier 15,1,,,2096,,
-,69             Alvin Kamara,,,,,,,,,,RB69,Tier 15,1,,,2087,,
-,70             Emanuel Wilson,,,,,,,,,,RB70,Tier 15,7,,,2070,,
-,71             DJ Giddens,,,,,,,,,,RB71,Tier 15,3,,,2028,,
-,72             Ray  Davis,,,,,,,,,,RB72,Tier 15,3,,,1996,,
-,73             Jaydon Blue,,,,,,,,,,RB73,Tier 15,1,,,1966,,
-,74             Kendre Miller,,,,,,,,,,RB74,Tier 15,0,,,1924,,
-,75             James Conner,,,,,,,,,,RB75,Tier 15,11,,,1899,,
-,76             Najee Harris,,,,,,,,,,RB76,Tier 15,2,,,1876,,
-,77             Brashard Smith,,,,,,,,,,RB77,Tier 15,11,,,1841,,
-,78             MarShawn Lloyd,,,,,,,,,,RB78,Tier 15,1,,,1834,,
-,79             Isaiah Davis,,,,,,,,,,RB79,Tier 15,3,,,1785,,
-,,,,,,,,,,,,,,,,,,
-,80             Jarquez Hunter,,,,,,,,,,RB80,Tier 16,0,,,1700,,
-,81             Will Shipley,,,,,,,,,,RB81,Tier 16,2,,,1673,,
-,82             Tahj Brooks,,,,,,,,,,RB82,Tier 16,0,,,1652,,
-,,,,,,,,,,,,,,,,,,
-,83             Demond Claiborne,,,,,R,,,,,RB83,Tier 17,22,,,1585,,
-,84             Audric Estime,,,,,,,,,,RB84,Tier 17,0,,,1568,,
-,85             Roschon Johnson,,,,,,,,,,RB85,Tier 17,1,,,1556,,
-,86             Isaac Guerendo,,,,,,,,,,RB86,Tier 17,5,,,1538,,
-,87             Jerome Ford,,,,,,,,,,RB87,Tier 17,2,,,1534,,
-,88             Jaleel McLaughlin,,,,,,,,,,RB88,Tier 17,0,,,1491,,
-,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,
-89             Damien Martinez,,,,,,,,,RB89,,,Tier 17,11,,,1469,,
-90             Raheim Sanders,,,,,,,,,RB90,,,Tier 18,3,,,1390,,
-91             Justice Hill,,,,,,,,,RB91,,,Tier 18,3,,,1358,,
-92             Devin Singletary,,,,,,,,,RB92,,,Tier 18,3,,,1349,,
-93             George Holani,,,,,,,,,RB93,,,Tier 18,0,,,1335,,
-94             Malik Davis,,,,,,,,,RB94,,,Tier 18,3,,,1309,,
-95             Ty  Johnson,,,,,,,,,RB95,,,Tier 18,1,,,1296,,
-,,,,,,,,,,,,,,,,,,
-96             Phil Mafah,,,,,,,,,RB96,,,Tier 19,1,,,1231,,
-97             Bam Knight,,,,,,,,,RB97,,,Tier 19,7,,,1229,,
-98             Joe Mixon,,,,,,,,,RB98,,,Tier 19,3,,,1198,,
-99             Chris Brooks,,,,,,,,,RB99,,,Tier 19,7,,,1173,,
-100            Emari Demercado,,,,,,,,,RB100,,,Tier 19,1,,,1168,,
-101            Rasheen Ali,,,,,,,,,RB101,,,Tier 19,3,,,1168,,
-102            Donovan Edwards,,,,,,,,,RB102,,,Tier 19,5,,,1160,,
-103            Kaelon Black   R,,,,,,,,,RB103,,,Tier 19,101,,,1145,,
-104            Tyler Goodson,,,,,,,,,RB104,,,Tier 19,3,,,1136,,
-,,,,,,,,,,,,,,,,,,
-105            Kalel Mullings,,,,,,,,,RB105,,,Tier 20,3,,,1074,,
-106            Michael Carter,,,,,,,,,RB106,,,Tier 20,14,,,1062,,
-107            Israel Abanikanda,,,,,,,,,RB107,,,Tier 20,12,,,1014,,
-108            Kenny  McIntosh,,,,,,,,,RB108,,,Tier 20,20,,,1004,,
-109            Dameon Pierce,,,,,,,,,RB109,,,Tier 20,6,,,1000,,
-110            Le'Veon Moss   R,,,,,,,,,RB110,,,Tier 20,0,,,997,,
-111            Sione Vaki,,,,,,,,,RB111,,,Tier 20,3,,,989,,
-112            Tyler Badie,,,,,,,,,RB112,,,Tier 20,3,,,978,,
-113            Kareem Hunt,,,,,,,,,RB113,,,Tier 20,9,,,977,,
-114            Hassan Haskins,,,,,,,,,RB114,,,Tier 20,3,,,933,,
-115            Deuce Vaughn,,,,,,,,,RB115,,,Tier 20,3,,,921,,
-116            Jawhar Jordan,,,,,,,,,RB116,,,Tier 20,2,,,906,,
-117            Frank Gore Jr.,,,,,,,,,RB117,,,Tier 20,4,,,880,,
-,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,,,
-,118            Eli Heidenreich,,R,,,,,,,RB118,,Tier 20,88,,,861,,
-,119            Ty  Chandler,,,,,,,,,RB119,,Tier 20,3,,,853,,
-,120            Zavier Scott,,,,,,,,,RB120,,Tier 20,9,,,840,,
-,121            Alexander Mattison,,,,,,,,,RB121,,Tier 20,10,,,814,,
-,122            Adam Randall   R,,,,,,,,,RB122,,Tier 20,83,,,803,,
-,123            Kendall Milton,,,,,,,,,RB123,,Tier 20,4,,,774,,
-,124            Seth McGowan   R,,,,,,,,,RB124,,Tier 20,8,,,774,,
-,125            Jam Miller   R,,,,,,,,,RB125,,Tier 20,13,,,762,,
-,126            J'Mari Taylor   R,,,,,,,,,RB126,,Tier 20,13,,,713,,
-,127            Cam Akers,,,,,,,,,RB127,,Tier 20,10,,,695,,
-,128            Elijah Mitchell,,,,,,,,,RB128,,Tier 21,13,,,605,,
-,129            Samaje Perine,,,,,,,,,RB129,,Tier 21,6,,,578,,
-,130            Khalil Herbert,,,,,,,,,RB130,,Tier 21,0,,,564,,
-,131            Trayveon Williams,,,,,,,,,RB131,,Tier 21,7,,,562,,
-,132            Julius Chestnut,,,,,,,,,RB132,,Tier 21,2,,,532,,
-,133            AJ Dillon,,,,,,,,,RB133,,Tier 21,1,,,515,,
-,,,,,,,,,,,,,,,,,,
+ï»¿Rank,Name,Position,Value
+1,Bijan Robinson,RB,9998
+2,Jahmyr Gibbs,RB,9559
+3,Jeremiyah Love,RB,7650
+4,Ashton Jeanty,RB,7559
+5,De'Von Achane,RB,6871
+6,Omarion Hampton,RB,6712
+7,Jonathan Taylor,RB,6060
+8,James Cook,RB,6052
+9,Quinshon Judkins,RB,5468
+10,Kenneth Walker III,RB,5452
+11,TreVeyon Henderson,RB,5379
+12,Breece Hall,RB,5370
+13,Christian McCaffrey,RB,5009
+14,Bucky Irving,RB,4920
+15,Chase Brown,RB,4912
+16,Saquon Barkley,RB,4883
+17,Kyren Williams,RB,4854
+18,Jadarian Price,RB,4714
+19,Cam Skattebo,RB,4553
+20,Josh Jacobs,RB,4477
+21,Travis Etienne,RB,4434
+22,Javonte Williams,RB,4425
+23,Zach Charbonnet,RB,4134
+24,Bhayshul Tuten,RB,3964
+25,Derrick Henry,RB,3820
+26,Kyle Monangai,RB,3577
+27,RJ Harvey,RB,3512
+28,D'Andre Swift,RB,3484
+29,Chuba Hubbard,RB,3392
+30,David Montgomery,RB,3367
+31,Blake Corum,RB,3208
+32,Jaylen Warren,RB,3194
+33,Rico Dowdle,RB,3163
+34,Jonathon Brooks,RB,3065
+35,Jonah Coleman,RB,3031
+36,J.K. Dobbins,RB,3003
+37,Jacory Croskey-Merritt,RB,2976
+38,Rhamondre Stevenson,RB,2935
+39,Nicholas Singleton,RB,2910
+40,Woody Marks,RB,2898
+41,Tony Pollard,RB,2877
+42,Kenneth Gainwell,RB,2758
+43,Tyler Allgeier,RB,2756
+44,Rachaad White,RB,2725
+45,Dylan Sampson,RB,2708
+46,Braelon Allen,RB,2689
+47,Ty jae Spears,RB,2675
+48,Jordan Mason,RB,2656
+49,Tyrone Tracy,RB,2617
+50,Chris Rodriguez,RB,2501
+51,Tank Bigsby,RB,2474
+52,Emmett Johnson,RB,2461
+53,Mike Washington Jr.,RB,2444
+54,Kaytron Allen,RB,2423
+55,Kaleb Johnson,RB,2412
+56,Ollie Gordon,RB,2411
+57,Brian Robinson,RB,2381
+58,Keaton Mitchell,RB,2380
+59,Trey Benson,RB,2304
+60,Isiah Pacheco,RB,2286
+61,Aaron Jones,RB,2273
+62,Jaylen Wright,RB,2231
+63,Kimani Vidal,RB,2228
+64,Sean Tucker,RB,2197
+65,Trevor Etienne,RB,2138
+66,Devin Neal,RB,2135
+67,Jordan James,RB,2116
+68,LeQuint Allen,RB,2096
+69,Alvin Kamara,RB,2087
+70,Emanuel Wilson,RB,2070
+71,DJ Giddens,RB,2028
+72,Ray Davis,RB,1996
+73,Jaydon Blue,RB,1966
+74,Kendre Miller,RB,1924
+75,James Conner,RB,1899
+76,Najee Harris,RB,1876
+77,Brashard Smith,RB,1841
+78,MarShawn Lloyd,RB,1834
+79,Isaiah Davis,RB,1785
+80,Jarquez Hunter,RB,1700
+81,Will Shipley,RB,1673
+82,Tahj Brooks,RB,1652
+83,Demond Claiborne,RB,1585
+84,Audric Estime,RB,1568
+85,Roschon Johnson,RB,1556
+86,Isaac Guerendo,RB,1538
+87,Jerome Ford,RB,1534
+88,Jaleel McLaughlin,RB,1491
+89,Damien Martinez,RB,1469
+90,Raheim Sanders,RB,1390
+91,Justice Hill,RB,1358
+92,Devin Singletary,RB,1349
+93,George Holani,RB,1335
+94,Malik Davis,RB,1309
+95,Ty Johnson,RB,1296
+96,Phil Mafah,RB,1231
+97,Bam Knight,RB,1229
+98,Joe Mixon,RB,1198
+99,Chris Brooks,RB,1173
+100,Emari Demercado,RB,1168
+101,Rasheen Ali,RB,1168
+102,Donovan Edwards,RB,1160
+103,Kaelon Black,RB,1145
+104,Tyler Goodson,RB,1136
+105,Kalel Mullings,RB,1074
+106,Michael Carter,RB,1062
+107,Israel Abanikanda,RB,1014
+108,Kenny McIntosh,RB,1004
+109,Dameon Pierce,RB,1000
+110,Le'Veon Moss,RB,997
+111,Sione Vaki,RB,989
+112,Tyler Badie,RB,978
+113,Kareem Hunt,RB,977
+114,Hassan Haskins,RB,933
+115,Deuce Vaughn,RB,921
+116,Jawhar Jordan,RB,906
+117,Frank Gore Jr.,RB,880
+118,Eli Heidenreich,RB,861
+119,Ty Chandler,RB,853
+120,Zavier Scott,RB,840
+121,Alexander Mattison,RB,814
+122,Adam Randall,RB,803
+123,Kendall Milton,RB,774
+124,Seth McGowan,RB,774
+125,Jam Miller,RB,762
+126,J'Mari Taylor,RB,713
+127,Cam Akers,RB,695
+128,Elijah Mitchell,RB,605
+129,Samaje Perine,RB,578
+130,Khalil Herbert,RB,564
+131,Trayveon Williams,RB,562
+132,Julius Chestnut,RB,532
+133,AJ Dillon,RB,515
