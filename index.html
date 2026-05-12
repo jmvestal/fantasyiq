@@ -6261,6 +6261,18 @@ function buildConsensus(p) {
     rawRv = Math.min(rvBase * (1 + CAP), Math.max(rvBase * (1 - CAP), rawRv));
   }
 
+  // SAFETY CAP: Players not in DYNASTY_DB have no market-calibrated anchor.
+  // Without this, a backup QB included in ANY external source at a high rank
+  // will inflate uncapped to 10,000. Cap consensus at 4× the rank-based estimate
+  // (floor 2500/1500) so depth players never hit elite tier from stray source data.
+  if (!vdb_d && !vdb_r) {
+    const srank = p.search_rank || 999;
+    const baseDv = Math.max(150, Math.min(8500, 9000 - srank * 30));
+    const baseRv = Math.max(100, Math.min(8500, 8600 - srank * 28));
+    rawDv = Math.min(rawDv, Math.max(baseDv * 4, 2500));
+    rawRv = Math.min(rawRv, Math.max(baseRv * 4, 1500));
+  }
+
   return {
     dv: Math.round(rawDv),
     rv: Math.round(rawRv),
@@ -7306,7 +7318,7 @@ function forceRefreshCustomRankings() {
   localStorage.removeItem(CUSTOM_TS_KEY);
   // Clear any loaded custom source keys
   for (const key of Object.keys(S.sourceValues||{})) {
-    if (!['tiq','fc','ktc','ffc','dlf','dp','fp_rd','fp_dyn'].includes(key)) {
+    if (!['tiq','fc','ktc','ffc','dlf'].includes(key)) {
       delete S.sourceValues[key];
       delete S.sourceStatus[key];
       delete S.sourceMeta?.[key];
@@ -7322,11 +7334,16 @@ function forceRefreshCustomRankings() {
 // DYNASTYPROCESS AUTO-FETCH — weekly FantasyPros ECR data
 // from DynastyProcess GitHub (public, no login required)
 // ═══════════════════════════════════════════════════════════
-const DP_CACHE_KEY = 'tradeiq_dp_values';
-const DP_TS_KEY    = 'tradeiq_dp_ts';
+const DP_CACHE_KEY = 'tradeiq_dp_values_v2';  // bumped to evict old bad data
+const DP_TS_KEY    = 'tradeiq_dp_ts_v2';
 const DP_TTL       = 23 * 60 * 60 * 1000;
 
 async function fetchDynastyProcessValues() {
+  // DISABLED: DynastyProcess ECR includes backup QBs/depth players with inflated ranks
+  // that bypass the DYNASTY_DB cap, pushing unknowns to 10,000. Re-enable only after
+  // adding per-source positional filtering.
+  S.sourceStatus['dp'] = 'none';
+  return;
   const ts = parseInt(localStorage.getItem(DP_TS_KEY) || '0');
   if (Date.now() - ts < DP_TTL) {
     try {
@@ -7395,11 +7412,17 @@ async function fetchDynastyProcessValues() {
 // Redraft: current-season PPR ECR → rv
 // Dynasty: dynasty ECR (HALF scoring) → dv
 // ═══════════════════════════════════════════════════════════
-const FP_CACHE_KEY = 'tradeiq_fp_values_v2';
-const FP_TS_KEY    = 'tradeiq_fp_ts_v2';
+const FP_CACHE_KEY = 'tradeiq_fp_values_v3';  // bumped to evict old bad data
+const FP_TS_KEY    = 'tradeiq_fp_ts_v3';
 const FP_TTL       = 23 * 60 * 60 * 1000;
 
 async function fetchFantasyProsValues() {
+  // DISABLED: FantasyPros ECR API includes all active players including backup QBs/depth.
+  // These bypass the DYNASTY_DB cap in buildConsensus and inflate unknowns to 10,000.
+  // Re-enable only after adding a top-N filter (e.g. only import top 200 dynasty players).
+  S.sourceStatus['fp_rd'] = 'none';
+  S.sourceStatus['fp_dyn'] = 'none';
+  return;
   const ts = parseInt(localStorage.getItem(FP_TS_KEY) || '0');
   if (Date.now() - ts < FP_TTL) {
     try {
