@@ -6224,10 +6224,18 @@ function renderSourcesUI() {
     const file   = fc;
     const typeLabel = src.type === 'auto' ? '⚡ Auto' : src.type === 'builtin' ? '✓ Built-in' : src.type === 'bookmarklet' ? '🔖 Bookmarklet' : '📂 CSV';
     let metaText = '';
-    if (status === 'ok') metaText = count + file;
+    if (status === 'ok') {
+      const fileList = (meta?.files || meta?.file || '').split(',').map(f => f.trim()).filter(Boolean);
+      if (fileList.length > 1) {
+        const names = fileList.map(f => `<div style="padding-left:10px;opacity:.75">· ${f}</div>`).join('');
+        metaText = `${count} · ${fileList.length} files loaded:<div style="margin-top:3px;font-size:11px;line-height:1.7">${names}</div>`;
+      } else {
+        metaText = count + file;
+      }
+    }
     else if (status === 'loading') metaText = 'Loading…';
     else if (status === 'err') metaText = 'Failed to load';
-    else if (src.type === 'csv') metaText = 'Not loaded — import a CSV below';
+    else if (src.type === 'csv') metaText = 'Not loaded — drop a CSV file below';
     else if (src.type === 'builtin') metaText = 'Always active';
     else if (src.type === 'bookmarklet') metaText = status === 'none' ? 'Not loaded — drag the bookmarklet to Chrome, then click it on their site' : '';
     let action = '';
