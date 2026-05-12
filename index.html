@@ -3949,6 +3949,10 @@ function calcValue(p, _over) {
     if (!se && mode === 'dynasty' && ['QB','RB','WR','TE'].includes(pos)) {
       se = S.sourceValues?.['scen_dyn_sf_hppr_note']?.[pid];
     }
+    // IDP: always use the dedicated IDP CSV (dyn_idp/fantasypros.csv) — never external data
+    if (!se && IDP_POS.has(pos)) {
+      se = S.sourceValues?.['scen_dyn_idp']?.[pid];
+    }
     if (se) {
       const raw = mode === 'dynasty' ? (se.dv || 0) : (se.rv || 0);
       if (raw > 0) {
@@ -5537,6 +5541,10 @@ async function fetchScenario(sk, silent = false) {
 function prefetchCurrentScenario() {
   const sk = scenarioKey();
   fetchScenario(sk, /* silent= */ true);
+  // Always prefetch the SF HPPR position files — used as dynasty fallback for all skill positions
+  if (sk !== 'scen_dyn_sf_hppr_note') fetchScenario('scen_dyn_sf_hppr_note', true);
+  // Always prefetch IDP rankings for dynasty
+  fetchScenario('scen_dyn_idp', true);
 }
 
 // Clear all auto-fetched scenario caches (but not user-uploaded ones)
@@ -6947,7 +6955,7 @@ function restoreCSVSources() {
 // from the very first render — no window where external players can slip through.
 function restoreScenarioCaches() {
   // Always restore the current scenario + the SF HPPR fallback source
-  const keys = new Set([scenarioKey(), 'scen_dyn_sf_hppr_note']);
+  const keys = new Set([scenarioKey(), 'scen_dyn_sf_hppr_note', 'scen_dyn_idp']);
   keys.forEach(sk => {
     if (S.sourceValues[sk] && Object.keys(S.sourceValues[sk]).length > 20) return; // already loaded
     try {
