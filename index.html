@@ -2682,7 +2682,7 @@ const DYNASTY_DB = {
   'Nico Collins':           {val:4400},
   'George Pickens':         {val:4700,trend:'up'},
   'Zay Flowers':            {val:5500,trend:'up'},
-  'Luther Burden III':      {val:5300,trend:'up'},
+  'Luther Burden III':      {val:3800,trend:'up'},
   'Tee Higgins':            {val:3300},
   'Ladd McConkey':          {val:3800,trend:'up'},
   'Travis Hunter':          {val:3325,trend:'up'},
@@ -3222,7 +3222,7 @@ const REDRAFT_DB = {
   'Nico Collins':           {val:5200},
   'George Pickens':         {val:5140},
   'Zay Flowers':            {val:4342},
-  'Luther Burden III':      {val:3145},
+  'Luther Burden III':      {val:2200},
   'Tee Higgins':            {val:4123},
   'Ladd McConkey':          {val:2888},
   'Travis Hunter':          {val:800},
@@ -3582,6 +3582,8 @@ const RETIRED_PLAYERS = new Set([
   'Eric Decker','Brandon Marshall','Demaryius Thomas','Andre Johnson',
   'Dez Bryant','Jordy Nelson','A.J. Green','Percy Harvin',
   'Victor Cruz','Anquan Boldin','Vincent Jackson','Reggie Wayne',
+  'Julian Edelman','Antonio Brown','Wes Welker','Sammy Watkins',
+  'Sterling Shepard','Corey Davis','T.J. Yeldon','Isaiah Ford',
   // TEs
   'Rob Gronkowski','Jason Witten','Greg Olsen','Heath Miller',
   'Antonio Gates','Tony Gonzalez','Jimmy Graham',
@@ -6598,7 +6600,7 @@ function restoreCSVSources() {
 // RANKINGS.JSON — CDN-hosted consensus data updated daily by
 // GitHub Action. Loads all 4 sources in one fast request.
 // ═══════════════════════════════════════════════════════════
-const _RNK_CACHE_KEY = 'tradeiq_rankings_v1';
+const _RNK_CACHE_KEY = 'tradeiq_rankings_v2'; // bumped: FC keys now re-keyed via normName
 const _RNK_TTL       = 23 * 60 * 60 * 1000; // 23h
 
 async function fetchRankingsJson() {
@@ -6631,13 +6633,26 @@ async function fetchRankingsJson() {
 
 function _applyRankingsData(data) {
   // Each source object: { normName: { dv, dv_sf, rv, trend, name, pos, team } }
-  const sources = { fc: 'FantasyCalc', ktc: 'KTC', ffc: 'FF Calculator', dp: 'DynastyProcess' };
+  // Note: dp (DynastyProcess) is disabled — backup QBs inflate uncapped.
+  const sources = { fc: 'FantasyCalc', ktc: 'KTC', ffc: 'FF Calculator' };
   Object.entries(sources).forEach(([key, label]) => {
     const src = data[key];
     if (!src || !Object.keys(src).length) return;
-    S.sourceValues[key] = src;
+    // rankings.json stores keys as all-lowercase-no-spaces (e.g. "bijanrobinson").
+    // buildConsensus looks up via normName(full_name) which keeps spaces (e.g. "bijan robinson").
+    // Re-key through normName(entry.name) so lookups in buildConsensus match correctly.
+    const normalized = {};
+    Object.values(src).forEach(v => {
+      const nameStr = v.name;
+      if (nameStr) {
+        const k = normName(nameStr);
+        if (k) normalized[k] = v;
+      }
+    });
+    if (!Object.keys(normalized).length) return;
+    S.sourceValues[key] = normalized;
     S.sourceStatus[key] = 'ok';
-    S.sourceMeta[key]   = { count: Object.keys(src).length, loaded: Date.now(), file: label + ' (CDN)' };
+    S.sourceMeta[key]   = { count: Object.keys(normalized).length, loaded: Date.now(), file: label + ' (CDN)' };
   });
 
   // Also populate FC_VALUES so applyValueDB can use Sleeper IDs for player matching
@@ -7764,7 +7779,7 @@ const FALLBACK_PLAYERS = [
   {id:'fb-84', full_name:'George Pickens',        position:'WR', team:'DAL', age:25, dynasty_val:5700, redraft_val:5140, trend:'up'},
   {id:'fb-79', full_name:'Nico Collins',          position:'WR', team:'HOU', age:27, dynasty_val:5700, redraft_val:5757, trend:'flat'},
   {id:'fb-92', full_name:'Zay Flowers',           position:'WR', team:'BAL', age:25, dynasty_val:5500, redraft_val:4342, trend:'up'},
-  {id:'fb-90', full_name:'Luther Burden III',     position:'WR', team:'CHI', age:23, dynasty_val:5300, redraft_val:3145, trend:'up'},
+  {id:'fb-90', full_name:'Luther Burden III',     position:'WR', team:'CHI', age:23, dynasty_val:3800, redraft_val:2200, trend:'up'},
   {id:'fb-96', full_name:'Tee Higgins',           position:'WR', team:'CIN', age:27, dynasty_val:5200, redraft_val:4123, trend:'flat'},
   {id:'fb-80', full_name:'Ladd McConkey',         position:'WR', team:'LAC', age:25, dynasty_val:5100, redraft_val:2888, trend:'up'},
   {id:'fb-91', full_name:'Travis Hunter',         position:'WR', team:'JAX', age:22, dynasty_val:5000, redraft_val:800,  trend:'up'},
