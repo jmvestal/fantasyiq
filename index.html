@@ -1469,6 +1469,8 @@
           <div class="sec-ttl">Player HQ</div>
           <div class="sec-sub" id="valTableSub">Adjusted for your league settings</div>
         </div>
+        <!-- League selector — visible when a league is connected; includes No League option -->
+        <select id="valTabLgSel" class="trade-partner-sel" style="display:none;font-size:12px;padding:6px 10px" onchange="switchLeagueGlobal(this.value)"></select>
       </div>
 
       <!-- Sign-in nudge — hidden once logged in -->
@@ -10232,15 +10234,15 @@ function _refreshLeagueSels() {
   const optsWithNone = noLeagueOpt + leagueOpts;
   const optsOnly     = leagueOpts; // for selectors that don't need "No League"
 
-  // Sidebar selector — show when 2+ leagues (league-switcher role only)
+  // Sidebar selector — show when any league is connected; includes "No League"
   const sbSec = document.getElementById('sbLgSection');
   const sbDiv = document.getElementById('sbLgDiv');
   const sbSel = document.getElementById('sbLgSel');
   if (sbSec && sbSel) {
-    const show = leagues.length > 1;
+    const show = leagues.length >= 1;
     sbSec.style.display = show ? '' : 'none';
     if (sbDiv) sbDiv.style.display = show ? '' : 'none';
-    if (show) sbSel.innerHTML = optsOnly;
+    if (show) sbSel.innerHTML = optsWithNone;
   }
 
   // Trade HQ My League mode selector
@@ -10260,6 +10262,13 @@ function _refreshLeagueSels() {
       if (leagues.length > 1) el.innerHTML = optsOnly;
     }
   });
+
+  // Player HQ league selector — show when any league connected; includes No League
+  const valTabLgSel = document.getElementById('valTabLgSel');
+  if (valTabLgSel) {
+    valTabLgSel.style.display = leagues.length >= 1 ? '' : 'none';
+    if (leagues.length >= 1) valTabLgSel.innerHTML = optsWithNone;
+  }
 
   // Mobile settings sheet — show when any league is connected (even 1),
   // includes "No League" so users can detach and adjust settings manually
