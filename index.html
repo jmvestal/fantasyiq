@@ -2079,50 +2079,74 @@
       <div id="draftWizardPane">
 
         <!-- Setup bar -->
-        <div class="draft-import-bar" id="wizSetupBar">
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-              <div style="font-size:13px;font-weight:700">🧙 Live Draft HQ Assistant</div>
-              <span class="info-chip" id="wizModeChip" style="font-size:10px"></span>
+        <div class="dsim-setup-bar" id="wizSetupBar">
+          <div class="dsim-setup-top">
+            <div>
+              <div class="dsim-setup-title" style="display:flex;align-items:center;gap:7px">
+                🧙 Draft HQ Assistant
+                <span class="info-chip" id="wizModeChip" style="font-size:10px"></span>
+              </div>
+              <div class="dsim-setup-sub">Rankings update live — mark picks as they happen and get best-value recommendations each round</div>
             </div>
-            <div style="font-size:11px;color:var(--text2)">Rankings auto-update when you change league settings (Dynasty/Redraft, SF, scoring). Mark picks as they happen — Fantasy HQ highlights best value each round.</div>
+            <div class="dsim-setup-btns">
+              <button class="btn btn-p btn-sm" onclick="resetWizard()">↺ Reset</button>
+            </div>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0">
-            <select id="wizDraftType" class="trade-partner-sel" style="max-width:130px" onchange="initWizard()">
-              <option value="redraft">Full Redraft</option>
-              <option value="rookie">Rookie Draft</option>
-            </select>
-            <select id="wizTotalTeams" class="trade-partner-sel" style="max-width:110px" onchange="initWizard()">
-              <option value="8">8 Teams</option>
-              <option value="10">10 Teams</option>
-              <option value="12" selected>12 Teams</option>
-              <option value="14">14 Teams</option>
-              <option value="16">16 Teams</option>
-            </select>
-            <select id="wizMyPick" class="trade-partner-sel" style="max-width:110px" onchange="initWizard()">
-            </select>
-            <select id="wizRounds" class="trade-partner-sel" style="max-width:110px" onchange="initWizard()">
-              <option value="5">5 Rounds</option>
-              <option value="10">10 Rounds</option>
-              <option value="15">15 Rounds</option>
-              <option value="20" selected>20 Rounds</option>
-              <option value="25">25 Rounds</option>
-            </select>
-            <select id="wizQB" class="trade-partner-sel" style="max-width:100px" onchange="initWizard()">
-              <option value="1qb" selected>1 QB</option>
-              <option value="sf">Superflex</option>
-              <option value="2qb">2 QB</option>
-            </select>
-            <select id="wizScoring" class="trade-partner-sel" style="max-width:100px" onchange="initWizard()">
-              <option value="ppr" selected>PPR</option>
-              <option value="half">Half PPR</option>
-              <option value="std">Non-PPR</option>
-            </select>
-            <select id="wizTE" class="trade-partner-sel" style="max-width:110px" onchange="initWizard()">
-              <option value="off" selected>Std TE</option>
-              <option value="on">TE Premium</option>
-            </select>
-            <button class="btn btn-p btn-sm" onclick="resetWizard()">↺ Reset</button>
+          <div class="dsim-controls">
+            <div class="dsim-ctrl-grp">
+              <div class="dsim-ctrl-lbl">Type</div>
+              <select id="wizDraftType" class="dsim-sel" onchange="initWizard()">
+                <option value="redraft">Full Redraft</option>
+                <option value="rookie">Rookie Draft</option>
+              </select>
+            </div>
+            <div class="dsim-ctrl-grp">
+              <div class="dsim-ctrl-lbl">Teams</div>
+              <select id="wizTotalTeams" class="dsim-sel" onchange="initWizard()">
+                <option value="8">8 Teams</option>
+                <option value="10">10 Teams</option>
+                <option value="12" selected>12 Teams</option>
+                <option value="14">14 Teams</option>
+                <option value="16">16 Teams</option>
+              </select>
+            </div>
+            <div class="dsim-ctrl-grp">
+              <div class="dsim-ctrl-lbl">My Pick</div>
+              <select id="wizMyPick" class="dsim-sel" onchange="initWizard()"></select>
+            </div>
+            <div class="dsim-ctrl-grp">
+              <div class="dsim-ctrl-lbl">Rounds</div>
+              <select id="wizRounds" class="dsim-sel" onchange="initWizard()">
+                <option value="5">5 Rounds</option>
+                <option value="10">10 Rounds</option>
+                <option value="15">15 Rounds</option>
+                <option value="20" selected>20 Rounds</option>
+                <option value="25">25 Rounds</option>
+              </select>
+            </div>
+            <div class="dsim-ctrl-grp">
+              <div class="dsim-ctrl-lbl">Format</div>
+              <select id="wizQB" class="dsim-sel" onchange="initWizard()">
+                <option value="1qb" selected>1 QB</option>
+                <option value="sf">Superflex</option>
+                <option value="2qb">2 QB</option>
+              </select>
+            </div>
+            <div class="dsim-ctrl-grp">
+              <div class="dsim-ctrl-lbl">Scoring</div>
+              <select id="wizScoring" class="dsim-sel" onchange="initWizard()">
+                <option value="ppr" selected>PPR</option>
+                <option value="half">Half PPR</option>
+                <option value="std">Non-PPR</option>
+              </select>
+            </div>
+            <div class="dsim-ctrl-grp">
+              <div class="dsim-ctrl-lbl">TE</div>
+              <select id="wizTE" class="dsim-sel" onchange="initWizard()">
+                <option value="off" selected>Std TE</option>
+                <option value="on">TE Premium</option>
+              </select>
+            </div>
           </div>
         </div>
 
