@@ -5063,6 +5063,10 @@ function renderValuesTable() {
     document.getElementById('valTableSub').textContent = `${rows.length} players · ${modeStr} · 12-Team · 1-QB · PPR — sign in to customize`;
   }
 
+  // Update value column header to match current mode
+  const valTh = document.querySelector('#valTable thead th:nth-child(3)');
+  if (valTh) valTh.textContent = isDynasty ? 'Dynasty' : 'Redraft';
+
   // sort indicators
   document.querySelectorAll('#valTable th').forEach(th => { th.classList.remove('sort-asc','sort-desc'); });
   // Headshots: inline img handles most cases; call fallback in case DOM settle is needed
