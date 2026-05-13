@@ -1804,9 +1804,13 @@
           <div class="sec-sub">Add players to each side — values auto-adjust to your league settings</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <span class="info-chip" id="modeChip">🏆 Dynasty · 12-Team · 1-QB · PPR</span>
-          <button class="btn btn-sm btn-s" onclick="clearTrade()">Clear Trade</button>
-          <button class="btn btn-sm btn-s" onclick="shareTradeUrl()">🔗 Share</button>
+          <select id="tradeModeSelect" class="dsim-sel" style="font-size:11px;padding:5px 7px;font-weight:700;flex-shrink:0" onchange="setSetting('mode',this.value)">
+            <option value="dynasty">Dynasty</option>
+            <option value="redraft">Redraft</option>
+          </select>
+          <span class="info-chip" id="modeChip" style="display:none"></span>
+          <button class="btn btn-sm btn-s" onclick="clearTrade()">Clear</button>
+          <button class="btn btn-sm btn-s" onclick="shareTradeUrl()">Share</button>
         </div>
       </div>
 
@@ -5372,6 +5376,9 @@ function addSugPairToTrade(id1, id2) {
 // RENDER TRADE
 // ═══════════════════════════════════════════════════════════
 function renderTrade() {
+  const ts = document.getElementById('tradeModeSelect');
+  if (ts) ts.value = S.settings.mode || 'dynasty';
+
   const vA = adjustedTotal(S.tradeA), vB = adjustedTotal(S.tradeB);
   const { grade, cls, verdict, pct } = calcGrade(vA, vB);
 
@@ -6551,10 +6558,12 @@ function setSetting(key, val) {
   document.querySelectorAll(`[data-s="${key}"]`).forEach(btn => {
     btn.classList.toggle('on', String(btn.dataset.v) === String(val));
   });
-  // Keep the PlayerHQ mode select in sync
+  // Keep mode selects in sync across tabs
   if (key === 'mode') {
     const ms = document.getElementById('valModeSelect');
     if (ms) ms.value = val;
+    const ts = document.getElementById('tradeModeSelect');
+    if (ts) ts.value = val;
   }
 
   updateModeChip();
