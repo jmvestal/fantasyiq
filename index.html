@@ -1341,7 +1341,7 @@
                   <div class="lp-trade-side">
                     <div class="lp-trade-side-lbl">Side A <span class="lp-trade-winner-badge">✓ Winner</span></div>
                     <div class="lp-trade-player">
-                      <div style="width:32px;height:32px;border-radius:50%;background:rgba(79,134,245,.18);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">🏈</div>
+                      <div class="rank-hs-wrap"><div class="rank-hs-ph pb-WR">J</div><img class="rank-hs-img" data-sid="4046" alt=""></div>
                       <div><div class="lp-trade-player-name">Ja'Marr Chase</div><div class="lp-trade-player-meta">WR · CIN</div></div>
                       <span class="pb pb-WR" style="font-size:9px;margin-left:auto">WR</span>
                     </div>
@@ -1351,7 +1351,7 @@
                   <div class="lp-trade-side">
                     <div class="lp-trade-side-lbl">Side B</div>
                     <div class="lp-trade-player">
-                      <div style="width:32px;height:32px;border-radius:50%;background:rgba(79,134,245,.18);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">🏈</div>
+                      <div class="rank-hs-wrap"><div class="rank-hs-ph pb-WR">C</div><img class="rank-hs-img" data-sid="6770" alt=""></div>
                       <div><div class="lp-trade-player-name">CeeDee Lamb</div><div class="lp-trade-player-meta">WR · DAL</div></div>
                       <span class="pb pb-WR" style="font-size:9px;margin-left:auto">WR</span>
                     </div>
@@ -1378,7 +1378,7 @@
             <div class="lp-section-widget">
               <div class="lp-mock-bsh">
                 <div class="lp-bsh-player">
-                  <div class="lp-bsh-avatar">🏈</div>
+                  <div class="rank-hs-wrap" style="width:44px;height:44px"><div class="rank-hs-ph pb-TE" style="width:44px;height:44px;font-size:14px">B</div><img class="rank-hs-img" data-sid="11565" alt="" style="width:44px;height:44px"></div>
                   <div>
                     <div style="font-size:15px;font-weight:800;color:var(--text)">Brock Bowers</div>
                     <div style="font-size:11px;color:var(--text3)">TE · Las Vegas Raiders</div>
@@ -6114,6 +6114,7 @@ function renderLpTopRankings() {
   }
   const numCls = i => ['gold','silver','bronze','',''][i]||'';
   el.innerHTML = top.map((p,i) => {
+    const hs = playerHsHtml(p.player_id||p.id, p.position);
     const tv = p.trend==='up'
       ? `<span class="lp-rank-trend" style="color:var(--success)">▲</span>`
       : p.trend==='down'
@@ -6121,15 +6122,16 @@ function renderLpTopRankings() {
       : `<span class="lp-rank-trend" style="color:var(--text3)">—</span>`;
     return `<div class="lp-rank-row" onclick="switchTab('values')">
       <span class="lp-rank-num ${numCls(i)}">#${i+1}</span>
+      ${hs}
       <div style="flex:1;min-width:0">
         <div class="lp-rank-name">${escHtml(p.full_name)}</div>
         <div class="lp-rank-meta">${p.position} · ${p.team||'FA'}</div>
       </div>
-      <span class="pb pb-${p.position}" style="font-size:9px">${p.position}</span>
       <span class="lp-rank-val">${Math.floor(p[valKey]||0).toLocaleString()}</span>
       ${tv}
     </div>`;
   }).join('');
+  initHeadshots();
 }
 
 // Populate the landing-page news ticker and position rankings (logged-out view only).
