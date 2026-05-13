@@ -728,8 +728,10 @@
 
     /* ── HEADER NAV LINKS (landing mode) ── */
     .hdr-nav-links{flex:1;display:flex;align-items:center;gap:2px}
-    .hdr-nav-link{display:none;background:none;border:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;padding:7px 12px;border-radius:7px;transition:all .15s;white-space:nowrap}
-    .hdr-nav-link:hover{color:var(--text);background:rgba(79,134,245,.1)}
+    .hdr-nav-link{display:none;background:none;border:none;font-size:13px;font-weight:900;letter-spacing:-.5px;cursor:pointer;padding:7px 12px;border-radius:7px;transition:all .15s;white-space:nowrap;opacity:.75}
+    .hdr-nav-link:hover{opacity:1;background:rgba(79,134,245,.1)}
+    .hdr-nav-link em{color:var(--primary-l);font-style:normal}
+    .hdr-nav-link span{color:var(--text)}
     /* ── AUTH ───────────────────────────── */
     .auth-btn{padding:6px 18px;border-radius:8px;border:none;background:linear-gradient(135deg,#1245c0 0%,#4f86f5 100%);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;box-shadow:0 2px 14px rgba(26,86,219,.55),inset 0 1px 0 rgba(255,255,255,.12)}
     .auth-btn:hover{background:linear-gradient(135deg,#1a56db 0%,#6da0ff 100%);box-shadow:0 3px 18px rgba(26,86,219,.65),inset 0 1px 0 rgba(255,255,255,.15)}
@@ -1037,11 +1039,11 @@
   <div class="hdr-inner">
     <!-- Left: nav links (landing mode only) -->
     <div class="hdr-nav-links">
-      <button class="hdr-nav-link" onclick="switchTab('analyzer')">Trade HQ</button>
-      <button class="hdr-nav-link" onclick="switchTab('values')">Player HQ</button>
-      <button class="hdr-nav-link" onclick="switchTab('roster')">Team HQ</button>
-      <button class="hdr-nav-link" onclick="switchTab('league')">League HQ</button>
-      <button class="hdr-nav-link" onclick="switchTab('draft')">Draft HQ</button>
+      <button class="hdr-nav-link" onclick="switchTab('analyzer')"><em>Trade</em><span>HQ</span></button>
+      <button class="hdr-nav-link" onclick="switchTab('values')"><em>Player</em><span>HQ</span></button>
+      <button class="hdr-nav-link" onclick="switchTab('roster')"><em>Team</em><span>HQ</span></button>
+      <button class="hdr-nav-link" onclick="switchTab('league')"><em>League</em><span>HQ</span></button>
+      <button class="hdr-nav-link" onclick="switchTab('draft')"><em>Draft</em><span>HQ</span></button>
     </div>
     <!-- Center: Logo -->
     <div class="logo" onclick="switchTab('home')" style="cursor:pointer" title="Home"><em>Fantasy</em><span>HQ</span></div>
@@ -1059,7 +1061,7 @@
         📊 <span class="src-count" id="srcCount">0</span>
       </button>
       <!-- Auth: signed-out state -->
-      <button class="auth-btn" id="authBtn" onclick="openModal('authModal')">Sign In</button>
+      <button class="auth-btn" id="authBtn" onclick="openModal('authModal')">Log In</button>
       <button class="auth-btn-signup" onclick="openModal('authModal');setTimeout(()=>authSwitchTab('register'),50)">Sign Up</button>
       <!-- Auth: signed-in state -->
       <div class="user-pill" id="userPill" style="display:none" onclick="toggleUserMenu(event)">
@@ -1177,38 +1179,6 @@
         <div class="home-landing">
           <div class="home-landing-tag">The free NFL fantasy analyzer built for serious players.</div>
           <button class="btn btn-p" style="font-size:15px;padding:12px 40px;border-radius:10px;margin-bottom:28px" onclick="openModal('authModal');setTimeout(()=>authSwitchTab('register'),50)">Get Started — It's Free</button>
-          <div class="home-feat-grid">
-            <div class="home-feat-card" onclick="switchTab('analyzer')">
-              <div class="home-feat-icon">⚖️</div>
-              <div class="home-feat-name">Trade HQ</div>
-              <div class="home-feat-desc">Evaluate any trade with multi-source consensus values.</div>
-            </div>
-            <div class="home-feat-card" onclick="switchTab('values')">
-              <div class="home-feat-icon">📊</div>
-              <div class="home-feat-name">Player HQ</div>
-              <div class="home-feat-desc">Full rankings for dynasty, redraft, IDP, K, and DST.</div>
-            </div>
-            <div class="home-feat-card" onclick="switchTab('wire')">
-              <div class="home-feat-icon">📋</div>
-              <div class="home-feat-name">Waiver HQ</div>
-              <div class="home-feat-desc">Weekly waiver targets ranked by upside and opportunity.</div>
-            </div>
-            <div class="home-feat-card" onclick="switchTab('buysell')">
-              <div class="home-feat-icon">📈</div>
-              <div class="home-feat-name">Value HQ</div>
-              <div class="home-feat-desc">Buy low, sell high alerts based on current value curves.</div>
-            </div>
-            <div class="home-feat-card" onclick="switchTab('draft')">
-              <div class="home-feat-icon">🎯</div>
-              <div class="home-feat-name">Draft HQ</div>
-              <div class="home-feat-desc">Big board, draft assistant, and a full draft simulator.</div>
-            </div>
-            <div class="home-feat-card" onclick="switchTab('roster')">
-              <div class="home-feat-icon">🏈</div>
-              <div class="home-feat-name">Team HQ</div>
-              <div class="home-feat-desc">Roster valuation and personalized team analysis.</div>
-            </div>
-          </div>
           <!-- Live player snapshot -->
           <!-- Position rankings -->
           <div class="home-posrank" id="homePosRank" style="display:none">
@@ -2225,7 +2195,7 @@
     </div>
     <!-- Tab switcher -->
     <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px">
-      <button id="authTabSignIn" class="auth-tab-btn auth-tab-active" onclick="authSwitchTab('signin')">Sign In</button>
+      <button id="authTabSignIn" class="auth-tab-btn auth-tab-active" onclick="authSwitchTab('signin')">Log In</button>
       <button id="authTabRegister" class="auth-tab-btn" onclick="authSwitchTab('register')">Create Account</button>
     </div>
     <!-- Sign In form -->
@@ -2233,7 +2203,7 @@
       <input class="mo-input" id="authEmailIn" type="email" placeholder="Email address" autocomplete="email">
       <input class="mo-input" id="authPassIn" type="password" placeholder="Password" autocomplete="current-password" style="margin-bottom:4px" onkeydown="if(event.key==='Enter')signInWithEmail()">
       <div id="authSignInErr" class="auth-error"></div>
-      <button class="btn btn-p" style="width:100%;justify-content:center;margin-top:8px" onclick="signInWithEmail()">Sign In</button>
+      <button class="btn btn-p" style="width:100%;justify-content:center;margin-top:8px" onclick="signInWithEmail()">Log In</button>
       <div style="text-align:center;margin-top:10px">
         <a href="#" style="font-size:12px;color:var(--primary-l)" onclick="event.preventDefault();sendPasswordReset()">Forgot password?</a>
       </div>
@@ -8526,7 +8496,7 @@ async function signInWithEmail() {
       e.code === 'auth/network-request-failed' ? 'Network error — check your connection.' :
       e.message || 'Sign-in failed. Please try again.';
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Sign In'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Log In'; }
   }
 }
 
