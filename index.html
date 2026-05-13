@@ -556,7 +556,16 @@
     .t1{background:#1e3a8a;color:#bfdbfe}.t2{background:#1e3a5f;color:#93c5fd}
     #valTable th,#valTable td{padding:6px 8px;font-size:12px}
     #valTable th{font-size:11px}
-    @media(max-width:600px){#valTable th,#valTable td{padding:5px 6px;font-size:11px}}
+    @media(max-width:600px){
+      #valTable th,#valTable td{padding:5px 6px;font-size:11px}
+      /* Headshot thumbnail: hide on small phones to save column width */
+      #valTable .rank-hs-wrap{display:none}
+      /* Player name cell: allow wrap so it doesn't force wide layout */
+      #valTable td:nth-child(2){white-space:normal!important;max-width:120px}
+      #valTable .pnr-name{font-size:12px}
+      /* FHQ score cell: tighter */
+      .eng-score-cell{font-size:11px;padding:2px 5px}
+    }
     .t3{background:#14532d;color:#86efac}.t4{background:#713f12;color:#fde68a}
     .t5{background:#1f2937;color:#9ca3af}.t6{background:#111827;color:#6b7280}
 
@@ -2007,16 +2016,15 @@
         <table id="valTable">
           <thead>
             <tr>
-              <th style="width:44px" onclick="sortTable('rank')">#</th>
+              <th style="width:36px" onclick="sortTable('rank')">#</th>
               <th onclick="sortTable('name')">Player</th>
               <th onclick="sortTable('value')">Value</th>
-              <th>Tier</th>
               <th onclick="sortTable('engine')" title="Fantasy HQ composite score (0–100): Production · Age · Opportunity · Physical · Efficiency. Hover a row to see breakdown.">FHQ Score ▸</th>
               <th onclick="sortTable('trend')">Trend</th>
             </tr>
           </thead>
           <tbody id="valTbody">
-            <tr><td colspan="6"><div class="loading"><div class="spin"></div>Loading players…</div></td></tr>
+            <tr><td colspan="5"><div class="loading"><div class="spin"></div>Loading players…</div></td></tr>
           </tbody>
         </table>
       </div>
@@ -5739,7 +5747,6 @@ function renderValuesTable() {
       <td><span style="color:var(--text3);font-size:12px">${i+1}</span></td>
       <td style="white-space:nowrap"><div style="display:flex;align-items:center;gap:7px">${hsHtml}<div><div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap"><strong class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="_openPc(event)">${escHtml(p.full_name)}</strong><span class="pb pb-${p.position==='DST'?'DEF':p.position}" style="font-size:9px;vertical-align:middle">${p.position==='DST'?'DEF':p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div><div style="font-size:11px;color:var(--text3);font-weight:400;margin-top:1px;line-height:1">${p.team||'FA'}${p.age ? ' · Age '+p.age : ''}</div></div></div></td>
       <td style="white-space:nowrap"><span style="font-weight:700;font-size:13px;color:var(--primary-l)">${fmtVal(v)}</span></td>
-      <td><span class="tier-badge ${tier.cls}">${tier.label}</span></td>
       <td>
         ${engScore != null ? (() => {
           const b = p._breakdown || {};
@@ -5757,7 +5764,7 @@ function renderValuesTable() {
       </td>
       <td>${trendHtml(p)}</td>
     </tr>`;
-  }).join('') || `<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--text3)">No players found</td></tr>`;
+  }).join('') || `<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--text3)">No players found</td></tr>`;
 
   // update sub
   const modeStr = isDynasty ? 'Dynasty' : 'Redraft';
