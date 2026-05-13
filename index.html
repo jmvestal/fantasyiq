@@ -129,12 +129,6 @@
     /* Landing header overrides */
     body.landing-mode .logo{font-size:38px;letter-spacing:-2px;text-align:center;justify-self:center}
     body.landing-mode .hdr-right{justify-content:flex-end;gap:8px}
-    body.landing-mode .auth-btn,
-    body.landing-mode .auth-btn-signup{background:none;border:1.5px solid transparent;box-shadow:none;font-weight:900;font-size:13px;letter-spacing:-.5px;border-radius:999px;padding:6px 13px;opacity:.75}
-    body.landing-mode .auth-btn:hover,
-    body.landing-mode .auth-btn-signup:hover{opacity:1;background:rgba(26,86,219,.1);border-color:rgba(79,134,245,.55);box-shadow:0 0 10px rgba(79,134,245,.2)}
-    body.landing-mode .auth-btn em,body.landing-mode .auth-btn-signup em{color:var(--primary-l);font-style:normal}
-    body.landing-mode .auth-btn span,body.landing-mode .auth-btn-signup span{color:var(--text)}
     body.landing-mode .glb-srch-wrap,body.landing-mode .pc-badge{display:none}
     /* Landing — full-screen centered content */
     .home-landing{background:var(--bg);overflow-x:hidden}
@@ -865,7 +859,7 @@
       body.landing-mode .logo{font-size:28px;flex:1;text-align:center}
       .pc-badge{display:none}
       .src-btn{padding:5px 8px;font-size:11px}
-      .auth-btn{padding:5px 11px;font-size:12px;border-radius:7px}
+      .auth-btn{padding:5px 11px;font-size:12px}
       .main{padding:10px 10px calc(68px + env(safe-area-inset-bottom,0px))}
       .anl-grid{grid-template-columns:1fr}
       .platform-grid{grid-template-columns:repeat(2,1fr)}
@@ -1001,10 +995,14 @@
     .hdr-nav-link em{color:var(--primary-l);font-style:normal}
     .hdr-nav-link span{color:var(--text)}
     /* ── AUTH ───────────────────────────── */
-    .auth-btn{padding:6px 18px;border-radius:8px;border:none;background:linear-gradient(135deg,#1245c0 0%,#4f86f5 100%);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;box-shadow:0 2px 14px rgba(26,86,219,.55),inset 0 1px 0 rgba(255,255,255,.12)}
-    .auth-btn:hover{background:linear-gradient(135deg,#1a56db 0%,#6da0ff 100%);box-shadow:0 3px 18px rgba(26,86,219,.65),inset 0 1px 0 rgba(255,255,255,.15)}
-    .auth-btn-signup{display:inline-flex;padding:6px 18px;border-radius:8px;border:none;background:linear-gradient(135deg,#1245c0 0%,#4f86f5 100%);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;box-shadow:0 2px 14px rgba(26,86,219,.55),inset 0 1px 0 rgba(255,255,255,.12)}
-    .auth-btn-signup:hover{background:linear-gradient(135deg,#1a56db 0%,#6da0ff 100%);box-shadow:0 3px 18px rgba(26,86,219,.65)}
+    .auth-btn{padding:6px 14px;border-radius:999px;border:1.5px solid transparent;background:none;box-shadow:none;font-size:13px;font-weight:900;letter-spacing:-.5px;cursor:pointer;transition:all .15s;white-space:nowrap;opacity:.75}
+    .auth-btn:hover{opacity:1;background:rgba(26,86,219,.1);border-color:rgba(79,134,245,.55);box-shadow:0 0 10px rgba(79,134,245,.2)}
+    .auth-btn em{color:var(--primary-l);font-style:normal}
+    .auth-btn span{color:var(--text)}
+    .auth-btn-signup{display:inline-flex;padding:6px 14px;border-radius:999px;border:1.5px solid transparent;background:none;box-shadow:none;font-size:13px;font-weight:900;letter-spacing:-.5px;cursor:pointer;transition:all .15s;white-space:nowrap;opacity:.75}
+    .auth-btn-signup:hover{opacity:1;background:rgba(26,86,219,.1);border-color:rgba(79,134,245,.55);box-shadow:0 0 10px rgba(79,134,245,.2)}
+    .auth-btn-signup em{color:var(--primary-l);font-style:normal}
+    .auth-btn-signup span{color:var(--text)}
     body.logged-in .auth-btn-signup{display:none}
     .user-pill{display:flex;align-items:center;gap:7px;padding:4px 10px 4px 5px;border-radius:20px;background:var(--bg3);border:1px solid var(--border);cursor:pointer;flex-shrink:0;position:relative;user-select:none}
     .user-pill:hover{border-color:var(--primary)}
