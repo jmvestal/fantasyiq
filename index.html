@@ -2097,6 +2097,7 @@
               <div class="dsim-ctrl-lbl">Type</div>
               <select id="wizDraftType" class="dsim-sel" onchange="initWizard()">
                 <option value="redraft">Full Redraft</option>
+                <option value="startup">Startup Dynasty</option>
                 <option value="rookie">Rookie Draft</option>
               </select>
             </div>
@@ -2276,6 +2277,7 @@
               <div class="dsim-ctrl-lbl">Type</div>
               <select id="dsimType" class="dsim-sel" onchange="dsimUpdateSetup()">
                 <option value="rookie">Rookie Draft</option>
+                <option value="startup">Startup Dynasty</option>
                 <option value="redraft">Full Redraft</option>
               </select>
             </div>
@@ -11488,7 +11490,7 @@ function initWizard() {
   resetWizard();
   // Apply format settings so calcValue() reflects the chosen draft format
   DS.wizState._savedSettings = { ...S.settings };
-  const mode = draftType === 'rookie' ? 'dynasty' : 'redraft';
+  const mode = (draftType === 'rookie' || draftType === 'startup') ? 'dynasty' : 'redraft';
   S.settings = { ...S.settings, mode, qb: wizQB, scoring: wizScoring, te: wizTE };
   _wizRankCache = null; // bust rank cache so new settings take effect
   renderWizAvail();
@@ -11536,7 +11538,8 @@ function isMyTurn() {
 // Returns sorted available players using current settings-aware calcValue
 function getWizAvailPlayers() {
   const draftedIds = new Set(DS.wizState.drafted.map(d => d.player.id));
-  const isRookie = (document.getElementById('wizDraftType')?.value || 'redraft') === 'rookie';
+  const _wizType = document.getElementById('wizDraftType')?.value || 'redraft';
+  const isRookie = _wizType === 'rookie';
   return (S.players || [])
     .filter(p => p.position !== 'PICK' && !draftedIds.has(p.id) && calcValue(p) > 0
                  && (!isRookie || p.rookie))
@@ -13115,8 +13118,9 @@ function dsimUpdateSetup() {
     const prev = parseInt(roundsSel.value) || 0;
     roundsSel.innerHTML = '';
     const isRookie = type === 'rookie';
-    const opts = isRookie ? [3,4,5,6] : [10,12,14,15,16,17,18,20];
-    const def = isRookie ? 4 : 15;
+    const isStartup = type === 'startup';
+    const opts = isRookie ? [3,4,5,6] : isStartup ? [20,22,24,25,26,28,30] : [10,12,14,15,16,17,18,20];
+    const def  = isRookie ? 4 : isStartup ? 25 : 15;
     opts.forEach(r => {
       const o = document.createElement('option');
       o.value = r;
@@ -13165,7 +13169,8 @@ function startDraftSim() {
 
   // Override global settings with sim-specific scoring so calcValue() reflects sim format
   DSIM._savedSettings = { ...S.settings };
-  S.settings = { ...S.settings, mode: 'redraft', scoring: DSIM.scoring, qb: DSIM.qb, te: DSIM.te };
+  const simMode = (DSIM.type === 'rookie' || DSIM.type === 'startup') ? 'dynasty' : 'redraft';
+  S.settings = { ...S.settings, mode: simMode, scoring: DSIM.scoring, qb: DSIM.qb, te: DSIM.te };
   DSIM.drafted   = new Set();
   DSIM.picks     = [];
   DSIM.posFilter = 'ALL';
@@ -13189,6 +13194,12 @@ function startDraftSim() {
   if (DSIM.type === 'rookie') {
     DSIM.available = (S.players || [])
       .filter(p => p.rookie && p.position !== 'PICK')
+      .sort((a, b) => (b.dynasty_val || 0) - (a.dynasty_val || 0));
+  } else if (DSIM.type === 'startup') {
+    // Startup dynasty: all dynasty-relevant positions sorted by dynasty value
+    const DYNASTY_POS = new Set(['QB','RB','WR','TE']);
+    DSIM.available = (S.players || [])
+      .filter(p => DYNASTY_POS.has(p.position) && (p.dynasty_val || 0) > 100)
       .sort((a, b) => (b.dynasty_val || 0) - (a.dynasty_val || 0));
   } else {
     // Redraft: standard fantasy positions only — no IDP (DE/DT/LB/CB/S/DB/IDP)
