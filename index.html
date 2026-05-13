@@ -1572,7 +1572,7 @@
           <div class="lp-cta-sec">
             <h2 class="lp-cta-h2">Ready to <em>win</em><br>your league?</h2>
             <p class="lp-cta-sub">Join fantasy managers making sharper decisions with multi-source consensus values and built-in analytics — completely free.</p>
-            <button class="lp-btn-p" style="font-size:15px;padding:14px 44px" onclick="openModal('authModal');setTimeout(()=>authSwitchTab('register'),50)">Get Started Free →</button>
+            <button class="lp-btn-p" style="font-size:15px;padding:14px 44px" id="lpCtaBtn" onclick="document.body.classList.contains('logged-in')?switchTab('analyzer'):openModal('authModal');if(!document.body.classList.contains('logged-in'))setTimeout(()=>authSwitchTab('register'),50)">Get Started Free →</button>
           </div>
 
           <!-- ── FOOTER ── -->
@@ -6299,9 +6299,6 @@ function renderLpTopRankings() {
 
 // Populate the landing-page news ticker and position rankings (logged-out view only).
 function renderLandingWidgets() {
-  // Only render on the logged-out landing page
-  if (S.auth) return;
-
   const hasValues = (S.players || []).some(p =>
     ['QB','RB','WR','TE'].includes(p.position) && (p.dynasty_val || 0) > 0
   );
@@ -6429,11 +6426,14 @@ function renderHome() {
   const loggedIn  = !!S.auth;
   const hasLeague = !!(S.connectedLeague?.leagueId);
 
-  // Any logged-in user goes to the dashboard view — no league connected shows a welcome/connect prompt
+  // Always show the landing page — user pill in header handles the logged-in state
   document.body.classList.toggle('landing-mode', !loggedIn);
-  document.getElementById('homeOptionA').style.display = loggedIn ? 'none' : '';
-  document.getElementById('homeOptionC').style.display = loggedIn ? ''     : 'none';
-  if (!loggedIn) { renderLandingWidgets(); return; }
+  document.getElementById('homeOptionA').style.display = '';
+  document.getElementById('homeOptionC').style.display = 'none';
+  // Update CTA button text based on auth state
+  const ctaBtn = document.getElementById('lpCtaBtn');
+  if (ctaBtn) ctaBtn.textContent = loggedIn ? 'Open TradeHQ →' : 'Get Started Free →';
+  renderLandingWidgets();
 
   // Logged in but no league yet — show a welcome screen inside the dashboard
   if (!hasLeague) {
