@@ -2001,16 +2001,23 @@
       </div>
 
       <div class="tbar">
-        <div class="pos-btns">
-          <button class="pos-btn on" data-pos="ALL">All</button>
-          <button class="pos-btn" data-pos="QB">QB</button>
-          <button class="pos-btn" data-pos="RB">RB</button>
-          <button class="pos-btn" data-pos="WR">WR</button>
-          <button class="pos-btn" data-pos="TE">TE</button>
-          <button class="pos-btn" data-pos="K">K</button>
-          <button class="pos-btn" data-pos="DEF">DST</button>
-          <button class="pos-btn" data-pos="IDP">IDP</button>
-          <button class="pos-btn" data-pos="PICK">Picks</button>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%">
+          <!-- Dynasty / Redraft toggle — always visible, no login required -->
+          <select id="valModeSelect" class="dsim-sel" style="font-size:12px;padding:6px 10px;font-weight:700;min-width:110px" onchange="setSetting('mode',this.value)">
+            <option value="dynasty">Dynasty</option>
+            <option value="redraft">Redraft</option>
+          </select>
+          <div class="pos-btns" style="flex:1;min-width:0">
+            <button class="pos-btn on" data-pos="ALL">All</button>
+            <button class="pos-btn" data-pos="QB">QB</button>
+            <button class="pos-btn" data-pos="RB">RB</button>
+            <button class="pos-btn" data-pos="WR">WR</button>
+            <button class="pos-btn" data-pos="TE">TE</button>
+            <button class="pos-btn" data-pos="K">K</button>
+            <button class="pos-btn" data-pos="DEF">DST</button>
+            <button class="pos-btn" data-pos="IDP">IDP</button>
+            <button class="pos-btn" data-pos="PICK">Picks</button>
+          </div>
         </div>
         <input class="srch tbl-srch" id="tblSearch" placeholder="Search players…" oninput="renderValuesTable()">
       </div>
@@ -5637,6 +5644,10 @@ function loadFromUrl() {
 // PLAYER VALUES TABLE
 // ═══════════════════════════════════════════════════════════
 function renderValuesTable() {
+  // Keep mode select in sync with current setting
+  const ms = document.getElementById('valModeSelect');
+  if (ms) ms.value = S.settings.mode || 'dynasty';
+
   const q = document.getElementById('tblSearch').value.toLowerCase();
   const { col, dir } = S.tableSort;
 
@@ -6540,6 +6551,11 @@ function setSetting(key, val) {
   document.querySelectorAll(`[data-s="${key}"]`).forEach(btn => {
     btn.classList.toggle('on', String(btn.dataset.v) === String(val));
   });
+  // Keep the PlayerHQ mode select in sync
+  if (key === 'mode') {
+    const ms = document.getElementById('valModeSelect');
+    if (ms) ms.value = val;
+  }
 
   updateModeChip();
   renderTrade();
