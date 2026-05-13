@@ -141,7 +141,7 @@
     body.landing-mode .auth-btn span,body.landing-mode .auth-btn-signup span{color:var(--text)}
     body.landing-mode .glb-srch-wrap,body.landing-mode .pc-badge{display:none}
     /* Landing — full-screen centered content */
-    .home-landing{min-height:calc(100vh - 70px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;background:var(--bg)}
+    .home-landing{background:var(--bg);overflow-x:hidden}
     .home-landing-logo{font-size:64px;font-weight:900;letter-spacing:-3px;margin-bottom:10px;line-height:1}
     .home-landing-logo em{color:var(--primary-l);font-style:normal}
     .home-landing-tag{font-size:15px;color:var(--text2);margin-bottom:32px;text-align:center;max-width:440px;line-height:1.6}
@@ -174,6 +174,107 @@
     .home-posrank-arrow{font-size:9px;font-weight:800;flex-shrink:0}
     .home-posrank-arrow.up{color:var(--success)}
     .home-posrank-arrow.down{color:var(--danger)}
+    /* ── LANDING PAGE SECTIONS ─────────── */
+    .lp-hero{padding:70px 40px 50px;max-width:1140px;margin:0 auto;display:grid;grid-template-columns:1fr 400px;gap:56px;align-items:center}
+    .lp-label{display:inline-flex;align-items:center;gap:7px;background:rgba(26,86,219,.12);border:1px solid rgba(79,134,245,.28);color:var(--primary-l);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:999px;margin-bottom:18px}
+    .lp-label-dot{width:6px;height:6px;border-radius:50%;background:var(--primary-l);display:inline-block;animation:lpPulse 2s infinite}
+    @keyframes lpPulse{0%,100%{opacity:1}50%{opacity:.35}}
+    .lp-h1{font-size:54px;font-weight:900;letter-spacing:-2.5px;line-height:1.05;margin-bottom:18px;color:var(--text)}
+    .lp-h1 em{color:var(--primary-l);font-style:normal}
+    .lp-pitch{font-size:15px;color:var(--text2);line-height:1.75;margin-bottom:32px;max-width:460px}
+    .lp-cta-row{display:flex;gap:12px;flex-wrap:wrap}
+    .lp-btn-p{padding:13px 28px;border-radius:999px;border:none;background:linear-gradient(135deg,#1245c0,#4f86f5);color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:all .18s;box-shadow:0 2px 16px rgba(26,86,219,.5),inset 0 1px 0 rgba(255,255,255,.12)}
+    .lp-btn-p:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(26,86,219,.65)}
+    .lp-btn-s{padding:13px 28px;border-radius:999px;border:1.5px solid rgba(79,134,245,.4);background:transparent;color:var(--primary-l);font-size:14px;font-weight:700;cursor:pointer;transition:all .18s}
+    .lp-btn-s:hover{background:rgba(26,86,219,.1);border-color:var(--primary-l)}
+    .lp-rank-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.45)}
+    .lp-rank-card-hdr{display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;color:var(--text)}
+    .lp-rank-tabs{display:flex;gap:2px;margin-left:auto}
+    .lp-rank-tab{padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;background:none;border:none;color:var(--text3);transition:all .12s}
+    .lp-rank-tab.on{background:rgba(26,86,219,.2);color:var(--primary-l)}
+    .lp-rank-row{display:flex;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid rgba(255,255,255,.03);cursor:pointer;transition:background .12s}
+    .lp-rank-row:last-child{border-bottom:none}
+    .lp-rank-row:hover{background:rgba(79,134,245,.07)}
+    .lp-rank-num{width:24px;font-size:11px;font-weight:800;color:var(--text3);text-align:center;flex-shrink:0}
+    .lp-rank-name{font-size:13px;font-weight:700;color:var(--text);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .lp-rank-meta{font-size:10px;color:var(--text3)}
+    .lp-rank-val{font-size:12px;font-weight:800;color:var(--primary-l);flex-shrink:0}
+    .lp-rank-trend{font-size:11px;font-weight:700;width:36px;text-align:right;flex-shrink:0}
+    .lp-rank-card-footer{padding:10px 18px;text-align:center;border-top:1px solid var(--border);font-size:11px;color:var(--text3);cursor:pointer;transition:color .12s}
+    .lp-rank-card-footer:hover{color:var(--primary-l)}
+    .lp-stats-wrap{max-width:1140px;margin:0 auto;padding:0 40px 60px}
+    .lp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+    .lp-stat-box{background:var(--bg);padding:28px;text-align:center}
+    .lp-stat-num{font-size:36px;font-weight:900;letter-spacing:-1.5px;color:var(--text)}
+    .lp-stat-num em{color:var(--primary-l);font-style:normal}
+    .lp-stat-lbl{font-size:12px;color:var(--text3);margin-top:4px}
+    .lp-section{max-width:1140px;margin:0 auto;padding:60px 40px;display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+    .lp-section.rev .lp-section-text{order:2}
+    .lp-section.rev .lp-section-widget{order:1}
+    .lp-sect-label{display:inline-flex;align-items:center;gap:7px;background:rgba(26,86,219,.12);border:1px solid rgba(79,134,245,.28);color:var(--primary-l);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:999px;margin-bottom:16px}
+    .lp-sect-h2{font-size:38px;font-weight:900;letter-spacing:-1.5px;line-height:1.1;margin-bottom:14px;color:var(--text)}
+    .lp-sect-desc{font-size:14px;color:var(--text2);line-height:1.75;margin-bottom:24px}
+    .lp-mock-trade{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.45)}
+    .lp-trade-cols{display:flex}
+    .lp-trade-side{flex:1;padding:16px 18px}
+    .lp-trade-side-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+    .lp-trade-winner-badge{background:rgba(34,197,94,.12);color:var(--success);font-size:9px;font-weight:800;padding:2px 7px;border-radius:999px;border:1px solid rgba(34,197,94,.3)}
+    .lp-trade-player{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:6px}
+    .lp-trade-player-name{font-size:12px;font-weight:700;color:var(--text)}
+    .lp-trade-player-meta{font-size:10px;color:var(--text3)}
+    .lp-trade-total{font-size:20px;font-weight:900;color:var(--primary-l);text-align:center;padding:10px 0 4px;letter-spacing:-1px}
+    .lp-trade-total span{font-size:10px;font-weight:500;color:var(--text3);display:block;margin-top:1px;letter-spacing:0}
+    .lp-trade-sep{width:1px;background:var(--border);flex-shrink:0}
+    .lp-trade-footer{padding:10px 18px;background:var(--bg3);border-top:1px solid var(--border);font-size:12px;color:var(--text3);text-align:center}
+    .lp-mock-bsh{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,.45)}
+    .lp-bsh-player{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+    .lp-bsh-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,rgba(26,86,219,.25),rgba(79,134,245,.15));border:2px solid rgba(79,134,245,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+    .lp-bsh-signal-box{text-align:center;padding:18px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:10px;margin-bottom:12px}
+    .lp-bsh-signal-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:5px}
+    .lp-bsh-signal-val{font-size:30px;font-weight:900;color:var(--success);letter-spacing:-1px}
+    .lp-bsh-signal-sub{font-size:11px;color:rgba(34,197,94,.6);margin-top:2px}
+    .lp-bsh-bar-wrap{margin-bottom:8px}
+    .lp-bsh-bar{height:6px;background:linear-gradient(to right,var(--success) 0%,var(--success) 33%,var(--warn) 33%,var(--warn) 66%,var(--danger) 66%);border-radius:3px;position:relative}
+    .lp-bsh-bar-dot{position:absolute;left:20%;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid var(--success);box-shadow:0 0 8px rgba(34,197,94,.5)}
+    .lp-bsh-meta-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+    .lp-bsh-meta-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+    .lp-bsh-meta-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+    .lp-bsh-meta-val{font-size:15px;font-weight:800}
+    .lp-tools-sec{max-width:1140px;margin:0 auto;padding:20px 40px 70px}
+    .lp-tools-hdr{text-align:center;margin-bottom:32px}
+    .lp-tools-ttl{font-size:30px;font-weight:900;letter-spacing:-1px;color:var(--text);margin-bottom:6px}
+    .lp-tools-sub{font-size:14px;color:var(--text3)}
+    .lp-tools-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .lp-tool{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px 18px;cursor:pointer;transition:all .18s;text-align:left}
+    .lp-tool:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+    .lp-tool-icon{font-size:28px;margin-bottom:12px}
+    .lp-tool-name{font-size:14px;font-weight:900;letter-spacing:-.5px;margin-bottom:6px}
+    .lp-tool-name em{color:var(--primary-l);font-style:normal}
+    .lp-tool-name span{color:var(--text)}
+    .lp-tool-desc{font-size:11px;color:var(--text3);line-height:1.55}
+    .lp-cta-sec{text-align:center;padding:80px 40px;background:radial-gradient(ellipse at 50% 0%,rgba(26,86,219,.13) 0%,transparent 65%)}
+    .lp-cta-h2{font-size:52px;font-weight:900;letter-spacing:-2px;line-height:1.1;margin-bottom:14px;color:var(--text)}
+    .lp-cta-h2 em{color:var(--primary-l);font-style:normal}
+    .lp-cta-sub{font-size:16px;color:var(--text2);margin-bottom:36px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6}
+    .lp-footer-sec{border-top:1px solid var(--border);padding:36px 40px;max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+    .lp-footer-logo{font-size:20px;font-weight:900;letter-spacing:-1px}
+    .lp-footer-logo em{color:var(--primary-l);font-style:normal}
+    .lp-footer-links{display:flex;gap:20px;flex-wrap:wrap;align-items:center}
+    .lp-footer-link{font-size:12px;color:var(--text3);cursor:pointer;transition:color .12s;background:none;border:none;padding:0;font-family:inherit}
+    .lp-footer-link:hover{color:var(--primary-l)}
+    .lp-footer-copy{font-size:11px;color:var(--text3);width:100%;text-align:center}
+    @media(max-width:900px){
+      .lp-hero,.lp-section{grid-template-columns:1fr;gap:28px;padding:40px 20px}
+      .lp-section.rev .lp-section-text{order:1}
+      .lp-section.rev .lp-section-widget{order:2}
+      .lp-h1{font-size:38px}
+      .lp-sect-h2{font-size:28px}
+      .lp-cta-h2{font-size:34px}
+      .lp-stats-wrap{padding:0 20px 40px}
+      .lp-tools-sec{padding:0 20px 40px}
+      .lp-tools-grid{grid-template-columns:repeat(2,1fr)}
+      .lp-cta-sec,.lp-footer-sec{padding-left:20px;padding-right:20px}
+    }
     @media(max-width:600px){
       .home-landing-logo{font-size:48px}
       .home-feat-grid{grid-template-columns:repeat(2,1fr);max-width:420px}
@@ -1181,32 +1282,199 @@
       <!-- Option A: not logged in — full-screen landing -->
       <div id="homeOptionA">
         <div class="home-landing">
-          <div class="home-landing-tag">The free NFL fantasy analyzer built for serious players.</div>
-          <button class="btn btn-p" style="font-size:15px;padding:12px 40px;border-radius:10px;margin-bottom:28px" onclick="openModal('authModal');setTimeout(()=>authSwitchTab('register'),50)">Get Started — It's Free</button>
-          <!-- Live player snapshot -->
-          <!-- Position rankings -->
+
+          <!-- ── HERO ── -->
+          <div class="lp-hero">
+            <div>
+              <div class="lp-label"><span class="lp-label-dot"></span>Live Rankings</div>
+              <h1 class="lp-h1">Fantasy Player<br><em>Rankings.</em></h1>
+              <p class="lp-pitch">Multi-source consensus values across Dynasty, Redraft, Superflex, and 2QB. Built-in tiers, trend signals, and FHQ scores to keep you ahead of your league.</p>
+              <div class="lp-cta-row">
+                <button class="lp-btn-p" onclick="switchTab('values')">Dynasty Rankings →</button>
+                <button class="lp-btn-s" onclick="switchTab('values')">Redraft Rankings →</button>
+              </div>
+            </div>
+            <div>
+              <div class="lp-rank-card">
+                <div class="lp-rank-card-hdr">
+                  📈 Top Rankings
+                  <div class="lp-rank-tabs">
+                    <button class="lp-rank-tab on" data-mode="dynasty" onclick="setLpRankMode('dynasty')">Dynasty</button>
+                    <button class="lp-rank-tab" data-mode="redraft" onclick="setLpRankMode('redraft')">Redraft</button>
+                  </div>
+                </div>
+                <div id="lpTopList"><div class="lp-rank-row"><span style="color:var(--text3);font-size:12px;padding:4px 0">Loading rankings…</span></div></div>
+                <div class="lp-rank-card-footer" onclick="switchTab('values')">View all rankings in PlayerHQ →</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── STATS BAR ── -->
+          <div class="lp-stats-wrap">
+            <div class="lp-stats">
+              <div class="lp-stat-box">
+                <div class="lp-stat-num">500<em>+</em></div>
+                <div class="lp-stat-lbl">Players Ranked</div>
+              </div>
+              <div class="lp-stat-box">
+                <div class="lp-stat-num"><em>6</em></div>
+                <div class="lp-stat-lbl">Built-In Tools</div>
+              </div>
+              <div class="lp-stat-box">
+                <div class="lp-stat-num"><em>Free</em></div>
+                <div class="lp-stat-lbl">Always &amp; Forever</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── SECTION: TRADE HQ ── -->
+          <div class="lp-section">
+            <div class="lp-section-text">
+              <div class="lp-sect-label">Trade Calculator</div>
+              <h2 class="lp-sect-h2">Compare Football Trades</h2>
+              <p class="lp-sect-desc">Pressure-test any trade with multi-source consensus values. Get instant grades, value gaps, and tier context to evaluate every offer faster — and stop getting burned.</p>
+              <button class="lp-btn-p" onclick="switchTab('analyzer')">Analyze a Trade →</button>
+            </div>
+            <div class="lp-section-widget">
+              <div class="lp-mock-trade">
+                <div class="lp-trade-cols">
+                  <div class="lp-trade-side">
+                    <div class="lp-trade-side-lbl">Side A <span class="lp-trade-winner-badge">✓ Winner</span></div>
+                    <div class="lp-trade-player">
+                      <div style="width:32px;height:32px;border-radius:50%;background:rgba(79,134,245,.18);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">🏈</div>
+                      <div><div class="lp-trade-player-name">Ja'Marr Chase</div><div class="lp-trade-player-meta">WR · CIN</div></div>
+                      <span class="pb pb-WR" style="font-size:9px;margin-left:auto">WR</span>
+                    </div>
+                    <div class="lp-trade-total">9,800<span>Total Value</span></div>
+                  </div>
+                  <div class="lp-trade-sep"></div>
+                  <div class="lp-trade-side">
+                    <div class="lp-trade-side-lbl">Side B</div>
+                    <div class="lp-trade-player">
+                      <div style="width:32px;height:32px;border-radius:50%;background:rgba(79,134,245,.18);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">🏈</div>
+                      <div><div class="lp-trade-player-name">CeeDee Lamb</div><div class="lp-trade-player-meta">WR · DAL</div></div>
+                      <span class="pb pb-WR" style="font-size:9px;margin-left:auto">WR</span>
+                    </div>
+                    <div class="lp-trade-player">
+                      <div style="width:32px;height:32px;border-radius:50%;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--warn);flex-shrink:0">1ST</div>
+                      <div><div class="lp-trade-player-name">2025 1st Round</div><div class="lp-trade-player-meta">Draft Pick</div></div>
+                    </div>
+                    <div class="lp-trade-total">9,300<span>Total Value</span></div>
+                  </div>
+                </div>
+                <div class="lp-trade-footer">Side A wins by <span style="color:var(--success);font-weight:700">+500</span> · Grade: <span style="color:var(--primary-l);font-weight:700">A</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── SECTION: VALUE HQ (reversed) ── -->
+          <div class="lp-section rev">
+            <div class="lp-section-text">
+              <div class="lp-sect-label">Value HQ</div>
+              <h2 class="lp-sect-h2">Find the Edge</h2>
+              <p class="lp-sect-desc">Identify undervalued players before your league does. Buy low, sell high alerts based on current value trends — so you always know when to act.</p>
+              <button class="lp-btn-p" onclick="switchTab('buysell')">View Buy/Sell Alerts →</button>
+            </div>
+            <div class="lp-section-widget">
+              <div class="lp-mock-bsh">
+                <div class="lp-bsh-player">
+                  <div class="lp-bsh-avatar">🏈</div>
+                  <div>
+                    <div style="font-size:15px;font-weight:800;color:var(--text)">Brock Bowers</div>
+                    <div style="font-size:11px;color:var(--text3)">TE · Las Vegas Raiders</div>
+                    <span class="pb pb-TE" style="font-size:9px;margin-top:3px;display:inline-block">TE</span>
+                  </div>
+                </div>
+                <div class="lp-bsh-signal-box">
+                  <div class="lp-bsh-signal-lbl">FHQ Signal</div>
+                  <div class="lp-bsh-signal-val">BUY</div>
+                  <div class="lp-bsh-signal-sub">Undervalued by the market</div>
+                </div>
+                <div class="lp-bsh-bar-wrap">
+                  <div class="lp-bsh-bar"><div class="lp-bsh-bar-dot"></div></div>
+                  <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:700;margin-top:5px">
+                    <span style="color:var(--success)">BUY</span><span style="color:var(--text3)">HOLD</span><span style="color:var(--danger)">SELL</span>
+                  </div>
+                </div>
+                <div class="lp-bsh-meta-row">
+                  <div class="lp-bsh-meta-box"><div class="lp-bsh-meta-lbl">FHQ Score</div><div class="lp-bsh-meta-val" style="color:var(--primary-l)">84/100</div></div>
+                  <div class="lp-bsh-meta-box"><div class="lp-bsh-meta-lbl">Trend</div><div class="lp-bsh-meta-val" style="color:var(--success)">▲ Rising</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── TOOLS GRID ── -->
+          <div class="lp-tools-sec">
+            <div class="lp-tools-hdr">
+              <div style="display:inline-flex;margin-bottom:12px" class="lp-sect-label">Everything in one place</div>
+              <div class="lp-tools-ttl">Your complete fantasy arsenal</div>
+              <div class="lp-tools-sub">Six tools, one app, zero cost.</div>
+            </div>
+            <div class="lp-tools-grid">
+              <div class="lp-tool" onclick="switchTab('analyzer')">
+                <div class="lp-tool-icon">⚖️</div>
+                <div class="lp-tool-name"><em>Trade</em><span>HQ</span></div>
+                <div class="lp-tool-desc">Multi-source consensus trade grades with instant value breakdowns.</div>
+              </div>
+              <div class="lp-tool" onclick="switchTab('values')">
+                <div class="lp-tool-icon">📊</div>
+                <div class="lp-tool-name"><em>Player</em><span>HQ</span></div>
+                <div class="lp-tool-desc">Full dynasty and redraft rankings with FHQ scores and tiers.</div>
+              </div>
+              <div class="lp-tool" onclick="switchTab('draft')">
+                <div class="lp-tool-icon">🎯</div>
+                <div class="lp-tool-name"><em>Draft</em><span>HQ</span></div>
+                <div class="lp-tool-desc">Big board, draft assistant, and a full mock draft simulator.</div>
+              </div>
+              <div class="lp-tool" onclick="switchTab('roster')">
+                <div class="lp-tool-icon">🏈</div>
+                <div class="lp-tool-name"><em>Team</em><span>HQ</span></div>
+                <div class="lp-tool-desc">Roster valuations and personalized team analysis.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── CTA ── -->
+          <div class="lp-cta-sec">
+            <h2 class="lp-cta-h2">Ready to <em>win</em><br>your league?</h2>
+            <p class="lp-cta-sub">Join fantasy managers making sharper decisions with multi-source consensus values and built-in analytics — completely free.</p>
+            <button class="lp-btn-p" style="font-size:15px;padding:14px 44px" onclick="openModal('authModal');setTimeout(()=>authSwitchTab('register'),50)">Get Started Free →</button>
+          </div>
+
+          <!-- ── FOOTER ── -->
+          <div style="border-top:1px solid var(--border)">
+            <div class="lp-footer-sec">
+              <div class="lp-footer-logo"><em>Fantasy</em>HQ</div>
+              <div class="lp-footer-links">
+                <button class="lp-footer-link" onclick="switchTab('analyzer')">TradeHQ</button>
+                <button class="lp-footer-link" onclick="switchTab('values')">PlayerHQ</button>
+                <button class="lp-footer-link" onclick="switchTab('draft')">DraftHQ</button>
+                <button class="lp-footer-link" onclick="switchTab('roster')">TeamHQ</button>
+                <button class="lp-footer-link" onclick="openModal('authModal')">Log In</button>
+              </div>
+              <div class="lp-footer-copy">© 2025 FantasyHQ · Built for serious fantasy players</div>
+            </div>
+          </div>
+
+          <!-- Keep posrank hidden for backward compat -->
           <div class="home-posrank" id="homePosRank" style="display:none">
             <div class="home-posrank-hdr">
-              <!-- Left: position tabs -->
               <div class="home-posrank-pos-tabs">
                 <button class="home-posrank-tab on" data-pos="RB" onclick="renderPosRank('RB')">RB</button>
                 <button class="home-posrank-tab" data-pos="WR" onclick="renderPosRank('WR')">WR</button>
                 <button class="home-posrank-tab" data-pos="QB" onclick="renderPosRank('QB')">QB</button>
                 <button class="home-posrank-tab" data-pos="TE" onclick="renderPosRank('TE')">TE</button>
               </div>
-              <!-- Center: title -->
               <div class="home-posrank-ttl">Position Rankings</div>
-              <!-- Right: dynasty/redraft toggle -->
               <div class="home-posrank-mode-tabs">
                 <button class="home-posrank-mode-tab on" data-mode="dynasty" onclick="setPosRankMode('dynasty')">Dynasty</button>
                 <button class="home-posrank-mode-tab" data-mode="redraft" onclick="setPosRankMode('redraft')">Redraft</button>
               </div>
             </div>
             <div class="home-posrank-list" id="homePosRankList"></div>
-            <div style="text-align:center;margin-top:12px">
-              <span style="font-size:11px;color:var(--text3);cursor:pointer" onclick="switchTab('values')">Full rankings in Player HQ →</span>
-            </div>
           </div>
+
         </div>
       </div>
       <!-- Option C: logged in + league imported -->
@@ -5823,6 +6091,47 @@ function switchTab(name) {
 let _posRankMode = 'dynasty'; // 'dynasty' | 'redraft'
 let _posRankPos  = 'RB';      // 'QB' | 'RB' | 'WR' | 'TE'
 
+// Landing page top rankings widget
+let _lpRankMode = 'dynasty';
+
+function setLpRankMode(mode) {
+  _lpRankMode = mode;
+  document.querySelectorAll('.lp-rank-tab').forEach(t => t.classList.toggle('on', t.dataset.mode === mode));
+  renderLpTopRankings();
+}
+
+function renderLpTopRankings() {
+  const el = document.getElementById('lpTopList');
+  if (!el) return;
+  const valKey = _lpRankMode === 'redraft' ? 'redraft_val' : 'dynasty_val';
+  const top = (S.players || [])
+    .filter(p => ['QB','RB','WR','TE'].includes(p.position) && (p[valKey]||0) > 0)
+    .sort((a,b) => (b[valKey]||0) - (a[valKey]||0))
+    .slice(0, 5);
+  if (!top.length) {
+    el.innerHTML = '<div class="lp-rank-row"><span style="color:var(--text3);font-size:12px">Loading rankings…</span></div>';
+    return;
+  }
+  const numCls = i => ['gold','silver','bronze','',''][i]||'';
+  el.innerHTML = top.map((p,i) => {
+    const tv = p.trend==='up'
+      ? `<span class="lp-rank-trend" style="color:var(--success)">▲</span>`
+      : p.trend==='down'
+      ? `<span class="lp-rank-trend" style="color:var(--danger)">▼</span>`
+      : `<span class="lp-rank-trend" style="color:var(--text3)">—</span>`;
+    return `<div class="lp-rank-row" onclick="switchTab('values')">
+      <span class="lp-rank-num ${numCls(i)}">#${i+1}</span>
+      <div style="flex:1;min-width:0">
+        <div class="lp-rank-name">${escHtml(p.full_name)}</div>
+        <div class="lp-rank-meta">${p.position} · ${p.team||'FA'}</div>
+      </div>
+      <span class="pb pb-${p.position}" style="font-size:9px">${p.position}</span>
+      <span class="lp-rank-val">${Math.floor(p[valKey]||0).toLocaleString()}</span>
+      ${tv}
+    </div>`;
+  }).join('');
+}
+
 // Populate the landing-page news ticker and position rankings (logged-out view only).
 function renderLandingWidgets() {
   // Only render on the logged-out landing page
@@ -5837,6 +6146,7 @@ function renderLandingWidgets() {
   const rankEl = document.getElementById('homePosRank');
   if (rankEl) rankEl.style.display = '';
   renderPosRank(_posRankPos);
+  renderLpTopRankings();
 }
 
 // Switch dynasty/redraft mode and re-render current position
