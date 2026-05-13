@@ -1042,7 +1042,26 @@
     .eng-t5{background:rgba(100,116,139,.13);color:#94a3b8;border:1px solid rgba(100,116,139,.2)}
     .eng-t6{background:rgba(71,85,105,.1);color:#64748b;border:1px solid rgba(71,85,105,.2)}
     .eng-tier-chip{font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:5px;vertical-align:middle;letter-spacing:.04em;text-transform:uppercase}
-    .eng-score-cell{font-size:12px;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap}
+    .eng-score-cell{font-size:12px;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap;cursor:default}
+    /* FHQ Rich Tooltip */
+    .fhq-tip{position:fixed;z-index:9999;background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:16px;width:230px;box-shadow:0 12px 40px rgba(0,0,0,.7);pointer-events:none;display:none;animation:fhqTipIn .12s ease}
+    @keyframes fhqTipIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+    .fhq-tip-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .fhq-tip-score{font-size:32px;font-weight:900;letter-spacing:-1.5px;line-height:1}
+    .fhq-tip-right{text-align:right}
+    .fhq-tip-tier{font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;margin-bottom:3px;display:inline-block}
+    .fhq-tip-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)}
+    .fhq-tip-rows{display:flex;flex-direction:column;gap:7px}
+    .fhq-tip-row{}
+    .fhq-tip-row-hdr{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:3px}
+    .fhq-tip-row-val{font-size:11px;font-weight:800;color:var(--text)}
+    .fhq-tip-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+    .fhq-tip-bar-fill{height:100%;border-radius:3px;transition:width .3s ease}
+    /* Player card FHQ score box */
+    .pc-fhq-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;min-width:68px;flex-shrink:0;text-align:center}
+    .pc-fhq-num{font-size:26px;font-weight:900;letter-spacing:-1.5px;line-height:1;margin-bottom:2px}
+    .pc-fhq-sub{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
+    .pc-fhq-tier{font-size:10px;font-weight:800;margin-top:5px;padding:2px 7px;border-radius:999px}
     .chip-bd{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
     .chip-bd span{font-size:10px;color:var(--text3);background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:1px 5px}
     .chip-eng-total{font-size:10px;font-weight:700;color:var(--primary-l) !important;background:var(--primary-d) !important;border-color:var(--primary) !important}
@@ -5573,8 +5592,20 @@ function renderValuesTable() {
       <td style="white-space:nowrap"><div style="display:flex;align-items:center;gap:7px">${hsHtml}<div><div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap"><strong class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="_openPc(event)">${escHtml(p.full_name)}</strong><span class="pb pb-${p.position==='DST'?'DEF':p.position}" style="font-size:9px;vertical-align:middle">${p.position==='DST'?'DEF':p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div><div style="font-size:11px;color:var(--text3);font-weight:400;margin-top:1px;line-height:1">${p.team||'FA'}${p.age ? ' · Age '+p.age : ''}</div></div></div></td>
       <td style="white-space:nowrap"><span style="font-weight:700;font-size:13px;color:var(--primary-l)">${fmtVal(v)}</span></td>
       <td><span class="tier-badge ${tier.cls}">${tier.label}</span></td>
-      <td title="${bdTip}">
-        ${engScore != null ? `<span class="eng-score-cell ${engT?.cls||''}">${engScore}<span style="font-size:9px;opacity:.6;margin-left:2px">/100</span></span>` : '—'}
+      <td>
+        ${engScore != null ? (() => {
+          const b = p._breakdown || {};
+          return `<span class="eng-score-cell ${engT?.cls||''}"
+            data-score="${engScore}"
+            data-tiercls="${engT?.cls||''}"
+            data-tierlbl="${escHtml(engT?.label||'')}"
+            data-prod="${Math.round(b.production||0)}"
+            data-age="${Math.round(b.age||0)}"
+            data-opp="${Math.round(b.opportunity||0)}"
+            data-phys="${Math.round(b.physical||0)}"
+            data-eff="${Math.round(b.efficiency||0)}"
+          >${engScore}<span style="font-size:9px;opacity:.6;margin-left:2px">/100</span></span>`;
+        })() : '—'}
       </td>
       <td>${trendHtml(p)}</td>
     </tr>`;
@@ -5604,6 +5635,88 @@ function sortTable(col) {
   else { S.tableSort.col = col; S.tableSort.dir = 'desc'; }
   renderValuesTable();
 }
+
+// ── FHQ Score Rich Tooltip ────────────────────────────────
+(function() {
+  const TIP_COMPONENTS = [
+    { key:'prod', label:'Production',      color:'#4f86f5' },
+    { key:'age',  label:'Age Curve',       color:'#22c55e' },
+    { key:'opp',  label:'Opportunity',     color:'#f59e0b' },
+    { key:'phys', label:'Physical Profile',color:'#a78bfa' },
+    { key:'eff',  label:'Efficiency',      color:'#34d399' },
+  ];
+  let tipEl, tipScore, tipTier, tipRows;
+  let hideTimer;
+
+  function init() {
+    tipEl    = document.getElementById('fhqTip');
+    tipScore = document.getElementById('fhqTipScore');
+    tipTier  = document.getElementById('fhqTipTier');
+    tipRows  = document.getElementById('fhqTipRows');
+    if (!tipEl) return;
+    // Event delegation on the entire document
+    document.addEventListener('mouseover', onOver);
+    document.addEventListener('mouseout',  onOut);
+    document.addEventListener('mousemove', onMove);
+  }
+
+  function onOver(e) {
+    const cell = e.target.closest('.eng-score-cell');
+    if (!cell) return;
+    clearTimeout(hideTimer);
+    const d = cell.dataset;
+    tipScore.textContent = d.score || '—';
+    // Apply tier color class to score text
+    tipScore.className   = 'fhq-tip-score ' + (d.tiercls || '');
+    tipTier.textContent  = d.tierlbl || '—';
+    tipTier.className    = 'fhq-tip-tier ' + (d.tiercls || '');
+    // Build component bars
+    tipRows.innerHTML = TIP_COMPONENTS.map(c => {
+      const val = parseInt(d[c.key]) || 0;
+      return `<div class="fhq-tip-row">
+        <div class="fhq-tip-row-hdr">
+          <span>${c.label}</span>
+          <span class="fhq-tip-row-val">${val}<span style="font-size:9px;opacity:.55;margin-left:1px">/100</span></span>
+        </div>
+        <div class="fhq-tip-bar">
+          <div class="fhq-tip-bar-fill" style="width:${val}%;background:${c.color}"></div>
+        </div>
+      </div>`;
+    }).join('');
+    tipEl.style.display = 'block';
+    positionTip(e);
+  }
+
+  function onOut(e) {
+    const cell = e.target.closest('.eng-score-cell');
+    if (!cell) return;
+    hideTimer = setTimeout(() => { if (tipEl) tipEl.style.display = 'none'; }, 80);
+  }
+
+  function onMove(e) {
+    if (!tipEl || tipEl.style.display === 'none') return;
+    if (!e.target.closest('.eng-score-cell')) return;
+    positionTip(e);
+  }
+
+  function positionTip(e) {
+    if (!tipEl) return;
+    const TW = tipEl.offsetWidth  || 230;
+    const TH = tipEl.offsetHeight || 200;
+    const VW = window.innerWidth;
+    const VH = window.innerHeight;
+    let x = e.clientX + 14;
+    let y = e.clientY - TH / 2;
+    if (x + TW > VW - 12) x = e.clientX - TW - 14;
+    if (y < 8) y = 8;
+    if (y + TH > VH - 8) y = VH - TH - 8;
+    tipEl.style.left = x + 'px';
+    tipEl.style.top  = y + 'px';
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
 
 // ═══════════════════════════════════════════════════════════
 // ROSTER / BUY-SELL-HOLD
@@ -13529,6 +13642,25 @@ function showPlayerCard(name) {
       + `<span class="pc-val">Redraft: ${fmtVal(rv)}</span>`
       + `<span class="pc-val ${trendCls}">${trendIcon} ${trend}</span>`;
 
+    // ── FHQ Score box (far right of header) ──
+    const fhqWrap = document.getElementById('pcFhqWrap');
+    const fhqNum  = document.getElementById('pcFhqNum');
+    const fhqTier = document.getElementById('pcFhqTier');
+    if (fhqWrap && fhqNum && fhqTier) {
+      const score = p._engineScore;
+      const tier  = p._engineTier;
+      if (score != null) {
+        fhqNum.textContent  = score;
+        fhqNum.className    = 'pc-fhq-num ' + (tier?.cls || '');
+        // strip background from num — just use text color
+        fhqTier.textContent = tier?.label || '';
+        fhqTier.className   = 'pc-fhq-tier ' + (tier?.cls || '');
+        fhqWrap.style.display = '';
+      } else {
+        fhqWrap.style.display = 'none';
+      }
+    }
+
     // ── Buy/Sell signal ──
     // _tiqGetBuySells() returns {buys:[...], sells:[...]} — combine into flat array
     const sigDiv = document.getElementById('pcSignal');
@@ -14071,6 +14203,11 @@ document.addEventListener('keydown', function(e) {
         <div class="pc-meta-row" id="pcMeta"></div>
         <div class="pc-vals" id="pcVals"></div>
       </div>
+      <div class="pc-fhq-wrap" id="pcFhqWrap" style="display:none">
+        <div class="pc-fhq-sub">FHQ Score</div>
+        <div class="pc-fhq-num" id="pcFhqNum">—</div>
+        <div class="pc-fhq-tier" id="pcFhqTier"></div>
+      </div>
     </div>
     <div class="pc-body">
       <div id="pcSignal" style="display:none" class="pc-signal"></div>
@@ -14141,6 +14278,22 @@ document.addEventListener('keydown', function(e) {
     <input id="tiqChatInput" placeholder="Ask about trades, players, strategy…" onkeydown="if(event.key==='Enter')sendTiqChat()" maxlength="400">
     <button onclick="sendTiqChat()">↑</button>
   </div>
+</div>
+
+<!-- FHQ Score Rich Tooltip -->
+<div id="fhqTip" class="fhq-tip">
+  <div class="fhq-tip-hdr">
+    <div>
+      <div class="fhq-tip-lbl">FHQ Score</div>
+      <div class="fhq-tip-score" id="fhqTipScore">—</div>
+      <div class="fhq-tip-lbl" style="margin-top:1px">/ 100</div>
+    </div>
+    <div class="fhq-tip-right">
+      <div class="fhq-tip-tier" id="fhqTipTier">—</div>
+      <div class="fhq-tip-lbl" style="margin-top:4px">FHQ Tier</div>
+    </div>
+  </div>
+  <div class="fhq-tip-rows" id="fhqTipRows"></div>
 </div>
 </body>
 </html>
