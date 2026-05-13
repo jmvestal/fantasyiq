@@ -86,9 +86,10 @@
     .layout:has(#tab-buysell.active) .sidebar{display:none}
     .layout:has(#tab-wire.active) .main,
     .layout:has(#tab-buysell.active) .main{max-width:none}
-    /* Hide sidebar + right-nav on Home tab — it has its own layout */
-    .layout:has(#tab-home.active) .sidebar,
-    .layout:has(#tab-home.active) .right-nav{display:none}
+    /* Hide sidebar on Home tab — it has its own layout */
+    .layout:has(#tab-home.active) .sidebar{display:none}
+    /* Hide right-nav on Home tab ONLY when not logged in (landing mode) */
+    body.landing-mode .layout:has(#tab-home.active) .right-nav{display:none}
 
     /* ── SIDEBAR SETTINGS ──────────────── */
     .s-section{margin-bottom:18px}
@@ -1621,8 +1622,13 @@
               <div class="home-dash-greet" id="homeDashGreet">Welcome back!</div>
               <div class="home-dash-league" id="homeDashLeague"></div>
             </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn btn-sm btn-s" onclick="openModal('connectModal')">🔗 Switch League</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <!-- League selector — shows when leagues connected -->
+              <select id="homeDashLgSel" class="sidebar-lg-sel" style="display:none;min-width:170px;font-size:12px;padding:7px 10px;border-radius:8px" onchange="switchLeagueGlobal(this.value)"></select>
+              <!-- Connect button — shows when no leagues connected -->
+              <button class="btn btn-sm btn-s" id="homeDashConnectBtn" onclick="openModal('connectModal')">🔗 Connect League</button>
+              <!-- Add another league — shows when leagues already connected -->
+              <button class="btn btn-sm btn-s" id="homeDashAddBtn" style="display:none" onclick="openModal('connectModal')" title="Add another league">＋</button>
               <button class="btn btn-sm btn-p" onclick="switchTab('analyzer')">⚖️ Analyze Trade</button>
             </div>
           </div>
@@ -12024,6 +12030,18 @@ function _refreshLeagueSels() {
     const show = leagues.length >= 1;
     mobLgSec.style.display = show ? '' : 'none';
     if (show) mobLgSel.innerHTML = optsWithNone;
+  }
+
+  // Home dashboard league selector
+  const homeDashLgSel     = document.getElementById('homeDashLgSel');
+  const homeDashConnectBtn = document.getElementById('homeDashConnectBtn');
+  const homeDashAddBtn     = document.getElementById('homeDashAddBtn');
+  if (homeDashLgSel) {
+    const hasList = leagues.length >= 1;
+    homeDashLgSel.style.display      = hasList ? '' : 'none';
+    if (homeDashConnectBtn) homeDashConnectBtn.style.display = hasList ? 'none' : '';
+    if (homeDashAddBtn)     homeDashAddBtn.style.display     = hasList ? '' : 'none';
+    if (hasList) homeDashLgSel.innerHTML = optsWithNone;
   }
 
   // Scout HQ chat dropdown
