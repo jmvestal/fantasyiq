@@ -133,8 +133,12 @@
     body.landing-mode .hdr-nav-link{display:inline-flex}
     body.landing-mode .hdr-right{justify-content:flex-end;gap:8px}
     body.landing-mode .auth-btn-signup{display:inline-flex}
-    body.landing-mode .auth-btn{background:transparent;border:1px solid rgba(79,134,245,.45);color:var(--primary-l);box-shadow:none}
-    body.landing-mode .auth-btn:hover{background:rgba(26,86,219,.18);border-color:var(--primary-l);box-shadow:none}
+    body.landing-mode .auth-btn,
+    body.landing-mode .auth-btn-signup{background:none;border:1.5px solid transparent;box-shadow:none;font-weight:900;font-size:13px;letter-spacing:-.5px;border-radius:999px;padding:6px 13px;opacity:.75}
+    body.landing-mode .auth-btn:hover,
+    body.landing-mode .auth-btn-signup:hover{opacity:1;background:rgba(26,86,219,.1);border-color:rgba(79,134,245,.55);box-shadow:0 0 10px rgba(79,134,245,.2)}
+    body.landing-mode .auth-btn em,body.landing-mode .auth-btn-signup em{color:var(--primary-l);font-style:normal}
+    body.landing-mode .auth-btn span,body.landing-mode .auth-btn-signup span{color:var(--text)}
     body.landing-mode .glb-srch-wrap,body.landing-mode .pc-badge{display:none}
     /* Landing — full-screen centered content */
     .home-landing{min-height:calc(100vh - 70px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;background:var(--bg)}
@@ -1061,8 +1065,8 @@
         📊 <span class="src-count" id="srcCount">0</span>
       </button>
       <!-- Auth: signed-out state -->
-      <button class="auth-btn" id="authBtn" onclick="openModal('authModal')">Log In</button>
-      <button class="auth-btn-signup" onclick="openModal('authModal');setTimeout(()=>authSwitchTab('register'),50)">Sign Up</button>
+      <button class="auth-btn" id="authBtn" onclick="openModal('authModal')"><em>Log</em><span> In</span></button>
+      <button class="auth-btn-signup" onclick="openModal('authModal');setTimeout(()=>authSwitchTab('register'),50)"><em>Sign</em><span> Up</span></button>
       <!-- Auth: signed-in state -->
       <div class="user-pill" id="userPill" style="display:none" onclick="toggleUserMenu(event)">
         <div class="user-avatar" id="userAvatarWrap"><span id="userInitial">?</span></div>
