@@ -558,8 +558,6 @@
     #valTable th{font-size:11px}
     @media(max-width:600px){
       #valTable th,#valTable td{padding:5px 6px;font-size:11px}
-      /* Headshot thumbnail: hide on small phones to save column width */
-      #valTable .rank-hs-wrap{display:none}
       /* Player name cell: allow wrap so it doesn't force wide layout */
       #valTable td:nth-child(2){white-space:normal!important;max-width:120px}
       #valTable .pnr-name{font-size:12px}
@@ -2020,11 +2018,10 @@
               <th onclick="sortTable('name')">Player</th>
               <th onclick="sortTable('value')">Value</th>
               <th onclick="sortTable('engine')" title="Fantasy HQ composite score (0–100): Production · Age · Opportunity · Physical · Efficiency. Hover a row to see breakdown.">FHQ Score ▸</th>
-              <th onclick="sortTable('trend')">Trend</th>
             </tr>
           </thead>
           <tbody id="valTbody">
-            <tr><td colspan="5"><div class="loading"><div class="spin"></div>Loading players…</div></td></tr>
+            <tr><td colspan="4"><div class="loading"><div class="spin"></div>Loading players…</div></td></tr>
           </tbody>
         </table>
       </div>
@@ -5762,9 +5759,8 @@ function renderValuesTable() {
           >${engScore}<span style="font-size:9px;opacity:.6;margin-left:2px">/100</span></span>`;
         })() : '—'}
       </td>
-      <td>${trendHtml(p)}</td>
     </tr>`;
-  }).join('') || `<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--text3)">No players found</td></tr>`;
+  }).join('') || `<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--text3)">No players found</td></tr>`;
 
   // update sub
   const modeStr = isDynasty ? 'Dynasty' : 'Redraft';
