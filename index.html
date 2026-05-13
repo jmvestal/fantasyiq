@@ -331,8 +331,10 @@
     .pc-news-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.4}
     .pc-news-title a{color:var(--text);text-decoration:none;transition:color .12s}
     .pc-news-title a:hover{color:var(--primary-l)}
+    .pc-news-desc{font-size:11.5px;color:var(--text2);line-height:1.5;margin-bottom:4px}
     .pc-news-meta{font-size:11px;color:var(--text3)}
     .pc-news-source{color:var(--text3);font-weight:600}
+    .pc-news-wrap{padding:4px 0}
     @media(max-width:900px){
       .lp-how-steps{grid-template-columns:1fr}
       .lp-rookie-grid{grid-template-columns:repeat(3,1fr)}
@@ -6572,31 +6574,104 @@ function renderRookieSpotlight() {
   initHeadshots();
 }
 
-// Fetch recent player news via rss2json → Google News RSS
-async function fetchPlayerNews(playerName) {
-  if (!playerName) return '<div style="color:var(--text3);font-size:12px;padding:10px 0">Player name unavailable</div>';
-  const rssUrl = 'https://news.google.com/rss/search?q=' + encodeURIComponent(playerName + ' NFL') + '&hl=en-US&gl=US&ceid=US:en';
-  const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl) + '&count=8';
+// ── Player News ──────────────────────────────────────────────
+function _newsErrHtml(msg) {
+  return `<div style="color:var(--text3);font-size:12px;padding:16px 0;text-align:center">${escHtml(msg)}</div>`;
+}
+function _renderNewsItems(items, playerName) {
+  if (!items || !items.length) return _newsErrHtml('No recent news found for ' + playerName + '.');
+  return '<div class="pc-news-wrap">' + items.slice(0, 8).map(item => {
+    const rawDate = item.pubDate ? new Date(item.pubDate) : null;
+    const date = rawDate && !isNaN(rawDate)
+      ? rawDate.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '';
+    const source = (item.author || item.source_name || '').replace(/<[^>]+>/g,'').trim();
+    const title  = (item.title || '').replace(/ - [^-]+$/, '').trim();
+    const raw    = (item.description || item.content || '').replace(/<[^>]+>/g,'').trim();
+    const desc   = raw.length > 10 ? raw.slice(0, 140).trim() + (raw.length > 140 ? '…' : '') : '';
+    const link   = item.link || item.url || '#';
+    return `<div class="pc-news-item">
+      <div class="pc-news-title"><a href="${escHtml(link)}" target="_blank" rel="noopener noreferrer">${escHtml(title)}</a></div>
+      ${desc ? `<div class="pc-news-desc">${escHtml(desc)}</div>` : ''}
+      <div class="pc-news-meta">${source ? `<span class="pc-news-source">${escHtml(source)}</span>${date ? ' · ' : ''}` : ''}${date}</div>
+    </div>`;
+  }).join('') + '</div>';
+}
+function _parseGoogleNewsXml(xml, playerName) {
   try {
-    const r = await fetch(apiUrl);
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const d = await r.json();
-    if (!d.items || !d.items.length) {
-      return '<div style="color:var(--text3);font-size:12px;padding:10px 0">No recent news found for ' + escHtml(playerName) + '.</div>';
-    }
-    return d.items.slice(0, 7).map(item => {
-      const rawDate = item.pubDate ? new Date(item.pubDate) : null;
-      const date = rawDate && !isNaN(rawDate) ? rawDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
-      const source = item.author || '';
-      const title = (item.title || '').replace(/ - [^-]+$/, ''); // strip trailing source from title
+    const doc   = new DOMParser().parseFromString(xml, 'text/xml');
+    const items = [...doc.querySelectorAll('item')];
+    if (!items.length) return _newsErrHtml('No recent news found for ' + playerName + '.');
+    return '<div class="pc-news-wrap">' + items.slice(0, 8).map(el => {
+      const title  = (el.querySelector('title')?.textContent || '').replace(/ - [^-]+$/, '').trim();
+      const link   = el.querySelector('link')?.nextSibling?.textContent?.trim()
+                  || el.querySelector('link')?.textContent?.trim() || '#';
+      const pubDate= el.querySelector('pubDate')?.textContent || '';
+      const source = el.querySelector('source')?.textContent?.trim() || '';
+      const rawDesc= (el.querySelector('description')?.textContent || '').replace(/<[^>]+>/g,'').trim();
+      const desc   = rawDesc.length > 10 ? rawDesc.slice(0, 140).trim() + (rawDesc.length > 140 ? '…' : '') : '';
+      const rawDate= pubDate ? new Date(pubDate) : null;
+      const date   = rawDate && !isNaN(rawDate)
+        ? rawDate.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '';
       return `<div class="pc-news-item">
-        <div class="pc-news-title"><a href="${escHtml(item.link)}" target="_blank" rel="noopener noreferrer">${escHtml(title)}</a></div>
+        <div class="pc-news-title"><a href="${escHtml(link)}" target="_blank" rel="noopener noreferrer">${escHtml(title)}</a></div>
+        ${desc ? `<div class="pc-news-desc">${escHtml(desc)}</div>` : ''}
         <div class="pc-news-meta">${source ? `<span class="pc-news-source">${escHtml(source)}</span>${date ? ' · ' : ''}` : ''}${date}</div>
       </div>`;
-    }).join('');
-  } catch(e) {
-    return '<div style="color:var(--text3);font-size:12px;padding:10px 0">Couldn\'t load news right now. Try again in a moment.</div>';
-  }
+    }).join('') + '</div>';
+  } catch(e) { return _newsErrHtml('Couldn\'t parse news feed.'); }
+}
+
+async function fetchPlayerNews(playerName) {
+  if (!playerName || playerName === '?')
+    return _newsErrHtml('Player name unavailable');
+
+  // Abort-with-timeout wrapper
+  const timedFetch = (url, ms) => {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms || 7000);
+    return fetch(url, { signal: ctrl.signal })
+      .then(r  => { clearTimeout(t); return r; })
+      .catch(e => { clearTimeout(t); throw e; });
+  };
+
+  const q      = encodeURIComponent(playerName + ' NFL');
+  const rssUrl = `https://news.google.com/rss/search?q=${q}&hl=en-US&gl=US&ceid=US:en`;
+
+  // ── Attempt 1: rss2json (returns clean JSON) ──────────────
+  try {
+    const r = await timedFetch(
+      `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&count=10`, 7000
+    );
+    if (r.ok) {
+      const d = await r.json();
+      if (d.status === 'ok' && d.items?.length)
+        return _renderNewsItems(d.items, playerName);
+    }
+  } catch(e) { /* fall through */ }
+
+  // ── Attempt 2: allorigins.win CORS proxy → parse raw XML ──
+  try {
+    const r = await timedFetch(
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`, 9000
+    );
+    if (r.ok) {
+      const xml = await r.text();
+      return _parseGoogleNewsXml(xml, playerName);
+    }
+  } catch(e) { /* fall through */ }
+
+  // ── Attempt 3: corsproxy.io fallback ──────────────────────
+  try {
+    const r = await timedFetch(
+      `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`, 9000
+    );
+    if (r.ok) {
+      const xml = await r.text();
+      return _parseGoogleNewsXml(xml, playerName);
+    }
+  } catch(e) { /* fall through */ }
+
+  return _newsErrHtml("Couldn't load news right now. Try again in a moment.");
 }
 
 // Switch dynasty/redraft mode and re-render current position
@@ -13870,7 +13945,7 @@ function pcStatsTab(tab, btn) {
   if (tab === 'season') promise = fetchPCStats(String(pl.slId), pl.pos);
   else if (tab === 'log')    promise = fetchPCGameLog(String(pl.slId), pl.pos, 2025);
   else if (tab === 'proj')   promise = fetchPCProjections(String(pl.slId), pl.pos, pl.player);
-  else if (tab === 'news')   promise = fetchPlayerNews(pl.player && (pl.player.full_name || pl.player.search_full_name || pl.player.last_name));
+  else if (tab === 'news')   promise = fetchPlayerNews((pl.player && pl.player.full_name) || pl.pname || '');
 
   if (promise) promise.then(html => {
     pl._data[key] = html;
