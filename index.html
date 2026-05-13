@@ -11020,57 +11020,169 @@ const TradeIQEngine = (() => {
     return Math.min(100, Math.max(0, 100 - pen * diff));
   }
 
-  function opportunityScore(player) {
+  // Opportunity — uses depth_chart_order (Sleeper provides this) with
+  // team-value-rank fallback when depth chart data is absent.
+  function opportunityScore(player, allPlayers) {
     const pos = player.position;
-    let score = 50;
+    const dco = player.depth_chart_order;
+    let score;
+
+    // 1. Prefer advanced stats if ever loaded from season endpoint
     if (['WR','TE'].includes(pos) && player.target_share != null)
-      score = player.target_share * 380;
-    else if (pos === 'RB' && player.carry_share != null)
-      score = player.carry_share * 130;
-    else if (pos === 'QB' && player.snap_pct != null)
-      score = player.snap_pct * 100;
-    if (player.depth_chart_order === 1) score += 10;
-    if (player.depth_chart_order >= 3) score -= 15;
+      return Math.min(100, Math.max(0, player.target_share * 400));
+    if (pos === 'RB' && player.carry_share != null)
+      return Math.min(100, Math.max(0, player.carry_share * 140));
+    if (pos === 'QB' && player.snap_pct != null)
+      return Math.min(100, Math.max(0, player.snap_pct * 100));
+
+    // 2. Depth chart order — most reliable available signal
+    if (dco === 1)      score = 84;
+    else if (dco === 2) score = 52;
+    else if (dco === 3) score = 28;
+    else if (dco >= 4)  score = 14;
+    else {
+      // 3. No depth chart data — estimate from team-position value rank
+      const pId      = player.player_id || player.id;
+      const teamVal  = player.dynasty_val || 0;
+      const team     = player.team;
+      if (!team || team === 'FA') {
+        score = 20; // Free agents have limited opportunity
+      } else {
+        const betterOnTeam = (allPlayers || []).filter(t =>
+          t.team === team &&
+          t.position === pos &&
+          (t.player_id || t.id) !== pId &&
+          (t.dynasty_val || 0) > teamVal
+        ).length;
+        if (betterOnTeam === 0)      score = 78; // Position leader on team
+        else if (betterOnTeam === 1) score = 52; // #2 option
+        else if (betterOnTeam === 2) score = 28; // #3 option
+        else                         score = 14;
+      }
+    }
     return Math.min(100, Math.max(0, score));
   }
 
+  // Physical — uses Sleeper combine data (40 time, height, weight, vertical, broad jump).
+  // Falls back to a value-anchored estimate for players without combine data.
   function physicalScore(player) {
-    const pos = player.position;
-    let score = 50;
+    const pos   = player.position;
+    const forty = player.forty_time;
+    const ht    = player.height_inches;
+    const wt    = player.weight_lbs;
+    const vert  = player.vertical;
+    const broad = player.broad_jump;
+    let score   = 50;
+    let pts     = 0; // track how many data points contributed
+
     if (pos === 'QB') {
-      if ((player.height_inches||0) >= 74) score += 10;
-      if ((player.forty_time||99)   <= 4.9) score += 8;
+      if (ht != null) { pts++;
+        if      (ht >= 76) score += 15;
+        else if (ht >= 74) score += 7;
+        else if (ht < 72)  score -= 10;
+      }
+      if (forty != null) { pts++;
+        if      (forty <= 4.65) score += 14;
+        else if (forty <= 4.80) score += 6;
+        else if (forty >  4.95) score -= 6;
+      }
+      if (vert != null) { pts++; if (vert >= 33) score += 5; }
     }
+
     if (pos === 'RB') {
-      const wt = player.weight_lbs || 0;
-      if (wt >= 200 && wt <= 220)         score += 10;
-      if ((player.forty_time||99) <= 4.45) score += 12;
-      if ((player.forty_time||99) <= 4.35) score += 5;
+      if (wt != null) { pts++;
+        if      (wt >= 195 && wt <= 225) score += 8;
+        else if (wt > 235)               score -= 6;
+      }
+      if (forty != null) { pts++;
+        if      (forty <= 4.35) score += 24;
+        else if (forty <= 4.45) score += 15;
+        else if (forty <= 4.55) score += 6;
+        else if (forty > 4.65)  score -= 8;
+      }
+      if (vert  != null) { pts++; if (vert  >= 38) score += 7; else if (vert >= 35) score += 3; }
+      if (broad != null) { pts++; if (broad >= 122) score += 5; }
     }
+
     if (pos === 'WR') {
-      if ((player.forty_time||99) <= 4.45) score += 15;
-      if ((player.forty_time||99) <= 4.35) score += 5;
-      if ((player.height_inches||0) >= 73 && (player.weight_lbs||0) >= 200) score += 10;
+      if (forty != null) { pts++;
+        if      (forty <= 4.35) score += 24;
+        else if (forty <= 4.45) score += 15;
+        else if (forty <= 4.52) score += 6;
+        else if (forty > 4.60)  score -= 8;
+      }
+      if (ht != null && wt != null) { pts++;
+        if      (ht >= 74 && wt >= 210) score += 12; // big WR
+        else if (ht >= 72 && wt >= 195) score += 6;
+        else if (ht < 70)               score -= 5;
+      }
+      if (vert  != null) { pts++; if (vert  >= 40) score += 10; else if (vert >= 36) score += 5; }
+      if (broad != null) { pts++; if (broad >= 126) score += 6; }
     }
+
     if (pos === 'TE') {
-      if ((player.height_inches||0) >= 76) score += 8;
-      if ((player.forty_time||99)   <= 4.7) score += 12;
-      if ((player.forty_time||99)   <= 4.6) score += 5;
-      const wt = player.weight_lbs || 0;
-      if (wt >= 240 && wt <= 260)           score += 8;
+      if (ht != null) { pts++;
+        if      (ht >= 77) score += 15;
+        else if (ht >= 76) score += 8;
+        else if (ht < 75)  score -= 6;
+      }
+      if (wt != null) { pts++;
+        if      (wt >= 245 && wt <= 265) score += 8;
+        else if (wt < 225)               score -= 6;
+      }
+      if (forty != null) { pts++;
+        if      (forty <= 4.55) score += 20;
+        else if (forty <= 4.65) score += 12;
+        else if (forty <= 4.75) score += 4;
+        else if (forty > 4.85)  score -= 8;
+      }
+      if (vert != null) { pts++; if (vert >= 34) score += 6; }
     }
-    return Math.min(100, Math.max(0, score));
+
+    // No combine data at all — anchor to dynasty value so established stars
+    // aren't penalised just for missing draft records
+    if (pts === 0) {
+      const dv = player.dynasty_val || 0;
+      if      (dv >= 7000) score = 72;
+      else if (dv >= 5000) score = 64;
+      else if (dv >= 3000) score = 56;
+      else if (dv >= 1500) score = 48;
+      else                 score = 38;
+    }
+
+    return Math.min(100, Math.max(5, score));
   }
 
+  // Efficiency — uses advanced stats when available; otherwise uses the
+  // redraft-to-dynasty value ratio as a real-production proxy.
+  // Logic: players whose redraft value is high relative to their dynasty
+  // value are actively producing at a high rate right now.
   function efficiencyScore(player) {
-    let score = 50;
+    // Prefer imported advanced stats
     if (player.yards_per_route_run != null)
-      score = (player.yards_per_route_run / 2.0) * 85;
-    else if (player.yards_after_contact != null)
-      score = (player.yards_after_contact / 3.0) * 85;
-    else if (player.cpoe != null)
-      score = 50 + player.cpoe * 5;
-    return Math.min(100, Math.max(0, score));
+      return Math.min(100, Math.max(0, (player.yards_per_route_run / 2.2) * 100));
+    if (player.yards_after_contact != null)
+      return Math.min(100, Math.max(0, (player.yards_after_contact / 3.5) * 100));
+    if (player.cpoe != null)
+      return Math.min(100, Math.max(0, 50 + player.cpoe * 6));
+
+    const dv  = player.dynasty_val  || 0;
+    const rv  = player.redraft_val  || 0;
+    const pos = player.position;
+    if (dv < 200) return 18; // Very low value → assumed inefficient/unproven
+
+    // Normalise redraft value within position ceiling
+    const rvMax = { QB:7200, RB:8000, WR:8200, TE:7200 }[pos] || 7500;
+    const rvPct = Math.min(100, (rv / rvMax) * 100);
+
+    // Ratio: rv/dv captures "producing now vs future value"
+    // 1.0+ = redraft ≥ dynasty → peak efficiency / prime production
+    // 0.7–1.0 = solid contributor
+    // <0.5 = mostly upside / young / unproven
+    const ratio = rv / dv;
+    const ratioBonus = Math.min(20, Math.max(-20, (ratio - 0.7) * 55));
+
+    return Math.min(100, Math.max(10, rvPct * 0.65 + ratioBonus + 18));
   }
 
   function applySettings(base, player, settings) {
@@ -11099,13 +11211,13 @@ const TradeIQEngine = (() => {
     return                        { n:6, label:'Stash',    cls:'eng-t6' };
   }
 
-  function scorePlayer(player, mode, settings) {
+  function scorePlayer(player, mode, settings, allPlayers) {
     const isRookie = (player.years_exp === 0 || player.rookie === true) && mode === 'dynasty';
     const w = WEIGHTS[mode] || WEIGHTS.dynasty;
     const bd = {
       production:  productionScore(player),
       age:         ageScore(player, mode),
-      opportunity: opportunityScore(player),
+      opportunity: opportunityScore(player, allPlayers),
       physical:    physicalScore(player),
       efficiency:  efficiencyScore(player),
     };
@@ -11134,6 +11246,8 @@ const TradeIQEngine = (() => {
       height_inches: parseHeight(p.height),
       weight_lbs:    parseInt(p.weight) || null,
       forty_time:    p.forty_time ? parseFloat(p.forty_time) : null,
+      vertical:      p.vertical   ? parseFloat(p.vertical)  : null,
+      broad_jump:    p.broad_jump ? parseFloat(p.broad_jump) : null,
       // Opportunity signals (populated if available from stats import)
       target_share:  p.target_share  || null,
       carry_share:   p.carry_share   || null,
@@ -11158,7 +11272,7 @@ function applyEngineScores() {
   S.players.forEach(p => {
     if (p.position === 'PICK') { p._engineScore = null; return; }
     const prepped  = TradeIQEngine.preparePlayer(p);
-    const result   = TradeIQEngine.scorePlayer(prepped, mode, settings);
+    const result   = TradeIQEngine.scorePlayer(prepped, mode, settings, S.players);
     p._engineScore = result.total;
     p._engineTier  = result.tier;
     p._breakdown   = result.breakdown;
