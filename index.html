@@ -176,7 +176,9 @@
     .home-posrank-arrow.down{color:var(--danger)}
     /* ── LANDING PAGE SECTIONS ─────────── */
     .lp-hero{padding:70px 40px 50px;max-width:1140px;margin:0 auto;display:grid;grid-template-columns:1fr 400px;gap:56px;align-items:center}
-    .lp-label{display:inline-flex;align-items:center;gap:7px;background:rgba(26,86,219,.12);border:1px solid rgba(79,134,245,.28);color:var(--primary-l);font-size:14px;font-weight:700;letter-spacing:-.3px;padding:5px 16px;border-radius:999px;margin-bottom:18px}
+    .lp-label{display:inline-flex;align-items:center;gap:7px;background:rgba(26,86,219,.12);border:1px solid rgba(79,134,245,.28);font-size:14px;font-weight:900;letter-spacing:-.5px;padding:5px 16px;border-radius:999px;margin-bottom:18px}
+    .lp-label em{color:var(--primary-l);font-style:normal}
+    .lp-label span{color:var(--text)}
     .lp-label-dot{width:6px;height:6px;border-radius:50%;background:var(--primary-l);display:inline-block;animation:lpPulse 2s infinite}
     @keyframes lpPulse{0%,100%{opacity:1}50%{opacity:.35}}
     .lp-h1{font-size:54px;font-weight:900;letter-spacing:-2.5px;line-height:1.05;margin-bottom:18px;color:var(--text)}
@@ -211,7 +213,9 @@
     .lp-section{max-width:1140px;margin:0 auto;padding:60px 40px;display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
     .lp-section.rev .lp-section-text{order:2}
     .lp-section.rev .lp-section-widget{order:1}
-    .lp-sect-label{display:inline-flex;align-items:center;gap:7px;background:rgba(26,86,219,.12);border:1px solid rgba(79,134,245,.28);color:var(--primary-l);font-size:14px;font-weight:700;letter-spacing:-.3px;padding:5px 16px;border-radius:999px;margin-bottom:16px}
+    .lp-sect-label{display:inline-flex;align-items:center;gap:7px;background:rgba(26,86,219,.12);border:1px solid rgba(79,134,245,.28);font-size:14px;font-weight:900;letter-spacing:-.5px;padding:5px 16px;border-radius:999px;margin-bottom:16px}
+    .lp-sect-label em{color:var(--primary-l);font-style:normal}
+    .lp-sect-label span{color:var(--text)}
     .lp-sect-h2{font-size:38px;font-weight:900;letter-spacing:-1.5px;line-height:1.1;margin-bottom:14px;color:var(--text)}
     .lp-sect-desc{font-size:14px;color:var(--text2);line-height:1.75;margin-bottom:24px}
     .lp-mock-trade{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.45)}
@@ -1286,7 +1290,7 @@
           <!-- ── HERO ── -->
           <div class="lp-hero">
             <div>
-              <div class="lp-label"><span class="lp-label-dot"></span>PlayerHQ</div>
+              <div class="lp-label"><span class="lp-label-dot"></span><em>Player</em><span>HQ</span></div>
               <h1 class="lp-h1">Fantasy Player<br><em>Rankings.</em></h1>
               <p class="lp-pitch">Multi-source consensus values across Dynasty, Redraft, Superflex, and 2QB. Built-in tiers, trend signals, and FHQ scores to keep you ahead of your league.</p>
               <div class="lp-cta-row">
@@ -1330,7 +1334,7 @@
           <!-- ── SECTION: TRADE HQ ── -->
           <div class="lp-section">
             <div class="lp-section-text">
-              <div class="lp-sect-label">TradeHQ</div>
+              <div class="lp-sect-label"><em>Trade</em><span>HQ</span></div>
               <h2 class="lp-sect-h2">Compare Football Trades</h2>
               <p class="lp-sect-desc">Pressure-test any trade with multi-source consensus values. Get instant grades, value gaps, and tier context to evaluate every offer faster — and stop getting burned.</p>
               <button class="lp-btn-p" onclick="switchTab('analyzer')">Analyze a Trade →</button>
@@ -1370,7 +1374,7 @@
           <!-- ── SECTION: VALUE HQ (reversed) ── -->
           <div class="lp-section rev">
             <div class="lp-section-text">
-              <div class="lp-sect-label">ValueHQ</div>
+              <div class="lp-sect-label"><em>Value</em><span>HQ</span></div>
               <h2 class="lp-sect-h2">Find the Edge</h2>
               <p class="lp-sect-desc">Identify undervalued players before your league does. Buy low, sell high alerts based on current value trends — so you always know when to act.</p>
               <button class="lp-btn-p" onclick="switchTab('buysell')">View Buy/Sell Alerts →</button>
@@ -1407,7 +1411,7 @@
           <!-- ── TOOLS GRID ── -->
           <div class="lp-tools-sec">
             <div class="lp-tools-hdr">
-              <div style="display:inline-flex;margin-bottom:12px" class="lp-sect-label">FantasyHQ</div>
+              <div style="display:inline-flex;margin-bottom:12px" class="lp-sect-label"><em>Fantasy</em><span>HQ</span></div>
               <div class="lp-tools-ttl">Your complete fantasy arsenal</div>
               <div class="lp-tools-sub">Six tools, one app, zero cost.</div>
             </div>
