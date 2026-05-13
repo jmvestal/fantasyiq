@@ -558,9 +558,14 @@
     #valTable th{font-size:11px}
     @media(max-width:600px){
       #valTable th,#valTable td{padding:5px 6px;font-size:11px}
-      /* Player name cell: constrain width, clip long names with ellipsis */
-      #valTable td:nth-child(2){max-width:160px}
-      #valTable .pnr-name{font-size:12px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block}
+      /* Fixed-layout table so columns don't push each other around */
+      #valTable{table-layout:fixed;width:100%}
+      #valTable th:nth-child(1),#valTable td:nth-child(1){width:30px}
+      #valTable th:nth-child(3),#valTable td:nth-child(3){width:52px}
+      #valTable th:nth-child(4),#valTable td:nth-child(4){width:60px}
+      /* Player column gets all remaining space; clip overflow */
+      #valTable td:nth-child(2){overflow:hidden}
+      #valTable .pnr-name{font-size:12px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle}
       /* FHQ score cell: tighter */
       .eng-score-cell{font-size:11px;padding:2px 5px}
     }
