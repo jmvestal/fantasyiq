@@ -787,6 +787,17 @@
     .dsim-team-pick-row:last-child{border-bottom:none}
     .dsim-all-teams-toggle{background:none;border:1px solid var(--border);border-radius:7px;padding:7px 16px;font-size:12px;color:var(--text2);cursor:pointer;margin-bottom:12px;width:100%}
     .dsim-all-teams-toggle:hover{border-color:var(--primary);color:var(--primary-l)}
+    /* ── Draft Sim compact controls ─────────────────────── */
+    .dsim-setup-bar{background:linear-gradient(135deg,rgba(26,86,219,.12) 0%,var(--bg3) 100%);border:1px solid rgba(26,86,219,.25);border-radius:10px;padding:12px 14px;margin-bottom:14px}
+    .dsim-setup-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+    .dsim-setup-title{font-size:13px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+    .dsim-setup-sub{font-size:11px;color:var(--text3);margin-top:1px}
+    .dsim-setup-btns{display:flex;gap:6px;flex-shrink:0}
+    .dsim-controls{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+    .dsim-ctrl-grp{display:flex;flex-direction:column;gap:2px}
+    .dsim-ctrl-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
+    .dsim-sel{padding:5px 7px;background:var(--bg2);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:11px;font-weight:600;font-family:inherit;outline:none;cursor:pointer;min-width:0;transition:border-color .15s}
+    .dsim-sel:focus,.dsim-sel:hover{border-color:var(--primary)}
     .wizard-rec-bar{background:var(--primary-d);border:1px solid rgba(26,86,219,.3);border-radius:10px;padding:12px 14px;margin-bottom:12px}
     .wizard-rec-ttl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--primary-l);margin-bottom:6px}
     .wizard-rec-name{font-size:15px;font-weight:800;letter-spacing:-.3px}
@@ -2224,47 +2235,75 @@
       <div id="draftSimPane" style="display:none">
 
         <!-- Setup bar -->
-        <div id="dsimSetupBar" class="draft-import-bar">
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;margin-bottom:3px">🎮 Draft Simulator</div>
-            <div style="font-size:11px;color:var(--text2)">Simulate a full snake draft against CPU teams. Practice rookie drafts or full redrafts with needs-based AI opponents.</div>
+        <div id="dsimSetupBar" class="dsim-setup-bar">
+          <div class="dsim-setup-top">
+            <div>
+              <div class="dsim-setup-title">🎮 Draft Simulator</div>
+              <div class="dsim-setup-sub">Simulate a snake draft vs CPU teams with needs-based AI</div>
+            </div>
+            <div class="dsim-setup-btns">
+              <button class="btn btn-p btn-sm" onclick="startDraftSim()">▶ Start Draft</button>
+              <button class="btn btn-s btn-sm" id="dsimResetBtn" style="display:none" onclick="resetDraftSim()">↺ Reset</button>
+              <button class="btn btn-s btn-sm" id="dsimUseLeagueBtn" style="display:none" onclick="dsimUseLeague()">🔗 My League</button>
+            </div>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0;align-items:center">
-            <select id="dsimType" class="trade-partner-sel" style="max-width:130px" onchange="dsimUpdateSetup()">
-              <option value="rookie">Rookie Draft</option>
-              <option value="redraft">Full Redraft</option>
-            </select>
-            <select id="dsimTeams" class="trade-partner-sel" style="max-width:110px" onchange="dsimUpdateSetup()">
-              <option value="8">8 Teams</option>
-              <option value="10">10 Teams</option>
-              <option value="12" selected>12 Teams</option>
-              <option value="14">14 Teams</option>
-              <option value="16">16 Teams</option>
-            </select>
-            <select id="dsimSlot" class="trade-partner-sel" style="max-width:120px"></select>
-            <select id="dsimRounds" class="trade-partner-sel" style="max-width:110px"></select>
-            <select id="dsimQB" class="trade-partner-sel" style="max-width:100px">
-              <option value="1qb" selected>1 QB</option>
-              <option value="sf">Superflex</option>
-              <option value="2qb">2 QB</option>
-            </select>
-            <select id="dsimScoring" class="trade-partner-sel" style="max-width:100px">
-              <option value="ppr" selected>PPR</option>
-              <option value="half">Half PPR</option>
-              <option value="std">Non-PPR</option>
-            </select>
-            <select id="dsimTE" class="trade-partner-sel" style="max-width:110px">
-              <option value="off" selected>Std TE</option>
-              <option value="on">TE Premium</option>
-            </select>
-            <select id="dsimSpeed" class="trade-partner-sel" style="max-width:110px">
-              <option value="fast">Fast CPU</option>
-              <option value="normal" selected>Normal CPU</option>
-              <option value="slow">Slow CPU</option>
-            </select>
-            <button class="btn btn-p btn-sm" onclick="startDraftSim()">▶ Start Draft</button>
-            <button class="btn btn-s btn-sm" id="dsimResetBtn" style="display:none" onclick="resetDraftSim()">↺ Reset</button>
-            <button class="btn btn-s btn-sm" id="dsimUseLeagueBtn" style="display:none" onclick="dsimUseLeague()">🔗 Use My League</button>
+          <div class="dsim-controls">
+            <div class="dsim-ctrl-grp">
+              <div class="dsim-ctrl-lbl">Type</div>
+              <select id="dsimType" class="dsim-sel" onchange="dsimUpdateSetup()">
+                <option value="rookie">Rookie Draft</option>
+                <option value="redraft">Full Redraft</option>
+              </select>
+            </div>
+            <div class="dsim-ctrl-grp">
+              <div class="dsim-ctrl-lbl">Teams</div>
+              <select id="dsimTeams" class="dsim-sel" onchange="dsimUpdateSetup()">
+                <option value="8">8 Teams</option>
+                <option value="10">10 Teams</option>
+                <option value="12" selected>12 Teams</option>
+                <option value="14">14 Teams</option>
+                <option value="16">16 Teams</option>
+              </select>
+            </div>
+            <div class="dsim-ctrl-grp">
+              <div class="dsim-ctrl-lbl">My Pick</div>
+              <select id="dsimSlot" class="dsim-sel"></select>
+            </div>
+            <div class="dsim-ctrl-grp">
+              <div class="dsim-ctrl-lbl">Rounds</div>
+              <select id="dsimRounds" class="dsim-sel"></select>
+            </div>
+            <div class="dsim-ctrl-grp">
+              <div class="dsim-ctrl-lbl">Format</div>
+              <select id="dsimQB" class="dsim-sel">
+                <option value="1qb" selected>1 QB</option>
+                <option value="sf">Superflex</option>
+                <option value="2qb">2 QB</option>
+              </select>
+            </div>
+            <div class="dsim-ctrl-grp">
+              <div class="dsim-ctrl-lbl">Scoring</div>
+              <select id="dsimScoring" class="dsim-sel">
+                <option value="ppr" selected>PPR</option>
+                <option value="half">Half PPR</option>
+                <option value="std">Non-PPR</option>
+              </select>
+            </div>
+            <div class="dsim-ctrl-grp">
+              <div class="dsim-ctrl-lbl">TE</div>
+              <select id="dsimTE" class="dsim-sel">
+                <option value="off" selected>Std TE</option>
+                <option value="on">TE Premium</option>
+              </select>
+            </div>
+            <div class="dsim-ctrl-grp">
+              <div class="dsim-ctrl-lbl">CPU Speed</div>
+              <select id="dsimSpeed" class="dsim-sel">
+                <option value="fast">Fast</option>
+                <option value="normal" selected>Normal</option>
+                <option value="slow">Slow</option>
+              </select>
+            </div>
           </div>
         </div>
 
