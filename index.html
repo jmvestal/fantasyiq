@@ -4949,9 +4949,7 @@ function renderValuesTable() {
     document.querySelectorAll('.pos-btn').forEach(b => b.classList.toggle('on', b.dataset.pos === 'ALL'));
   }
 
-  const _FA_VALS = new Set(['FA','Free Agent','','N/A']);
   let rows = S.players
-    .filter(p => p.position === 'PICK' || (p.team && !_FA_VALS.has(p.team)))  // exclude free agents
     .filter(p => {
       if (pos === 'ALL') {
         // Always hide IDP from ALL view — use the IDP tab to browse defenders
