@@ -898,6 +898,86 @@
       .pos-btn{padding:5px 9px;font-size:11px}
       .badge{font-size:9px;padding:1px 4px}
     }
+
+    /* ── ENHANCED MOBILE RESPONSIVENESS ──────────────────────
+       These rules cover gaps not addressed by earlier queries.
+       Breakpoints: 768px (tablet/large phone), 480px (phone)   */
+
+    /* ── 768px: tablets + large phones ────────────────────── */
+    @media(max-width:768px){
+      /* Header: switch 3-col grid → flex; hide always-on nav links */
+      .hdr-inner{display:flex!important;justify-content:space-between;align-items:center;padding:0 12px;box-sizing:border-box}
+      .hdr-nav-links{display:none!important}
+      /* Draft setup bars: 4-col grid so all controls fit one row on tablet */
+      .dsim-controls{display:grid!important;grid-template-columns:repeat(4,1fr);gap:6px 8px}
+      .dsim-setup-bar{padding:10px 12px}
+      .dsim-ctrl-grp{min-width:0}
+      /* Player card: tighten up on tablet */
+      .pc-headshot-wrap{width:68px;height:68px}
+      .pc-fhq-num{font-size:20px}
+      .pc-fhq-wrap{min-width:48px;padding:7px 10px}
+      /* Landing: stat boxes stack */
+      .lp-stats{grid-template-columns:1fr 1fr}
+      .lp-stat-box{padding:20px}
+      /* Modal slightly tighter */
+      .mo-box{padding:20px 18px}
+      /* Home dashboard header */
+      .home-dash-hdr{flex-direction:column;align-items:flex-start}
+    }
+
+    /* ── 480px: phones (iPhone SE → iPhone 15 Pro) ─────────── */
+    @media(max-width:480px){
+      /* Header */
+      .hdr-inner{padding:0 10px}
+      .logo{font-size:18px!important;letter-spacing:-.8px}
+      /* Draft setup: 2-col grid on phones */
+      .dsim-controls{grid-template-columns:repeat(2,1fr)!important}
+      .dsim-setup-top{flex-direction:column;align-items:flex-start;gap:8px}
+      .dsim-setup-btns{width:100%;justify-content:flex-end}
+      /* Player card: compact header */
+      .pc-header{padding:12px 14px 10px;gap:10px}
+      .pc-headshot-wrap{width:52px;height:52px;border-radius:10px}
+      .pc-fhq-wrap{display:none}
+      .pc-stat-nav{gap:0;padding:0 8px}
+      .pc-stab{font-size:11px;padding:8px 7px}
+      /* Landing hero */
+      .lp-h1{font-size:30px!important;letter-spacing:-1.5px!important}
+      .lp-pitch{font-size:13px}
+      .lp-cta-row{flex-direction:column;gap:10px}
+      .lp-cta-row .btn,.lp-cta-row button[class*="btn"]{width:100%;justify-content:center;text-align:center}
+      /* Landing sections */
+      .lp-cta-h2{font-size:26px!important;letter-spacing:-1px!important}
+      .lp-cta-sub{font-size:13px}
+      .lp-how-sec{padding:36px 16px}
+      .lp-how-step{padding:18px 14px}
+      .lp-how-ttl{font-size:26px}
+      .lp-rookie-sec{padding-left:16px;padding-right:16px}
+      .lp-rookie-grid{grid-template-columns:repeat(2,1fr)}
+      .lp-tools-grid{grid-template-columns:1fr}
+      .lp-tool{padding:16px 14px}
+      .lp-stats{grid-template-columns:1fr}
+      .lp-stat-num{font-size:28px}
+      .lp-stat-box{padding:18px}
+      .lp-fhq-h2{font-size:26px}
+      .lp-sect-h2{font-size:22px!important}
+      .lp-tools-sec{padding:0 16px 40px}
+      .lp-cta-sec{padding:50px 16px}
+      .lp-footer-sec{padding:24px 16px;flex-direction:column;gap:12px}
+      .lp-footer-links{gap:12px}
+      /* Modals: bottom-sheet style */
+      .mo{align-items:flex-end;padding:0}
+      .mo-box{border-radius:16px 16px 0 0;padding:18px 16px;max-height:88vh}
+      .mo-ttl{font-size:17px}
+      /* Tables: ensure scroll */
+      .tbar{gap:6px}
+      /* Home dashboard */
+      .home-stats-row{grid-template-columns:1fr 1fr}
+      .home-posrank{margin-left:-8px;margin-right:-8px;border-radius:8px}
+      /* Buttons in section headers */
+      .sec-hdr>div:last-child .btn{font-size:11px;padding:5px 10px}
+      /* Trade cols stack */
+      .trade-cols{gap:10px}
+    }
     ::-webkit-scrollbar{width:5px;height:5px}
     ::-webkit-scrollbar-track{background:var(--bg)}
     ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
@@ -1058,6 +1138,7 @@
     .eng-score-cell{font-size:12px;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap;cursor:default}
     /* FHQ Rich Tooltip */
     .fhq-tip{position:fixed;z-index:9999;background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:16px;width:230px;box-shadow:0 12px 40px rgba(0,0,0,.7);pointer-events:none;display:none;animation:fhqTipIn .12s ease}
+    @media(max-width:768px){.fhq-tip{width:min(260px,calc(100vw - 32px));pointer-events:auto}}
     @keyframes fhqTipIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
     .fhq-tip-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
     .fhq-tip-score{font-size:32px;font-weight:900;letter-spacing:-1.5px;line-height:1}
@@ -5721,10 +5802,43 @@ function sortTable(col) {
     tipTier  = document.getElementById('fhqTipTier');
     tipRows  = document.getElementById('fhqTipRows');
     if (!tipEl) return;
-    // Event delegation on the entire document
+    // Desktop: hover
     document.addEventListener('mouseover', onOver);
     document.addEventListener('mouseout',  onOut);
     document.addEventListener('mousemove', onMove);
+    // Touch/mobile: tap to show, tap anywhere else to dismiss
+    document.addEventListener('touchstart', onTouch, { passive: true });
+  }
+
+  function onTouch(e) {
+    const cell = e.target.closest('.eng-score-cell');
+    if (!cell) { if (tipEl) tipEl.style.display = 'none'; return; }
+    clearTimeout(hideTimer);
+    const d = cell.dataset;
+    tipScore.textContent = d.score || '—';
+    tipScore.className   = 'fhq-tip-score ' + (d.tiercls || '');
+    tipTier.textContent  = d.tierlbl || '—';
+    tipTier.className    = 'fhq-tip-tier ' + (d.tiercls || '');
+    tipRows.innerHTML = TIP_COMPONENTS.map(c => {
+      const val = parseInt(d[c.key]) || 0;
+      return `<div class="fhq-tip-row">
+        <div class="fhq-tip-row-hdr">
+          <span>${c.label}</span>
+          <span class="fhq-tip-row-val">${val}<span style="font-size:9px;opacity:.55;margin-left:1px">/100</span></span>
+        </div>
+        <div class="fhq-tip-bar">
+          <div class="fhq-tip-bar-fill" style="width:${val}%;background:${c.color}"></div>
+        </div>
+      </div>`;
+    }).join('');
+    // Position centered near top of screen on mobile
+    tipEl.style.display = 'block';
+    const TW = tipEl.offsetWidth  || 230;
+    const TH = tipEl.offsetHeight || 200;
+    const VW = window.innerWidth;
+    const VH = window.innerHeight;
+    tipEl.style.left = Math.round((VW - TW) / 2) + 'px';
+    tipEl.style.top  = Math.min(80, VH - TH - 20) + 'px';
   }
 
   function onOver(e) {
