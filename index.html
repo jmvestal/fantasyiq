@@ -121,18 +121,6 @@
     body.landing-mode .layout { display:block }
     body.landing-mode .main { padding:0 }
     body.landing-mode #tab-home { display:block }
-    /* Global trending ticker — sits between header and layout on all pages */
-    .global-ticker-bar{background:var(--bg3);border-bottom:1px solid var(--border);overflow:hidden;height:0;transition:height .2s}
-    .global-ticker-bar.ready{height:30px}
-    body.landing-mode .global-ticker-bar{display:none}
-    .global-ticker-inner{display:flex;white-space:nowrap;animation:global-ticker-scroll 12s linear infinite;will-change:transform;height:100%;align-items:center}
-    .global-ticker-inner:hover{animation-play-state:paused}
-    @keyframes global-ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-    .global-ticker-item{display:inline-flex;align-items:center;gap:5px;padding:0 14px;font-size:11px;font-weight:600;cursor:pointer;transition:color .15s;flex-shrink:0}
-    .global-ticker-item.up{color:var(--success)}
-    .global-ticker-item.down{color:var(--danger)}
-    .global-ticker-item:hover{opacity:.8}
-    .global-ticker-sep{display:inline-block;color:var(--border);font-size:11px;flex-shrink:0;padding:0 2px;user-select:none}
     /* Option A — Full-screen centered landing */
     .home-landing{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;background:var(--bg)}
     .home-landing-logo{font-size:64px;font-weight:900;letter-spacing:-3px;margin-bottom:10px;line-height:1}
@@ -144,17 +132,6 @@
     .home-feat-icon{font-size:26px}
     .home-feat-name{font-size:13px;font-weight:700;color:var(--text)}
     .home-feat-desc{font-size:11px;color:var(--text3);line-height:1.5}
-    /* News ticker */
-    .home-ticker-wrap{width:100%;max-width:700px;overflow:hidden;background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:28px;position:relative}
-    .home-ticker-wrap::before,.home-ticker-wrap::after{content:'';position:absolute;top:0;bottom:0;width:36px;z-index:2;pointer-events:none}
-    .home-ticker-wrap::before{left:0;background:linear-gradient(to right,var(--bg3),transparent)}
-    .home-ticker-wrap::after{right:0;background:linear-gradient(to left,var(--bg3),transparent)}
-    .home-ticker{display:flex;white-space:nowrap;animation:home-ticker-scroll 12s linear infinite;will-change:transform}
-    .home-ticker:hover{animation-play-state:paused}
-    @keyframes home-ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-    .home-ticker-item{display:inline-flex;align-items:center;gap:5px;padding:9px 18px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;transition:color .15s;flex-shrink:0}
-    .home-ticker-item:hover{color:var(--text)}
-    .home-ticker-sep{display:inline-block;padding:9px 0;color:var(--border);font-size:12px;flex-shrink:0;user-select:none}
     /* Position rankings */
     .home-posrank{max-width:700px;width:100%;margin-top:8px;padding-bottom:40px}
     /* Position rankings header: [pos tabs] [title] [mode tabs] */
@@ -224,6 +201,8 @@
     /* ── SECTION HEADERS ────────────────── */
     .sec-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
     .sec-ttl{font-size:20px;font-weight:800;letter-spacing:-.3px}
+    .sec-ttl em{color:var(--primary-l);font-style:normal;text-shadow:0 0 22px rgba(157,90,240,.5)}
+    .sec-ttl span{color:var(--text)}
     .sec-sub{font-size:12px;color:var(--text2);margin-top:3px}
 
     /* ── TRADE LAYOUT ───────────────────── */
@@ -963,6 +942,13 @@
     .pc-headshot-wrap{flex-shrink:0;width:88px;height:88px;border-radius:12px;overflow:hidden;background:var(--bg3);border:1px solid var(--border)}
     .pc-headshot{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
     .pc-headshot-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:38px}
+    /* ── PLAYER HEADSHOT THUMBNAILS ─────────────────────────────── */
+    /* Wrapper — 30 px circle; position:relative so the photo can overlay */
+    .rank-hs-wrap{flex-shrink:0;width:30px;height:30px;border-radius:50%;overflow:hidden;position:relative;display:inline-flex;align-items:center;justify-content:center}
+    /* Placeholder circle — always visible by default */
+    .rank-hs-ph{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+    /* Photo — injected by initHeadshots(); starts hidden, shown on load */
+    .rank-hs-img{position:absolute;top:0;left:0;width:30px;height:30px;object-fit:cover;object-position:top center;display:none}
     .pc-info{flex:1;min-width:0;padding-top:2px}
     .pc-name{font-size:18px;font-weight:900;color:var(--text);line-height:1.2;margin-bottom:5px;display:flex;align-items:center;flex-wrap:wrap;gap:5px}
     .pc-meta-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;font-size:12px;color:var(--text2);margin-bottom:8px}
@@ -1084,11 +1070,6 @@
   </div>
 </header>
 
-<!-- ═══ GLOBAL TRENDING TICKER ═══ -->
-<div class="global-ticker-bar" id="globalTickerBar">
-  <div class="global-ticker-inner" id="globalTickerInner"></div>
-</div>
-
 <!-- ═══ LAYOUT ═══ -->
 <div class="layout">
 
@@ -1187,10 +1168,6 @@
       <!-- Option A: not logged in — full-screen landing -->
       <div id="homeOptionA">
         <div class="home-landing">
-          <!-- Live ticker -->
-          <div class="home-ticker-wrap" id="homeTickerWrap" style="display:none">
-            <div class="home-ticker" id="homeTicker"></div>
-          </div>
           <div class="home-landing-logo"><em>Fantasy</em>HQ</div>
           <div class="home-landing-tag">The free NFL fantasy analyzer built for serious players.</div>
           <button class="btn btn-p" style="font-size:15px;padding:12px 40px;border-radius:10px;margin-bottom:20px" onclick="openModal('authModal')">Sign In</button>
@@ -1291,7 +1268,7 @@
     <div id="tab-analyzer" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl">Trade HQ</div>
+          <div class="sec-ttl"><em>Trade</em><span> HQ</span></div>
           <div class="sec-sub">Add players to each side — values auto-adjust to your league settings</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1466,7 +1443,7 @@
     <div id="tab-values" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl">Player HQ</div>
+          <div class="sec-ttl"><em>Player</em><span> HQ</span></div>
           <div class="sec-sub" id="valTableSub">Adjusted for your league settings</div>
         </div>
         <!-- League selector — visible when a league is connected; includes No League option -->
@@ -1527,7 +1504,7 @@
     <div id="tab-roster" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl">Team HQ</div>
+          <div class="sec-ttl"><em>Team</em><span> HQ</span></div>
           <div class="sec-sub">Connect your league for roster grades, trade targets &amp; buy/sell advice</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1605,7 +1582,7 @@
     <div id="tab-league" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl">League HQ</div>
+          <div class="sec-ttl"><em>League</em><span> HQ</span></div>
           <div class="sec-sub" id="leagueAnalyzerSub">Connect a league to rank all teams</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1645,7 +1622,7 @@
     <div id="tab-draft" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl">Draft HQ</div>
+          <div class="sec-ttl"><em>Draft</em><span> HQ</span></div>
           <div class="sec-sub">Analyze a completed draft or get live pick-by-pick guidance</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1940,7 +1917,7 @@
     <div id="tab-wire" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl">Waiver HQ</div>
+          <div class="sec-ttl"><em>Waiver</em><span> HQ</span></div>
           <div class="sec-sub" id="wireSubHead">Weekly waiver targets — updated every Tuesday</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1994,7 +1971,7 @@
       <div class="sec-hdr">
         <div>
           <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px">
-            <div class="sec-ttl">Value HQ</div>
+            <div class="sec-ttl"><em>Value</em><span> HQ</span></div>
             <span style="background:var(--primary);color:#fff;font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;letter-spacing:.04em;text-transform:uppercase">Dynasty</span>
           </div>
           <div class="sec-sub">Trade targets based on current market values, age curves &amp; trend data</div>
@@ -3941,13 +3918,17 @@ function calcValue(p, _over) {
   if (pos !== 'PICK') {
     const sk  = scenarioKey({ mode, qb, scoring, te });
     const pid = normName(p.full_name || '');
-    // For dynasty skill positions, the scen_dyn_sf_hppr_note position files are the
-    // authoritative source (rb/wr/qb/te/rookies CSVs). Always try the active scenario
-    // first, then fall back to the SF HPPR position files. This keeps QB rankings
-    // format-agnostic and ensures all positions share one consistent dynasty source.
-    let se = S.sourceValues?.[sk]?.[pid];
-    if (!se && mode === 'dynasty' && ['QB','RB','WR','TE'].includes(pos)) {
+    // For dynasty skill positions, scen_dyn_sf_hppr_note (position-specific files:
+    // qb.csv / rb.csv / wr.csv / te.csv / rookies.csv) is the AUTHORITATIVE source.
+    // Check it FIRST so that Josh Allen is always #1 QB, Goff/Prescott stay at their
+    // correct ranks, and format or league-size changes cannot reorder dynasty skill pos.
+    // Only fall back to the active scenario key for players not found in those files.
+    let se;
+    if (mode === 'dynasty' && ['QB','RB','WR','TE'].includes(pos)) {
       se = S.sourceValues?.['scen_dyn_sf_hppr_note']?.[pid];
+    }
+    if (!se) {
+      se = S.sourceValues?.[sk]?.[pid];
     }
     // IDP: always use the dedicated IDP CSV (dyn_idp/fantasypros.csv) — never external data
     if (!se && IDP_POS.has(pos)) {
@@ -3966,25 +3947,42 @@ function calcValue(p, _over) {
         if (IDP_POS.has(pos)) sv = Math.round(sv * (mode === 'dynasty' ? 0.30 : 0.18));
         if (DST_POS.has(pos)) sv = Math.min(sv, mode === 'dynasty' ? 200 : 2800);
         if (pos === 'K')       sv = Math.min(sv, 1600);
-        // League size modifier — scenarios don't know about size, so we apply it here.
-        // DYNASTY: szMod = 1.0 for all positions. The scenario CSV already encodes the
-        // correct value for the scoring format + TE premium. League size does not change
-        // dynasty rankings — only format (PPR/Half/Std) and TE premium do.
-        // REDRAFT: format and size both scale values.
+        // League size modifier — applied only in redraft.
+        // DYNASTY: szMod = 1.0 for ALL positions. The CSV values (qb.csv / rb.csv /
+        //   wr.csv / te.csv) are the authoritative dynasty rankings. Multiplying any
+        //   value risks capping at 10000 and creating false ties that scramble
+        //   positional order (e.g. Allen = Maye = Williams = 10000 in large SF leagues).
+        //   QB format scarcity (1QB vs SF vs 2QB) is expressed through how the CSV
+        //   values were calibrated, not through runtime multipliers.
+        // REDRAFT: format and size both scale values normally.
         let szMod = 1.0;
         if (mode === 'dynasty') {
-          szMod = 1.0; // CSV value IS the dynasty value — no size adjustment
+          szMod = 1.0; // never adjust dynasty values at runtime — CSV order is final
         } else if (pos === 'QB') {
-            szMod = qb === '2qb' ? ({ 8:0.88,10:0.94,12:1.00,14:1.10,16:1.22 }[size]||1)
-                  : qb === 'sf'  ? ({ 8:0.85,10:0.92,12:1.00,14:1.10,16:1.20 }[size]||1)
-                  :                ({ 8:0.78,10:0.88,12:1.00,14:1.12,16:1.26 }[size]||1);
+            // QB positional order must not shift with league size — the same QB who
+            // is QB1 in a 12-team league must still be QB1 in a 16-team league.
+            // Apply only small-league discounts; no boost for large leagues.
+            szMod = qb === '2qb' ? ({ 8:0.88,10:0.94,12:1.00,14:1.00,16:1.00 }[size]||1)
+                  : qb === 'sf'  ? ({ 8:0.85,10:0.92,12:1.00,14:1.00,16:1.00 }[size]||1)
+                  :                ({ 8:0.78,10:0.88,12:1.00,14:1.00,16:1.00 }[size]||1);
         } else if (pos === 'TE') {
-          const eTE = sv > 4000;
-          szMod = eTE ? ({ 8:0.85,10:0.92,12:1.00,14:1.12,16:1.25 }[size]||1)
-                      : ({ 8:0.90,10:0.95,12:1.00,14:1.08,16:1.16 }[size]||1);
+            // At 16 teams non-TE-premium: add an extra size-based discount so TEs
+            // don't rank above elite WRs/RBs.
+            // At 16 teams TE-premium: keep 1.00 — the CSV already encodes the premium
+            // and we don't want to double-penalise TEs in that format.
+            const eTE = sv > 4000;
+            const te16 = te === 'on' ? 1.00 : 0.90; // 16-team TE discount (non-prem only)
+            szMod = eTE ? ({ 8:0.85,10:0.92,12:1.00,14:1.00,16:te16 }[size]||1)
+                        : ({ 8:0.90,10:0.95,12:1.00,14:1.00,16:te16 }[size]||1);
+            if (te !== 'on') szMod *= 0.88;
         } else {
-          const el = sv > 5500;
-          szMod = ({8:el?1.12:0.86,10:el?1.06:0.93,12:1.00,14:el?0.96:1.04,16:el?0.91:1.10})[size]||1;
+            // RB/WR: at 16 teams, a moderate boost ensures elite WRs/RBs appear
+            // in the top picks alongside QBs (not buried at pick 27+).
+            // The QB boost at 16 teams (1.02–1.03) is intentionally smaller than
+            // the WR/RB boost (1.05) so top skill players get sprinkled in.
+            // 14-team stays at 1.00 (user confirmed this looks correct already).
+            const el = sv > 5500;
+            szMod = ({8:el?1.08:0.88,10:el?1.04:0.94,12:1.00,14:1.00,16:el?1.05:1.02})[size]||1;
         }
         sv = Math.round(sv * szMod);
         return Math.max(0, Math.min(10000, sv));
@@ -4056,18 +4054,31 @@ function calcValue(p, _over) {
   //   2QB dynasty : dv × 1.55   (most valuable QB format in dynasty)
   // ══════════════════════════════════════════════════════════════
   if (pos === 'QB') {
-    const dv = p.dynasty_val || 500;
+    // Use the authoritative position-specific qb.csv (scen_dyn_sf_hppr_note) as the
+    // base value for QB ordering. This file has correct direct values (Allen=9990,
+    // Maye=9412, …, Prescott=4966, Goff=4623) so ordering is never scrambled by
+    // mixed dynasty CSVs where lesser QBs can rank artificially high.
+    //
+    // buildConsensus caps p.dynasty_val at POS_RANK_MAX.QB=7800, collapsing all
+    // high-value QBs to the same number — the qb.csv entry bypasses that cap.
+    //
+    // Scale factors are chosen so Josh Allen (9990) doesn't hit the 10000 ceiling:
+    //   SF  redraft : 9990 × 0.92 ≈ 9191  (Allen #1–2 overall in SF)
+    //   2QB redraft : 9990 × 0.97 ≈ 9690  (Allen clear #1 in 2QB)
+    //   1QB redraft : 9990 × 0.58 ≈ 5794  (QBs are depth picks in 1QB)
+    const _qbPid = normName(p.full_name || '');
+    const _qbSrc = S.sourceValues?.['scen_dyn_sf_hppr_note']?.[_qbPid];
+    const dv = (_qbSrc?.dv > 0) ? _qbSrc.dv : (p.dynasty_val || 500);
     if (qb === '2qb') {
       v = mode === 'redraft'
-        ? Math.round(dv * 1.38 * 0.88)   // all 32 starters needed in 16-team
+        ? Math.round(dv * 0.97)           // 2QB: Allen≈9690, preserves ordering
         : Math.round(dv * 1.55);          // 2QB dynasty
     } else if (qb === 'sf') {
       v = mode === 'redraft'
-        ? Math.round(dv * 1.38 * 0.80)   // SF flex slot, current-season focus
+        ? Math.round(dv * 0.92)           // SF: Allen≈9191, Prescott≈4569 (correct)
         : Math.round(dv * 1.38);          // SF dynasty: restores KTC SF value
     } else {
-      // 1QB: use dv × 0.58 to maintain ordering consistency with SF/2QB
-      // (same QB hierarchy, just scaled down since only 12–14 QBs matter)
+      // 1QB: scale down so QBs sit behind elite WRs/RBs in overall rankings
       v = Math.round(dv * 0.58);
     }
   }
@@ -4137,32 +4148,41 @@ function calcValue(p, _over) {
   //   become enormous assets. TEs get their own size table (not the generic
   //   skill-player one) so elite TEs are boosted, not penalized, in big leagues.
   // ══════════════════════════════════════════════════════════════
+  // League size modifier — redraft only (dynasty always returns before here).
+  // No upward boost for QBs or TEs in large leagues: their values already approach
+  // 9500–9800, so any multiplier >1.02 causes multiple players to tie at the 10000
+  // cap and destroys positional ordering. Format-specific QB scarcity (1QB/SF/2QB)
+  // is encoded in the scenario CSV, not in runtime multipliers.
+  // Small-league downward discounts remain — in an 8-team 1QB league the #8 QB
+  // genuinely has no starting value.
   let szMod;
   if (pos === 'QB') {
+    // QB positional order must be stable across all league sizes.
+    // Only small-league discounts apply; no upward boost for larger leagues.
     if (qb === '2qb') {
-      // 2QB: 8-team needs 16 QB slots, 16-team needs 32 — massive scarcity jump
-      szMod = { 8: 0.88, 10: 0.94, 12: 1.00, 14: 1.10, 16: 1.22 }[size] || 1.0;
+      szMod = { 8: 0.88, 10: 0.94, 12: 1.00, 14: 1.00, 16: 1.00 }[size] || 1.0;
     } else if (qb === 'sf') {
-      // SF: 1 flex QB per team — size matters but less than 2QB
-      szMod = { 8: 0.85, 10: 0.92, 12: 1.00, 14: 1.10, 16: 1.20 }[size] || 1.0;
+      szMod = { 8: 0.85, 10: 0.92, 12: 1.00, 14: 1.00, 16: 1.00 }[size] || 1.0;
     } else {
-      // 1QB: small leagues have surplus, large leagues have real scarcity
-      szMod = { 8: 0.78, 10: 0.88, 12: 1.00, 14: 1.12, 16: 1.26 }[size] || 1.0;
+      szMod = { 8: 0.78, 10: 0.88, 12: 1.00, 14: 1.00, 16: 1.00 }[size] || 1.0;
     }
   } else if (pos === 'TE') {
-    // TEs have unique size dynamics: elite TEs (only ~4 exist) become
-    // game-breaking assets in large leagues — the OPPOSITE of WR/RB elite players.
-    // Non-elite TEs also scale up since every team needs a TE starter.
+    // At 16 teams, always apply a mild downward modifier to prevent the TE-premium
+    // ×1.28 multiplier (applied above) from inflating elite TEs above top WRs/RBs
+    // when no TE-premium CSV is loaded and the main-formula fallback is used.
+    // The 0.88 non-premium discount is also applied below for non-TE-premium leagues.
     const isEliteTE = v > 4000;
     szMod = isEliteTE
-      ? { 8: 0.85, 10: 0.92, 12: 1.00, 14: 1.12, 16: 1.25 }[size] || 1.0  // elite TE: strong large-league premium
-      : { 8: 0.90, 10: 0.95, 12: 1.00, 14: 1.08, 16: 1.16 }[size] || 1.0; // non-elite TE: moderate bump
+      ? { 8: 0.85, 10: 0.92, 12: 1.00, 14: 1.00, 16: 0.90 }[size] || 1.0
+      : { 8: 0.90, 10: 0.95, 12: 1.00, 14: 1.00, 16: 0.95 }[size] || 1.0;
+    if (te !== 'on') szMod *= 0.88; // non-TE-premium discount
   } else {
-    // WR / RB / other: elite players slightly spread thin in large leagues;
-    // mid-tier players more in demand as rosters deepen
+    // WR / RB: at 16 teams, a moderate boost ensures elite WRs/RBs appear
+    // alongside QBs in the top picks. The QB boost (1.02–1.03) is intentionally
+    // smaller than the WR/RB boost (1.05) so skill players are sprinkled in.
     const isElite = v > 5500;
-    szMod = ({ 8: isElite ? 1.12 : 0.86, 10: isElite ? 1.06 : 0.93,
-      12: 1.00, 14: isElite ? 0.96 : 1.04, 16: isElite ? 0.91 : 1.10 })[size] || 1.0;
+    szMod = ({ 8: isElite ? 1.08 : 0.88, 10: isElite ? 1.04 : 0.94,
+      12: 1.00, 14: 1.00, 16: isElite ? 1.05 : 1.02 })[size] || 1.0;
   }
   v = Math.round(v * szMod);
 
@@ -4197,6 +4217,50 @@ function pnr(p) {
     ? escHtml(nm)
     : `<span class="pnr-name" data-pcname="${escHtml(nm)}" onclick="_openPc(event)">${escHtml(nm)}</span>`;
   return `<span style="white-space:nowrap">${nameHtml}<span class="pb pb-${pos}" style="font-size:9px;vertical-align:middle;margin-left:4px">${pos}</span>${rk}</span>`;
+}
+
+// ── PLAYER HEADSHOT THUMBNAILS ─────────────────────────────────────────────
+//
+// playerHsHtml(slId, pos)
+//   Returns a 30-px circle wrap.  For valid numeric Sleeper IDs the img tag
+//   is embedded directly — same way static player-card img works.  The img
+//   comes FIRST inside the wrap so nextElementSibling always points to the
+//   placeholder div.  No lazy-loading, no JS createElement needed.
+//
+// initHeadshots() / MutationObserver kept as belt-and-suspenders fallback
+// for any wrap that somehow has data-sid but no embedded img yet.
+// ───────────────────────────────────────────────────────────────────────────
+
+function playerHsHtml(slId, pos) {
+  const pk      = (pos === 'DST' ? 'DEF' : pos) || '?';
+  const ltr     = pk[0];
+  // Only numeric Sleeper IDs have valid CDN photos; 'fb-N' / 'r26-N' stubs do not
+  const validId = slId && /^\d+$/.test(String(slId)) ? String(slId) : null;
+  if (validId) {
+    // img has NO src attribute — browser won't try to load until initHeadshots() fires.
+    // initHeadshots() sets .onload / .onerror handlers THEN sets .src, exactly
+    // mirroring the working player-card modal mechanism.
+    return `<div class="rank-hs-wrap">`
+         + `<div class="rank-hs-ph pb-${pk}">${ltr}</div>`
+         + `<img class="rank-hs-img" data-sid="${validId}" alt="">`
+         + `</div>`;
+  }
+  return `<div class="rank-hs-wrap"><div class="rank-hs-ph pb-${pk}">${ltr}</div></div>`;
+}
+
+// Activates headshot imgs — mirrors showPlayerCard() exactly:
+//   1. mark as initialised  2. hide img  3. set onload  4. set onerror  5. set src LAST
+// data-hs-done attribute prevents double-initialisation across MutationObserver re-fires.
+function initHeadshots() {
+  document.querySelectorAll('img.rank-hs-img[data-sid]:not([data-hs-done])').forEach(img => {
+    img.setAttribute('data-hs-done', '1');
+    const sid = img.dataset.sid;
+    const ph  = img.previousElementSibling; // the .rank-hs-ph div
+    img.style.display = 'none';             // hide until loaded (same as player-card modal)
+    img.onload  = () => { img.style.display = 'block'; if (ph) ph.style.display = 'none'; };
+    img.onerror = () => { img.style.display = 'none';  if (ph) ph.style.display = ''; };
+    img.src = `https://sleepercdn.com/content/nfl/players/thumb/${sid}.jpg`; // src LAST
+  });
 }
 
 function sideTotal(arr) { return arr.reduce((s,p)=>s+calcValue(p),0); }
@@ -4581,6 +4645,7 @@ function renderTrade() {
   // Chips — fall back to quick-start popular players when empty
   document.getElementById('chipsA').innerHTML = renderChips(S.tradeA, 'A') || _renderQuickStart('A');
   document.getElementById('chipsB').innerHTML = renderChips(S.tradeB, 'B') || _renderQuickStart('B');
+  setTimeout(initHeadshots, 0);
 
   // Hide analysis when trade changes
   document.getElementById('analysisCard').style.display = 'none';
@@ -4698,6 +4763,7 @@ function renderChips(arr, side) {
       </div>`;
     })() : '';
     return `<div class="chip">
+      ${playerHsHtml(p.player_id||p.id, p.position)}
       <div class="chip-info">
         <div class="chip-name">${pnr(p)}${tierBadge}</div>
         <div class="chip-sub">${p.team||''}${p.age?' · Age '+p.age:''}</div>
@@ -4924,9 +4990,11 @@ function renderValuesTable() {
     const crossTd = isDynasty
       ? `<td><span style="font-size:12px;color:var(--text2)">${fmtVal(rvRaw)}</span></td>`
       : `<td style="display:none"></td>`;
+    // Headshot thumbnail — shared helper; Sleeper CDN thumb with position-coloured fallback
+    const hsHtml = playerHsHtml(p.player_id||p.id, p.position);
     return `<tr>
       <td><span style="color:var(--text3);font-size:12px">${i+1}</span></td>
-      <td style="white-space:nowrap"><strong class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="_openPc(event)">${escHtml(p.full_name)}</strong><span class="pb pb-${p.position==='DST'?'DEF':p.position}" style="font-size:9px;vertical-align:middle;margin-left:4px">${p.position==='DST'?'DEF':p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</td>
+      <td style="white-space:nowrap"><div style="display:flex;align-items:center;gap:7px">${hsHtml}<div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap"><strong class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="_openPc(event)">${escHtml(p.full_name)}</strong><span class="pb pb-${p.position==='DST'?'DEF':p.position}" style="font-size:9px;vertical-align:middle">${p.position==='DST'?'DEF':p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div></div></td>
       <td style="display:none"></td>
       <td style="color:var(--text2)">${p.team||'—'}</td>
       <td style="color:var(--text2)">${p.age||'—'}</td>
@@ -4956,6 +5024,8 @@ function renderValuesTable() {
 
   // sort indicators
   document.querySelectorAll('#valTable th').forEach(th => { th.classList.remove('sort-asc','sort-desc'); });
+  // Headshots: inline img handles most cases; call fallback in case DOM settle is needed
+  setTimeout(initHeadshots, 0);
 }
 
 function sortTable(col) {
@@ -5152,10 +5222,13 @@ function renderRosterList() {
     return `<div class="ros-row">
       <span class="ros-slot-lbl ${cls}">${slotLabel}</span>
       <div class="ros-row-info">
-        <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-          <span class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="_openPc(event)">${escHtml(p.full_name)}</span>
-          <span class="pb pb-${pos}" style="font-size:9px;vertical-align:middle;margin-left:4px">${pos}</span>
-          ${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}
+        <div style="display:flex;align-items:center;gap:7px">
+          ${playerHsHtml(p.player_id||p.id, p.position)}
+          <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            <span class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="_openPc(event)">${escHtml(p.full_name)}</span>
+            <span class="pb pb-${pos}" style="font-size:9px;vertical-align:middle;margin-left:4px">${pos}</span>
+            ${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}
+          </div>
         </div>
         <div style="font-size:11px;color:var(--text3)">${p.team||'FA'}${p.age?' · Age '+p.age:''}</div>
       </div>
@@ -5207,6 +5280,7 @@ function renderRosterList() {
   }
 
   el.innerHTML = html;
+  setTimeout(initHeadshots, 0);
 }
 
 function removeFromRoster(id) {
@@ -5353,7 +5427,7 @@ function buildSearch(inputId, ddId, onSelect, excludeFn) {
       dd.innerHTML = results.map(p => {
         const v = calcValue(p);
         return `<div class="dd-item" onclick="selectPlayer('${p.id}','${inputId}','${ddId}')">
-          <span class="pb pb-${p.position}">${p.position}</span>
+          ${playerHsHtml(p.player_id||p.id, p.position)}
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:600">${p.full_name}${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div>
             <div style="font-size:11px;color:var(--text3)">${p.team||''}${p.age?' · Age '+p.age:''}</div>
@@ -5363,6 +5437,7 @@ function buildSearch(inputId, ddId, onSelect, excludeFn) {
       }).join('');
     }
     dd.classList.add('open');
+    setTimeout(initHeadshots, 0);
     if (isTouchLayout()) {
       input.classList.add('has-results');
       // Scroll the suggestion list into view (iOS keyboard pushes content up)
@@ -5431,7 +5506,7 @@ function removeSugGive(id) {
 const SCENARIO_BASE    = '/rankings/scenarios';
 const SCENARIO_MANIFEST_URL = '/rankings/scenarios/scenarios.json';
 const SCENARIO_CACHE_TTL    = 7 * 24 * 60 * 60 * 1000; // 7 days
-const SCENARIO_CACHE_PREFIX = 'fhq_scen_v1_'; // bump to invalidate all caches
+const SCENARIO_CACHE_PREFIX = 'fhq_scen_v8_'; // bumped — 16-team TE szMod discounts added to prevent inflation above WRs/RBs
 
 // Manifest cache (avoid refetching scenarios.json on every settings change)
 let _scenManifest = null;
@@ -5696,74 +5771,7 @@ function switchTab(name) {
 // HOMEPAGE — LANDING WIDGETS (news ticker + position rankings)
 // ═══════════════════════════════════════════════════════════
 
-// Build news-style blurb items from player trend/value data.
-// Each item has { emoji, text, pos, type } for display in the ticker.
-function buildNewsItems() {
-  const players = (S.players || []).filter(p =>
-    ['QB','RB','WR','TE'].includes(p.position) && (p.dynasty_val || 0) > 1500
-  );
 
-  const upTemplates   = ['rising in dynasty value', 'trending up this offseason', 'buy window open', 'climbing the rankings', 'surging in dynasty leagues'];
-  const downTemplates = ['selling opportunity', 'value trending down', 'sell-high candidate', 'sliding in dynasty value'];
-  const youngTemplates= ['emerging dynasty asset', 'must-hold long-term', 'future franchise piece'];
-  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
-  const items = [];
-
-  // Position leaders (always include #1 at each spot)
-  ['QB','RB','WR','TE'].forEach(pos => {
-    const leader = players.filter(p => p.position === pos)
-      .sort((a,b) => (b.dynasty_val||0) - (a.dynasty_val||0))[0];
-    if (leader) items.push({ emoji: '👑', text: `${leader.full_name} — ${pos}1`, pos: leader.position, type: 'leader' });
-  });
-
-  // Trending up — high-value players
-  players.filter(p => p.trend === 'up')
-    .sort((a,b) => (b.dynasty_val||0) - (a.dynasty_val||0))
-    .slice(0, 8)
-    .forEach(p => items.push({ emoji: '🔥', text: `${p.full_name} ${pick(upTemplates)}`, pos: p.position, type: 'up' }));
-
-  // Trending down — high-value players
-  players.filter(p => p.trend === 'down')
-    .sort((a,b) => (b.dynasty_val||0) - (a.dynasty_val||0))
-    .slice(0, 5)
-    .forEach(p => items.push({ emoji: '📉', text: `${p.full_name} ${pick(downTemplates)}`, pos: p.position, type: 'down' }));
-
-  // Young stars (age ≤ 24, high value, not already trending down)
-  players.filter(p => p.age && p.age <= 24 && p.trend !== 'down' && (p.dynasty_val||0) > 3000)
-    .sort((a,b) => (b.dynasty_val||0) - (a.dynasty_val||0))
-    .slice(0, 5)
-    .forEach(p => items.push({ emoji: '⭐', text: `${p.full_name} — ${pick(youngTemplates)}`, pos: p.position, type: 'star' }));
-
-  // Shuffle so it's not always the same order
-  for (let i = items.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [items[i], items[j]] = [items[j], items[i]];
-  }
-  return items;
-}
-
-// Render one news ticker item as HTML.
-function mkNewsItem(item, cssClass) {
-  const posColor = { QB:'#a78bfa', RB:'#34d399', WR:'#60a5fa', TE:'#fb923c' }[item.pos] || 'var(--text3)';
-  return `<span class="${cssClass}" onclick="switchTab('values')" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;flex-shrink:0;white-space:nowrap;transition:color .15s">`
-    + `<span>${item.emoji}</span>`
-    + `<span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:3px;background:${posColor}22;color:${posColor}">${item.pos}</span>`
-    + `<span>${item.text}</span>`
-    + `</span><span class="home-ticker-sep">·</span>`;
-}
-
-// Render the global trending ticker bar (shown on all pages for all users).
-function renderGlobalTicker() {
-  const bar   = document.getElementById('globalTickerBar');
-  const inner = document.getElementById('globalTickerInner');
-  if (!bar || !inner) return;
-  const items = buildNewsItems();
-  if (!items.length) return;
-  const content = items.map(item => mkNewsItem(item, 'global-ticker-item')).join('');
-  inner.innerHTML = content + content;
-  bar.classList.add('ready');
-}
 
 // Current position rankings state — persists across tab switches
 let _posRankMode = 'dynasty'; // 'dynasty' | 'redraft'
@@ -5778,18 +5786,6 @@ function renderLandingWidgets() {
     ['QB','RB','WR','TE'].includes(p.position) && (p.dynasty_val || 0) > 0
   );
   if (!hasValues) return;
-
-  // ── News ticker ───────────────────────────────────────────
-  const tickerWrap = document.getElementById('homeTickerWrap');
-  const tickerEl   = document.getElementById('homeTicker');
-  if (tickerWrap && tickerEl) {
-    const items = buildNewsItems();
-    if (items.length) {
-      const content = items.map(item => mkNewsItem(item, 'home-ticker-item')).join('');
-      tickerEl.innerHTML = content + content;
-      tickerWrap.style.display = '';
-    }
-  }
 
   // ── Position rankings ─────────────────────────────────────
   const rankEl = document.getElementById('homePosRank');
@@ -5980,7 +5976,7 @@ function renderHome() {
 
   const mkRow = (p, v, tag, tagCls) =>
     `<div class="home-intel-row">
-      <span class="pb pb-${p.position}" style="font-size:10px">${p.position}</span>
+      ${playerHsHtml(p.player_id||p.id, p.position)}
       <div class="home-intel-name">${p.full_name}</div>
       <span class="home-intel-tag ${tagCls}">${tag}</span>
       <div class="home-intel-val">${fmtVal(v)}</div>
@@ -6023,7 +6019,7 @@ function renderHome() {
   const trendHtml = trending.length
     ? trending.map(({p,v}) =>
         `<div class="home-intel-row" style="cursor:pointer" onclick="switchTab('analyzer')">
-          <span class="pb pb-${p.position}" style="font-size:10px">${p.position}</span>
+          ${playerHsHtml(p.player_id||p.id, p.position)}
           <div class="home-intel-name">${p.full_name}</div>
           <span style="font-size:10px;color:var(--success);font-weight:700">▲</span>
           <div class="home-intel-val">${fmtVal(v)}</div>
@@ -6096,6 +6092,7 @@ function renderHome() {
       ${powerHtml}
     </div>
   `;
+  setTimeout(initHeadshots, 0);
 }
 
 function openMobSettings() {
@@ -6332,7 +6329,10 @@ function parseRankingsCSV(text) {
   }
 
   const nameIdx  = findCol('player name','player','name','full_name','playername');
-  const rankIdx  = findCol('rank','ecr','overall rank','overall','rk','#','position rank');
+  // NOTE: 'ecr' intentionally excluded — FantasyPros exports have "ECR vs. ADP" which
+  // substring-matches 'ecr' but contains relative values (+2, +17, …), NOT actual ranks.
+  // 'rk' is listed first to prefer the FantasyPros "RK" overall-rank column exactly.
+  const rankIdx  = findCol('rk','rank','overall rank','overall','#','position rank');
   const valueIdx = findCol('value','ktc value','dynasty value','redraft value','points','score','val','sf value','1qb value');
   const dynIdx   = findCol('dynasty value','dynasty','1qb','sf value','overall value');
   const rdfIdx   = findCol('redraft value','redraft','rest of season','ros');
@@ -6389,11 +6389,18 @@ function parseRankingsCSV(text) {
     }
 
     // Fall back to rank-based if no direct values
-    // Pass posMax so QB-only files don't rank-1 to 9500
     if (!dv && !rv) {
-      // For mixed files, detect this row's position to apply per-row cap
-      const rowPos = posIdx >= 0 ? (cols[posIdx]||'').replace(/"/g,'').trim().toUpperCase() : null;
-      const rowMax = rowPos && POS_RANK_MAX[rowPos] ? POS_RANK_MAX[rowPos] : rankPosMax;
+      // POS_RANK_MAX is ONLY applied for position-specific files (e.g. a 30-QB
+      // qb.csv where rank-1 should NOT score like rank-1 overall).
+      // For MIXED overall files (SF rankings, 1QB rankings, etc.) never apply
+      // a per-row position cap — Josh Allen at rank 1 in an SF overall ranking
+      // genuinely is a 9500-value pick, not a capped 7800-value QB.
+      // dominantPos is non-null only when one position dominates >65% of the file.
+      const rowMax = dominantPos
+        ? (posIdx >= 0
+            ? (POS_RANK_MAX[(cols[posIdx]||'').replace(/"/g,'').trim().toUpperCase()] || rankPosMax)
+            : rankPosMax)
+        : null;
       const val = rankToValue(rank, total, rowMax);
       dv = val; rv = val;
     }
@@ -6488,8 +6495,6 @@ function rebuildPlayerValues() {
   renderValuesTable();
   renderTrade();
   updateSourceCount();
-  // Global ticker updates on every page whenever values rebuild
-  renderGlobalTicker();
   // Landing widgets — guard handled inside the function
   renderLandingWidgets();
 }
@@ -8276,7 +8281,7 @@ async function init() {
   try { updateModeChip(); }    catch(e) {}
   try { renderTrade(); }       catch(e) {}
   if (location.search.includes('a=') || location.search.includes('b=')) loadFromUrl();
-  try { renderGlobalTicker(); renderLandingWidgets(); } catch(e) {}
+  try { renderLandingWidgets(); } catch(e) {}
   document.getElementById('pcBadge').innerHTML =
     `${S.players.length.toLocaleString()} players <span class="spin" style="display:inline-block;width:10px;height:10px;border-width:2px;vertical-align:middle;margin-left:3px"></span>`;
 
@@ -9992,6 +9997,18 @@ document.addEventListener('keydown', e => {
   }
 });
 
+// ── AUTO-INIT HEADSHOTS ─────────────────────────────────────────────────────
+// Watch for any DOM changes (new player lists rendered) and call initHeadshots()
+// 80 ms later.  The debounce batches rapid successive mutations into one call.
+// data-hs-init prevents double-initialisation on elements already processed.
+(function() {
+  let _hsTimer;
+  new MutationObserver(() => {
+    clearTimeout(_hsTimer);
+    _hsTimer = setTimeout(initHeadshots, 80);
+  }).observe(document.body, { childList: true, subtree: true });
+})();
+
 // ═══════════════════════════════════════════════════════════
 // TRADEIQ VALUATION ENGINE v1.0
 // Composite score (0–100) from Production, Age, Opportunity,
@@ -10859,17 +10876,20 @@ function renderWireTab() {
       : false;
     const availBadge = (filterLeague || !myPlayer) ? ''
       : `<span class="wire-avail-badge">On Your Roster</span>`;
+    const _wireP  = (S.players||[]).find(x => x.full_name === p.name);
+    const _wireHs = playerHsHtml(_wireP?.player_id || _wireP?.id, p.pos);
     return `<div class="wire-row">
       <div class="wire-rank">${i+1}</div>
-      <div class="pb pb-${escHtml(p.pos)}" style="align-self:flex-start;margin-top:2px">${escHtml(p.pos)}</div>
+      ${_wireHs}
       <div class="wire-info">
-        <div class="wire-name"><span class="pnr-name" data-pcname="${escHtml(p.name)}" onclick="_openPc(event)">${escHtml(p.name)}</span>${(S.players||[]).find(x=>x.full_name===p.name)?.rookie?'<span class="badge badge-rook">ROOK</span>':''}<span class="wire-badge ${bc}" style="margin-left:7px">${bl}</span>${availBadge}</div>
+        <div class="wire-name"><span class="pnr-name" data-pcname="${escHtml(p.name)}" onclick="_openPc(event)">${escHtml(p.name)}</span>${_wireP?.rookie?'<span class="badge badge-rook">ROOK</span>':''}<span class="wire-badge ${bc}" style="margin-left:7px">${bl}</span>${availBadge}</div>
         <div class="wire-sub">${escHtml(p.team)} · ${p.owned||'—'} owned</div>
         <div class="wire-reason">${escHtml(p.reason)}</div>
       </div>
       <button class="btn btn-xs btn-p" style="flex-shrink:0;margin-top:2px" onclick="wireAnalyze(${JSON.stringify(p.name)})">+ Analyze</button>
     </div>`;
   }).join('');
+  setTimeout(initHeadshots, 0);
 }
 
 function wireAnalyze(name) {
