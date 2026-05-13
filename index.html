@@ -4216,13 +4216,30 @@ function calcValue(p, _over) {
   return Math.max(0, Math.min(9999, v));
 }
 
-function getTier(v) {
-  if (v >= 7500) return {label:'Franchise', cls:'t1'};
-  if (v >= 5500) return {label:'Alpha',     cls:'t2'};
-  if (v >= 3500) return {label:'Impact',    cls:'t3'};
-  if (v >= 2000) return {label:'Flex',      cls:'t4'};
-  if (v >= 1000) return {label:'Handcuff',  cls:'t5'};
-  return             {label:'Stash',    cls:'t6'};
+function getTier(v, pos, mode) {
+  if (mode === 'redraft') {
+    // Redraft tiers: Bell Cow | Playmaker | Starter | Flex | Depth | Waiver
+    // Top tier is position-relative so e.g. McBride (TE) qualifies as Bell Cow
+    // even though his overall value sits below many Playmaker-tier WRs/RBs.
+    const bellCowMin = ({QB:7500, RB:8500, WR:8700, TE:4400}[pos]) || 8000;
+    if (v >= bellCowMin) return {label:'Bell Cow',  cls:'t1'};
+    if (v >= 5500)       return {label:'Playmaker', cls:'t2'};
+    if (v >= 2500)       return {label:'Starter',   cls:'t3'};
+    if (v >= 1500)       return {label:'Flex',       cls:'t4'};
+    if (v >= 600)        return {label:'Depth',      cls:'t5'};
+    return                      {label:'Waiver',     cls:'t6'};
+  }
+  // Dynasty tiers: Franchise | Alpha | Impact | Flex | Handcuff | Stash
+  // Top tier is position-relative — top 2-3 per position group.
+  // QB:7900 → Allen/Maye/Williams  RB:9000 → Robinson/Gibbs
+  // WR:9500 → Chase/JSN            TE:7200 → Bowers/McBride
+  const franchiseMin = ({QB:7900, RB:9000, WR:9500, TE:7200}[pos]) || 8500;
+  if (v >= franchiseMin) return {label:'Franchise', cls:'t1'};
+  if (v >= 5500)         return {label:'Alpha',     cls:'t2'};
+  if (v >= 3500)         return {label:'Impact',    cls:'t3'};
+  if (v >= 2000)         return {label:'Flex',      cls:'t4'};
+  if (v >= 1000)         return {label:'Handcuff',  cls:'t5'};
+  return                        {label:'Stash',     cls:'t6'};
 }
 
 function trendHtml(p) {
@@ -5007,7 +5024,7 @@ function renderValuesTable() {
   const tbody = document.getElementById('valTbody');
   tbody.innerHTML = rows.slice(0,500).map((p,i) => {
     const v      = p._val;                          // adjusted for mode + all settings
-    const tier   = getTier(v);
+    const tier   = getTier(v, p.position, mode);
     const engT   = p._engineTier;
     const engScore = p._engineScore;
     const bdTip  = p._breakdown ? (() => {
@@ -5333,7 +5350,7 @@ function runBSH() {
       grade = 'HOLD';
       reason = 'Draft picks are assets to deploy strategically — hold unless offered significant value.';
     } else if (isDynasty) {
-      const tier = getTier(v);
+      const tier = getTier(v, pos, 'dynasty');
       if (pos === 'RB') {
         if (age >= 29)      { grade='SELL'; reason=`Age ${age} RBs lose value quickly — sell before further decline.`; }
         else if (age <= 22) { grade='BUY';  reason=`Young RB with runway. Buy low if possible; strong dynasty asset.`; }
@@ -5359,9 +5376,9 @@ function runBSH() {
       }
     } else {
       // Redraft mode
-      const tier = getTier(v);
-      if (tier.label === 'Franchise' || tier.label === 'Alpha') { grade='HOLD'; reason='Redraft star — keep and plug in your lineup.'; }
-      else if (tier.label === 'Stash' || v < 1000) { grade='SELL'; reason='Low redraft value. Drop or trade for waiver adds.'; }
+      const tier = getTier(v, pos, 'redraft');
+      if (tier.label === 'Bell Cow' || tier.label === 'Playmaker') { grade='HOLD'; reason='Redraft star — keep and plug in your lineup.'; }
+      else if (tier.label === 'Waiver' || v < 600) { grade='SELL'; reason='Low redraft value. Drop or trade for waiver adds.'; }
       else { grade='HOLD'; reason='Serviceable player. Hold for now and monitor his situation.'; }
     }
 
@@ -11759,7 +11776,7 @@ function tiqChatReply(msg) {
     const v  = calcValue(p);
     const dv = p.dynasty_val || 0;
     const rv = p.redraft_val || 0;
-    const tier = getTier(v);
+    const tier = getTier(v, p.position, mode);
     const age  = p.age || '?';
     const trendStr = p.trend === 'up' ? '📈 Rising' : p.trend === 'down' ? '📉 Falling' : '➡️ Stable';
     let rec = '';
