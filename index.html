@@ -121,15 +121,23 @@
     .tab.active{display:block}
 
     /* ── HOMEPAGE ──────────────────────── */
-    /* Full-screen landing mode (Option A) */
-    body.landing-mode .hdr,
+    /* Full-screen landing mode */
     body.landing-mode .sidebar,
     body.landing-mode .mob-tab-bar { display:none !important }
     body.landing-mode .layout { display:block }
     body.landing-mode .main { padding:0 }
     body.landing-mode #tab-home { display:block }
-    /* Option A — Full-screen centered landing */
-    .home-landing{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;background:var(--bg)}
+    /* Landing header: 3-column grid — nav | logo | auth */
+    body.landing-mode .hdr-inner{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:70px}
+    body.landing-mode .logo{font-size:38px;letter-spacing:-2px;text-align:center;justify-self:center}
+    body.landing-mode .hdr-nav-link{display:inline-flex}
+    body.landing-mode .hdr-right{justify-content:flex-end;gap:8px}
+    body.landing-mode .auth-btn-signup{display:inline-flex}
+    body.landing-mode .auth-btn{background:transparent;border:1px solid rgba(79,134,245,.45);color:var(--primary-l);box-shadow:none}
+    body.landing-mode .auth-btn:hover{background:rgba(26,86,219,.18);border-color:var(--primary-l);box-shadow:none}
+    body.landing-mode .glb-srch-wrap,body.landing-mode .pc-badge{display:none}
+    /* Landing — full-screen centered content */
+    .home-landing{min-height:calc(100vh - 70px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;background:var(--bg)}
     .home-landing-logo{font-size:64px;font-weight:900;letter-spacing:-3px;margin-bottom:10px;line-height:1}
     .home-landing-logo em{color:var(--primary-l);font-style:normal}
     .home-landing-tag{font-size:15px;color:var(--text2);margin-bottom:32px;text-align:center;max-width:440px;line-height:1.6}
@@ -664,6 +672,9 @@
       .right-nav{display:none}
       .hdr-inner{gap:6px;height:50px}
       .logo{font-size:22px;letter-spacing:-1px}
+      body.landing-mode .hdr-inner{display:flex;justify-content:space-between;height:58px}
+      body.landing-mode .hdr-nav-links{display:none}
+      body.landing-mode .logo{font-size:28px;flex:1;text-align:center}
       .pc-badge{display:none}
       .src-btn{padding:5px 8px;font-size:11px}
       .auth-btn{padding:5px 11px;font-size:12px;border-radius:7px}
@@ -715,9 +726,15 @@
     ::-webkit-scrollbar-track{background:var(--bg)}
     ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 
+    /* ── HEADER NAV LINKS (landing mode) ── */
+    .hdr-nav-links{flex:1;display:flex;align-items:center;gap:2px}
+    .hdr-nav-link{display:none;background:none;border:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;padding:7px 12px;border-radius:7px;transition:all .15s;white-space:nowrap}
+    .hdr-nav-link:hover{color:var(--text);background:rgba(79,134,245,.1)}
     /* ── AUTH ───────────────────────────── */
     .auth-btn{padding:6px 18px;border-radius:8px;border:none;background:linear-gradient(135deg,#1245c0 0%,#4f86f5 100%);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;box-shadow:0 2px 14px rgba(26,86,219,.55),inset 0 1px 0 rgba(255,255,255,.12)}
     .auth-btn:hover{background:linear-gradient(135deg,#1a56db 0%,#6da0ff 100%);box-shadow:0 3px 18px rgba(26,86,219,.65),inset 0 1px 0 rgba(255,255,255,.15)}
+    .auth-btn-signup{display:none;padding:6px 18px;border-radius:8px;border:none;background:linear-gradient(135deg,#1245c0 0%,#4f86f5 100%);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;box-shadow:0 2px 14px rgba(26,86,219,.55),inset 0 1px 0 rgba(255,255,255,.12)}
+    .auth-btn-signup:hover{background:linear-gradient(135deg,#1a56db 0%,#6da0ff 100%);box-shadow:0 3px 18px rgba(26,86,219,.65)}
     .user-pill{display:flex;align-items:center;gap:7px;padding:4px 10px 4px 5px;border-radius:20px;background:var(--bg3);border:1px solid var(--border);cursor:pointer;flex-shrink:0;position:relative;user-select:none}
     .user-pill:hover{border-color:var(--primary)}
     .user-avatar{width:24px;height:24px;border-radius:50%;object-fit:cover;background:var(--primary-d);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--primary-l);flex-shrink:0}
@@ -1018,8 +1035,17 @@
 <!-- ═══ HEADER ═══ -->
 <header class="hdr">
   <div class="hdr-inner">
-    <div class="hdr-spacer"></div>
+    <!-- Left: nav links (landing mode only) -->
+    <div class="hdr-nav-links">
+      <button class="hdr-nav-link" onclick="switchTab('analyzer')">Trade HQ</button>
+      <button class="hdr-nav-link" onclick="switchTab('values')">Player HQ</button>
+      <button class="hdr-nav-link" onclick="switchTab('roster')">Team HQ</button>
+      <button class="hdr-nav-link" onclick="switchTab('league')">League HQ</button>
+      <button class="hdr-nav-link" onclick="switchTab('draft')">Draft HQ</button>
+    </div>
+    <!-- Center: Logo -->
     <div class="logo" onclick="switchTab('home')" style="cursor:pointer" title="Home"><em>Fantasy</em><span>HQ</span></div>
+    <!-- Right: search + auth -->
     <div class="hdr-right">
       <!-- Global Player Search -->
       <div class="glb-srch-wrap">
@@ -1034,6 +1060,7 @@
       </button>
       <!-- Auth: signed-out state -->
       <button class="auth-btn" id="authBtn" onclick="openModal('authModal')">Sign In</button>
+      <button class="auth-btn-signup" onclick="openModal('authModal');setTimeout(()=>authSwitchTab('register'),50)">Sign Up</button>
       <!-- Auth: signed-in state -->
       <div class="user-pill" id="userPill" style="display:none" onclick="toggleUserMenu(event)">
         <div class="user-avatar" id="userAvatarWrap"><span id="userInitial">?</span></div>
@@ -1148,9 +1175,8 @@
       <!-- Option A: not logged in — full-screen landing -->
       <div id="homeOptionA">
         <div class="home-landing">
-          <div class="home-landing-logo"><em>Fantasy</em>HQ</div>
           <div class="home-landing-tag">The free NFL fantasy analyzer built for serious players.</div>
-          <button class="btn btn-p" style="font-size:15px;padding:12px 40px;border-radius:10px;margin-bottom:20px" onclick="openModal('authModal')">Sign In</button>
+          <button class="btn btn-p" style="font-size:15px;padding:12px 40px;border-radius:10px;margin-bottom:28px" onclick="openModal('authModal');setTimeout(()=>authSwitchTab('register'),50)">Get Started — It's Free</button>
           <div class="home-feat-grid">
             <div class="home-feat-card" onclick="switchTab('analyzer')">
               <div class="home-feat-icon">⚖️</div>
