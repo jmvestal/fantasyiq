@@ -200,8 +200,8 @@
 
     /* ── SECTION HEADERS ────────────────── */
     .sec-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
-    .sec-ttl{font-size:20px;font-weight:800;letter-spacing:-.3px}
-    .sec-ttl em{color:var(--primary-l);font-style:normal;text-shadow:0 0 22px rgba(157,90,240,.5)}
+    .sec-ttl{font-size:20px;font-weight:900;letter-spacing:-1px}
+    .sec-ttl em{color:var(--primary-l);font-style:normal;text-shadow:0 0 28px rgba(157,90,240,.55)}
     .sec-ttl span{color:var(--text)}
     .sec-sub{font-size:12px;color:var(--text2);margin-top:3px}
 
@@ -1011,31 +1011,31 @@
     <nav class="nav">
       <button class="nav-btn" data-tab="analyzer">
         <svg class="nav-icon" viewBox="0 0 16 16"><path d="M2 5.5h10M9.5 3l2.5 2.5-2.5 2.5M14 10.5H4M6.5 8l-2.5 2.5 2.5 2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Trade HQ
+        TradeHQ
       </button>
       <button class="nav-btn" data-tab="values">
         <svg class="nav-icon" viewBox="0 0 16 16"><path d="M2 13V8h3v5zM7 13V4h3v9zM12 13V9.5h3V13z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Player HQ
+        PlayerHQ
       </button>
       <button class="nav-btn" data-tab="wire">
         <svg class="nav-icon" viewBox="0 0 16 16"><path d="M4 5h8M4 8h8M4 11h5" stroke-linecap="round"/></svg>
-        Waiver HQ
+        WaiverHQ
       </button>
       <button class="nav-btn" data-tab="buysell">
         <svg class="nav-icon" viewBox="0 0 16 16"><path d="M2 12l4-4 3 2.5 5-6.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 4h3v3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Value HQ <span class="pro-badge">PRO</span>
+        ValueHQ <span class="pro-badge">PRO</span>
       </button>
       <button class="nav-btn" data-tab="roster">
         <svg class="nav-icon" viewBox="0 0 16 16"><path d="M8 2L3 4.5V9c0 3.5 2.5 5.5 5 6 2.5-.5 5-2.5 5-6V4.5L8 2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Team HQ <span class="pro-badge">PRO</span>
+        TeamHQ <span class="pro-badge">PRO</span>
       </button>
       <button class="nav-btn" data-tab="league">
         <svg class="nav-icon" viewBox="0 0 16 16"><path d="M4 2h8v5a4 4 0 01-8 0V2z" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 2h2M12 2h2M6 11v2M10 11v2M5 13h6" stroke-linecap="round"/></svg>
-        League HQ <span class="pro-badge">PRO</span>
+        LeagueHQ <span class="pro-badge">PRO</span>
       </button>
       <button class="nav-btn" data-tab="draft">
         <svg class="nav-icon" viewBox="0 0 16 16"><rect x="3" y="2" width="10" height="12" rx="1.5"/><path d="M6 7l1.5 1.5L10 6M6 10h4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Draft HQ <span class="pro-badge">PRO</span>
+        DraftHQ <span class="pro-badge">PRO</span>
       </button>
     </nav>
 
@@ -1268,7 +1268,7 @@
     <div id="tab-analyzer" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl"><em>Trade</em><span> HQ</span></div>
+          <div class="sec-ttl"><em>Trade</em><span>HQ</span></div>
           <div class="sec-sub">Add players to each side — values auto-adjust to your league settings</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1443,7 +1443,7 @@
     <div id="tab-values" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl"><em>Player</em><span> HQ</span></div>
+          <div class="sec-ttl"><em>Player</em><span>HQ</span></div>
           <div class="sec-sub" id="valTableSub">Adjusted for your league settings</div>
         </div>
         <!-- League selector — visible when a league is connected; includes No League option -->
@@ -1504,7 +1504,7 @@
     <div id="tab-roster" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl"><em>Team</em><span> HQ</span></div>
+          <div class="sec-ttl"><em>Team</em><span>HQ</span></div>
           <div class="sec-sub">Connect your league for roster grades, trade targets &amp; buy/sell advice</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1582,7 +1582,7 @@
     <div id="tab-league" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl"><em>League</em><span> HQ</span></div>
+          <div class="sec-ttl"><em>League</em><span>HQ</span></div>
           <div class="sec-sub" id="leagueAnalyzerSub">Connect a league to rank all teams</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1622,7 +1622,7 @@
     <div id="tab-draft" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl"><em>Draft</em><span> HQ</span></div>
+          <div class="sec-ttl"><em>Draft</em><span>HQ</span></div>
           <div class="sec-sub">Analyze a completed draft or get live pick-by-pick guidance</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1917,7 +1917,7 @@
     <div id="tab-wire" class="tab">
       <div class="sec-hdr">
         <div>
-          <div class="sec-ttl"><em>Waiver</em><span> HQ</span></div>
+          <div class="sec-ttl"><em>Waiver</em><span>HQ</span></div>
           <div class="sec-sub" id="wireSubHead">Weekly waiver targets — updated every Tuesday</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -1971,7 +1971,7 @@
       <div class="sec-hdr">
         <div>
           <div style="display:flex;align-items:center;gap:9px;margin-bottom:4px">
-            <div class="sec-ttl"><em>Value</em><span> HQ</span></div>
+            <div class="sec-ttl"><em>Value</em><span>HQ</span></div>
             <span style="background:var(--primary);color:#fff;font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;letter-spacing:.04em;text-transform:uppercase">Dynasty</span>
           </div>
           <div class="sec-sub">Trade targets based on current market values, age curves &amp; trend data</div>
@@ -2043,31 +2043,31 @@
       <div class="mob-tab-icon-wrap">
         <svg class="mob-tab-icon" viewBox="0 0 16 16"><path d="M2 5.5h10M9.5 3l2.5 2.5-2.5 2.5M14 10.5H4M6.5 8l-2.5 2.5 2.5 2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <span class="mob-tab-label">Trade HQ</span>
+      <span class="mob-tab-label">TradeHQ</span>
     </button>
     <button class="mob-tab" data-tab="wire" onclick="switchTab('wire')">
       <div class="mob-tab-icon-wrap">
         <svg class="mob-tab-icon" viewBox="0 0 16 16"><path d="M4 5h8M4 8h8M4 11h5" stroke-linecap="round"/></svg>
       </div>
-      <span class="mob-tab-label">Waiver HQ</span>
+      <span class="mob-tab-label">WaiverHQ</span>
     </button>
     <button class="mob-tab" data-tab="buysell" onclick="switchTab('buysell')">
       <div class="mob-tab-icon-wrap">
         <svg class="mob-tab-icon" viewBox="0 0 16 16"><path d="M2 12l4-4 3 2.5 5-6.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 4h3v3" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <span class="mob-tab-label">Value HQ</span>
+      <span class="mob-tab-label">ValueHQ</span>
     </button>
     <button class="mob-tab" data-tab="values" onclick="switchTab('values')">
       <div class="mob-tab-icon-wrap">
         <svg class="mob-tab-icon" viewBox="0 0 16 16"><path d="M2 13V8h3v5zM7 13V4h3v9zM12 13V9.5h3V13z" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <span class="mob-tab-label">Player HQ</span>
+      <span class="mob-tab-label">PlayerHQ</span>
     </button>
     <button class="mob-tab" data-tab="draft" onclick="switchTab('draft')">
       <div class="mob-tab-icon-wrap">
         <svg class="mob-tab-icon" viewBox="0 0 16 16"><rect x="3" y="2" width="10" height="12" rx="1.5"/><path d="M6 7l1.5 1.5L10 6M6 10h4" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <span class="mob-tab-label">Draft HQ</span>
+      <span class="mob-tab-label">DraftHQ</span>
     </button>
     <button class="mob-tab" data-tab="roster" onclick="switchTab('roster')">
       <div class="mob-tab-icon-wrap">
@@ -10121,12 +10121,12 @@ const TradeIQEngine = (() => {
   }
 
   function assignTier(score) {
-    if (score >= 88) return { n:1, label:'Elite',   cls:'eng-t1' };
-    if (score >= 75) return { n:2, label:'Stud',    cls:'eng-t2' };
-    if (score >= 62) return { n:3, label:'Starter', cls:'eng-t3' };
-    if (score >= 48) return { n:4, label:'Flex',    cls:'eng-t4' };
-    if (score >= 35) return { n:5, label:'Depth',   cls:'eng-t5' };
-    return                        { n:6, label:'Bench',  cls:'eng-t6' };
+    if (score >= 88) return { n:1, label:'Franchise', cls:'eng-t1' };
+    if (score >= 75) return { n:2, label:'Alpha',     cls:'eng-t2' };
+    if (score >= 62) return { n:3, label:'Impact',    cls:'eng-t3' };
+    if (score >= 48) return { n:4, label:'Flex',      cls:'eng-t4' };
+    if (score >= 35) return { n:5, label:'Handcuff',  cls:'eng-t5' };
+    return                        { n:6, label:'Stash',    cls:'eng-t6' };
   }
 
   function scorePlayer(player, mode, settings) {
