@@ -6580,11 +6580,8 @@ function _newsErrHtml(msg) {
 }
 function _renderNewsItems(items, playerName) {
   if (!items || !items.length) return _newsErrHtml('No recent news found for ' + playerName + '.');
-  const sorted = [...items].sort((a, b) => {
-    const ta = a.pubDate ? new Date(a.pubDate).getTime() : 0;
-    const tb = b.pubDate ? new Date(b.pubDate).getTime() : 0;
-    return tb - ta;
-  });
+  const _ts = s => { if (!s) return 0; const d = new Date(String(s).replace(' ','T')); return isNaN(d) ? 0 : d.getTime(); };
+  const sorted = [...items].sort((a, b) => _ts(b.pubDate) - _ts(a.pubDate));
   return '<div class="pc-news-wrap">' + sorted.slice(0, 8).map(item => {
     const rawDate = item.pubDate ? new Date(item.pubDate) : null;
     const date = rawDate && !isNaN(rawDate)
@@ -6606,11 +6603,8 @@ function _parseGoogleNewsXml(xml, playerName) {
     const doc   = new DOMParser().parseFromString(xml, 'text/xml');
     const rawItems = [...doc.querySelectorAll('item')];
     if (!rawItems.length) return _newsErrHtml('No recent news found for ' + playerName + '.');
-    const items = rawItems.sort((a, b) => {
-      const ta = a.querySelector('pubDate')?.textContent ? new Date(a.querySelector('pubDate').textContent).getTime() : 0;
-      const tb = b.querySelector('pubDate')?.textContent ? new Date(b.querySelector('pubDate').textContent).getTime() : 0;
-      return tb - ta;
-    });
+    const _xts = el => { const s = el.querySelector('pubDate')?.textContent; if (!s) return 0; const d = new Date(s); return isNaN(d) ? 0 : d.getTime(); };
+    const items = rawItems.sort((a, b) => _xts(b) - _xts(a));
     return '<div class="pc-news-wrap">' + items.slice(0, 8).map(el => {
       const title  = (el.querySelector('title')?.textContent || '').replace(/ - [^-]+$/, '').trim();
       const link   = el.querySelector('link')?.nextSibling?.textContent?.trim()
