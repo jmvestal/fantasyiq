@@ -3554,6 +3554,8 @@ const RETIRED_PLAYERS = new Set([
   'Todd Gurley','Isaiah Crowell','Doug Martin','Jonathan Stewart',
   'DeMarco Murray','Giovani Bernard','James White','Danny Woodhead',
   'Chris Thompson','Tevin Coleman','Bilal Powell','Duke Johnson',
+  'Ezekiel Elliott','Kareem Hunt','Peyton Barber','Kenyan Drake',
+  'Jeremy McNichols','Damien Williams','Boston Scott',
   // WRs
   'Calvin Johnson','Larry Fitzgerald','Steve Smith Sr.','Torry Holt',
   'T.Y. Hilton','DeSean Jackson','Emmanuel Sanders','Golden Tate',
@@ -3568,10 +3570,23 @@ const RETIRED_PLAYERS = new Set([
   'Victor Cruz','Anquan Boldin','Vincent Jackson','Reggie Wayne',
   'Julian Edelman','Antonio Brown','Wes Welker','Sammy Watkins',
   'Sterling Shepard','Corey Davis','T.J. Yeldon','Isaiah Ford',
+  // Currently inactive / suspended / not playing
+  'Henry Ruggs','Henry Ruggs III',       // imprisoned
+  'Amari Cooper',                         // retired 2025
+  'William Fuller','William Fuller V',    // retired/inactive
+  'Bryce Ford-Wheaton',                   // cut/inactive
+  'Josh Gordon','Martavis Bryant',        // suspended/inactive
   // TEs
   'Rob Gronkowski','Jason Witten','Greg Olsen','Heath Miller',
   'Antonio Gates','Tony Gonzalez','Jimmy Graham',
+  'Jordan Reed','Tyler Eifert',
 ]);
+
+// Notable free agents to always show in rankings (even without a team)
+const NOTABLE_FAS = [
+  {id:'fa-ar17', full_name:'Aaron Rodgers', position:'QB', team:'FA', age:42,
+   dynasty_val:1300, redraft_val:570, trend:'down', _notable_fa:true},
+];
 
 // ═══════════════════════════════════════════════════════════
 const ROOKIES_2026 = [
@@ -3955,16 +3970,20 @@ function calcValue(p, _over) {
         if (DST_POS.has(pos)) sv = Math.min(sv, mode === 'dynasty' ? 200 : 2800);
         if (pos === 'K')       sv = Math.min(sv, 1600);
         // League size modifier — applied only in redraft.
-        // DYNASTY: szMod = 1.0 for ALL positions. The CSV values (qb.csv / rb.csv /
-        //   wr.csv / te.csv) are the authoritative dynasty rankings. Multiplying any
-        //   value risks capping at 10000 and creating false ties that scramble
-        //   positional order (e.g. Allen = Maye = Williams = 10000 in large SF leagues).
-        //   QB format scarcity (1QB vs SF vs 2QB) is expressed through how the CSV
-        //   values were calibrated, not through runtime multipliers.
+        // DYNASTY QBs: boost value in SF/2QB formats — QBs are far scarcer when two
+        //   are required per roster. Relative QB order is preserved (same multiplier
+        //   for all QBs), only their value vs. RBs/WRs changes.
+        // DYNASTY non-QB: szMod = 1.0 — CSV order is authoritative and must not shift.
         // REDRAFT: format and size both scale values normally.
         let szMod = 1.0;
         if (mode === 'dynasty') {
-          szMod = 1.0; // never adjust dynasty values at runtime — CSV order is final
+          if (pos === 'QB') {
+            szMod = qb === '2qb' ? ({ 8:1.10, 10:1.15, 12:1.22, 14:1.28, 16:1.35 }[size]||1.22)
+                  : qb === 'sf'  ? ({ 8:1.06, 10:1.10, 12:1.15, 14:1.20, 16:1.25 }[size]||1.15)
+                  :                1.00;
+          } else {
+            szMod = 1.0; // never adjust dynasty values at runtime for non-QB
+          }
         } else if (pos === 'QB') {
             // QB positional order must not shift with league size — the same QB who
             // is QB1 in a 12-team league must still be QB1 in a 16-team league.
@@ -4981,7 +5000,8 @@ function renderValuesTable() {
       return 0;
     })
     // Remove FA / teamless players AFTER sorting so sort order is unchanged
-    .filter(p => p.position === 'PICK' || (p.team && p.team !== 'FA' && p.team !== 'Free Agent' && p.team !== 'N/A'));
+    // _notable_fa players (Aaron Rodgers etc.) are always shown regardless of team
+    .filter(p => p.position === 'PICK' || p._notable_fa || (p.team && p.team !== 'FA' && p.team !== 'Free Agent' && p.team !== 'N/A'));
 
   const maxV = Math.max(...rows.map(r=>r._val), 1);
   const tbody = document.getElementById('valTbody');
@@ -8053,9 +8073,10 @@ async function fetchPlayers() {
   } catch(e) {
     console.warn('Sleeper fetch failed on cold load:', e);
     const FA_SET = new Set(['FA','Free Agent','','N/A']);
-    return FALLBACK_PLAYERS.filter(p =>
-      !RETIRED_PLAYERS.has(p.full_name) && p.team && !FA_SET.has(p.team)
-    );
+    return [
+      ...FALLBACK_PLAYERS.filter(p => !RETIRED_PLAYERS.has(p.full_name) && p.team && !FA_SET.has(p.team)),
+      ...NOTABLE_FAS,
+    ];
   }
 }
 
@@ -8069,7 +8090,7 @@ async function refreshSleeperCache() {
     const sleeperNorms = new Set(freshPlayers.map(p => normName(p.full_name || '')));
     const freshRookies = ROOKIES_2026.filter(p => !sleeperNorms.has(normName(p.full_name || '')));
     const _seen = new Set();
-    S.players = [...freshPlayers, ...freshRookies, ...PICKS]
+    S.players = [...freshPlayers, ...freshRookies, ...NOTABLE_FAS, ...PICKS]
       .filter(p => {
         if (p.position !== 'PICK') {
           const key = normName(p.full_name || '');
@@ -8077,7 +8098,7 @@ async function refreshSleeperCache() {
           _seen.add(key);
         }
         return !RETIRED_PLAYERS.has(p.full_name) &&
-          (p.position === 'PICK' || (p.team && !FA_VALS.has(p.team)));
+          (p.position === 'PICK' || p._notable_fa || (p.team && !FA_VALS.has(p.team)));
       });
     FALLBACK_PLAYERS.forEach(p => { p.rookie = false; });
     rebuildPlayerValues();
@@ -8312,7 +8333,7 @@ async function init() {
     const sleeperNorms = new Set(sleeperPlayers.map(p => normName(p.full_name || '')));
     const freshRookies = ROOKIES_2026.filter(p => !sleeperNorms.has(normName(p.full_name || '')));
     const _seen = new Set();
-    S.players = [...sleeperPlayers, ...freshRookies, ...PICKS]
+    S.players = [...sleeperPlayers, ...freshRookies, ...NOTABLE_FAS, ...PICKS]
       .filter(p => {
         if (p.position !== 'PICK') {
           const key = normName(p.full_name || '');
@@ -8320,7 +8341,7 @@ async function init() {
           _seen.add(key);
         }
         return !RETIRED_PLAYERS.has(p.full_name) &&
-          (p.position === 'PICK' || (p.team && !FA_VALS.has(p.team)));
+          (p.position === 'PICK' || p._notable_fa || (p.team && !FA_VALS.has(p.team)));
       });
     FALLBACK_PLAYERS.forEach(p=>{ p.rookie = false; });
     console.log('Merge complete:', S.players.length, 'total players');
