@@ -4230,10 +4230,12 @@ function getTier(v, pos, mode) {
     return                      {label:'Waiver',     cls:'t6'};
   }
   // Dynasty tiers: Franchise | Alpha | Impact | Flex | Handcuff | Stash
-  // Top tier is position-relative — top 2-3 per position group.
-  // QB:7900 → Allen/Maye/Williams  RB:9000 → Robinson/Gibbs
-  // WR:9500 → Chase/JSN            TE:7200 → Bowers/McBride
-  const franchiseMin = ({QB:7900, RB:9000, WR:9500, TE:7200}[pos]) || 8500;
+  // Top tier is position-relative — top few per position group.
+  // QB:7900 → Allen/Maye/Williams
+  // RB:6400 → Robinson/Gibbs/Jeanty/Achane/Love
+  // WR:8500 → Chase/JSN/Puka
+  // TE:7200 → Bowers/McBride
+  const franchiseMin = ({QB:7900, RB:6400, WR:8500, TE:7200}[pos]) || 8500;
   if (v >= franchiseMin) return {label:'Franchise', cls:'t1'};
   if (v >= 5500)         return {label:'Alpha',     cls:'t2'};
   if (v >= 3500)         return {label:'Impact',    cls:'t3'};
