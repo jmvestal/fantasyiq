@@ -42,7 +42,7 @@
     :root{
       --bg:#0e0e14;--bg2:#14141e;--bg3:#1c1c28;--card:#181825;
       --border:#252535;--border2:#30304a;
-      --primary:#7c3aed;--primary-l:#9d5af0;--primary-d:rgba(124,58,237,.18);
+      --primary:#1a56db;--primary-l:#4f86f5;--primary-d:rgba(26,86,219,.18);
       --success:#22c55e;--success-d:rgba(34,197,94,.15);
       --warn:#f59e0b;--warn-d:rgba(245,158,11,.15);
       --danger:#ef4444;--danger-d:rgba(239,68,68,.15);
@@ -58,16 +58,16 @@
     .hdr-spacer{flex:1;min-width:0}
     .hdr-right{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:1;min-width:0}
     .logo{font-size:22px;font-weight:900;letter-spacing:-1px;white-space:nowrap}
-    .logo em{color:var(--primary-l);font-style:normal;text-shadow:0 0 28px rgba(157,90,240,.55)}
+    .logo em{color:var(--primary-l);font-style:normal;text-shadow:0 0 28px rgba(79,134,245,.55)}
     .logo span{color:var(--text)}
     .nav{display:flex;gap:2px;flex:1;overflow-x:auto;background:rgba(0,0,0,.3);border-radius:10px;padding:3px;border:1px solid rgba(255,255,255,.07)}
     .nav::-webkit-scrollbar{display:none}
     .nav-btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;border:none;background:none;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
     .nav-btn .nav-icon{width:15px;height:15px;flex-shrink:0;stroke:currentColor;stroke-width:1.8;fill:none;transition:stroke .15s}
     .nav-btn:hover{color:var(--text);background:rgba(157,90,240,.14)}
-    .nav-btn.active{background:linear-gradient(135deg,#6d28d9 0%,#9d5af0 100%);color:#fff;box-shadow:0 2px 14px rgba(124,58,237,.55),inset 0 1px 0 rgba(255,255,255,.12)}
+    .nav-btn.active{background:linear-gradient(135deg,#1245c0 0%,#4f86f5 100%);color:#fff;box-shadow:0 2px 14px rgba(26,86,219,.55),inset 0 1px 0 rgba(255,255,255,.12)}
     .nav-btn.active .nav-icon{stroke:#fff}
-    .pro-badge{font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;vertical-align:middle;margin-left:3px;letter-spacing:.04em}
+    .pro-badge{font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:linear-gradient(135deg,#1a56db,#4f86f5);color:#fff;vertical-align:middle;margin-left:3px;letter-spacing:.04em}
     body.logged-in .pro-badge{display:none}
     /* Player Values sign-in nudge */
     .val-signin-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;margin-bottom:14px}
@@ -205,7 +205,7 @@
     /* ── SECTION HEADERS ────────────────── */
     .sec-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
     .sec-ttl{font-size:20px;font-weight:900;letter-spacing:-1px}
-    .sec-ttl em{color:var(--primary-l);font-style:normal;text-shadow:0 0 28px rgba(157,90,240,.55)}
+    .sec-ttl em{color:var(--primary-l);font-style:normal;text-shadow:0 0 28px rgba(79,134,245,.55)}
     .sec-ttl span{color:var(--text)}
     .sec-sub{font-size:12px;color:var(--text2);margin-top:3px}
 
@@ -1457,18 +1457,14 @@
             <tr>
               <th style="width:44px" onclick="sortTable('rank')">#</th>
               <th onclick="sortTable('name')">Player</th>
-              <th style="display:none"></th>
-              <th onclick="sortTable('team')">Team</th>
-              <th onclick="sortTable('age')">Age</th>
-              <th onclick="sortTable('value')">Dynasty</th>
-              <th>Redraft</th>
+              <th onclick="sortTable('value')">Value</th>
               <th>Tier</th>
               <th onclick="sortTable('engine')" title="Fantasy HQ composite score (0–100): Production · Age · Opportunity · Physical · Efficiency. Hover a row to see breakdown.">FHQ Score ▸</th>
               <th onclick="sortTable('trend')">Trend</th>
             </tr>
           </thead>
           <tbody id="valTbody">
-            <tr><td colspan="8"><div class="loading"><div class="spin"></div>Loading players…</div></td></tr>
+            <tr><td colspan="6"><div class="loading"><div class="spin"></div>Loading players…</div></td></tr>
           </tbody>
         </table>
       </div>
@@ -5043,24 +5039,20 @@ function renderValuesTable() {
     const hsHtml = playerHsHtml(p.player_id||p.id, p.position);
     return `<tr>
       <td><span style="color:var(--text3);font-size:12px">${i+1}</span></td>
-      <td style="white-space:nowrap"><div style="display:flex;align-items:center;gap:7px">${hsHtml}<div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap"><strong class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="_openPc(event)">${escHtml(p.full_name)}</strong><span class="pb pb-${p.position==='DST'?'DEF':p.position}" style="font-size:9px;vertical-align:middle">${p.position==='DST'?'DEF':p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div></div></td>
-      <td style="display:none"></td>
-      <td style="color:var(--text2)">${p.team||'—'}</td>
-      <td style="color:var(--text2)">${p.age||'—'}</td>
+      <td style="white-space:nowrap"><div style="display:flex;align-items:center;gap:7px">${hsHtml}<div><div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap"><strong class="pnr-name" data-pcname="${escHtml(p.full_name)}" onclick="_openPc(event)">${escHtml(p.full_name)}</strong><span class="pb pb-${p.position==='DST'?'DEF':p.position}" style="font-size:9px;vertical-align:middle">${p.position==='DST'?'DEF':p.position}</span>${p.rookie?'<span class="badge badge-rook">ROOK</span>':''}</div><div style="font-size:11px;color:var(--text3);font-weight:400;margin-top:1px;line-height:1">${p.team||'FA'}${p.age ? ' · Age '+p.age : ''}</div></div></div></td>
       <td>
         <div class="mini-bar">
           <span style="font-weight:700;font-size:13px;min-width:42px;color:var(--primary-l)">${fmtVal(v)}</span>
           <div class="mini-track"><div class="mini-fill" style="width:${dvBar}%"></div></div>
         </div>
       </td>
-      ${crossTd}
       <td><span class="tier-badge ${tier.cls}">${tier.label}</span></td>
       <td title="${bdTip}">
         ${engScore != null ? `<span class="eng-score-cell ${engT?.cls||''}">${engScore}<span style="font-size:9px;opacity:.6;margin-left:2px">/100</span></span>` : '—'}
       </td>
       <td>${trendHtml(p)}</td>
     </tr>`;
-  }).join('') || `<tr><td colspan="9" style="padding:24px;text-align:center;color:var(--text3)">No players found</td></tr>`;
+  }).join('') || `<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--text3)">No players found</td></tr>`;
 
   // update sub
   const modeStr = isDynasty ? 'Dynasty' : 'Redraft';
