@@ -931,6 +931,25 @@
     .mo-note{background:var(--bg3);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.6;margin-top:8px}
     .mo-note strong{color:var(--warn)}
     .mo-success{background:rgba(34,197,94,.1);border-left:3px solid var(--success);border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.6;margin-top:8px}
+    /* ── ACCOUNT SETTINGS ───────────────── */
+    .acct-tabs{display:flex;gap:2px;margin-bottom:22px;background:var(--bg3);border-radius:10px;padding:3px;border:1px solid var(--border)}
+    .acct-tab{flex:1;padding:7px 4px;border-radius:7px;border:none;background:none;color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center}
+    .acct-tab:hover{color:var(--text)}
+    .acct-tab.on{background:var(--bg2);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+    .acct-panel{display:none}
+    .acct-panel.on{display:block}
+    .acct-row{margin-bottom:14px}
+    .acct-section-ttl{font-size:13px;font-weight:800;color:var(--text);margin-bottom:12px;letter-spacing:-.2px}
+    .acct-info-row{display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:10px}
+    .acct-info-lbl{font-size:11px;color:var(--text3);margin-bottom:2px}
+    .acct-info-val{font-size:13px;font-weight:600;color:var(--text)}
+    .acct-plan-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .acct-plan-badge{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:rgba(26,86,219,.15);color:var(--primary-l);border:1px solid rgba(79,134,245,.3)}
+    .acct-danger-btn{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(239,68,68,.35);background:rgba(239,68,68,.07);color:var(--danger);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit}
+    .acct-danger-btn:hover{background:rgba(239,68,68,.15);border-color:var(--danger)}
+    .acct-msg{font-size:12px;padding:9px 12px;border-radius:7px;margin-top:8px;display:none}
+    .acct-msg.ok{background:rgba(34,197,94,.1);color:var(--success);border:1px solid rgba(34,197,94,.2);display:block}
+    .acct-msg.err{background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.2);display:block}
 
     /* Platform grid */
     .platform-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:6px}
@@ -1235,6 +1254,8 @@
         <div class="user-menu" id="userMenu">
           <div class="user-menu-item" onclick="switchTab('roster');closeModal('x')">🏈 My Team</div>
           <div class="user-menu-item" onclick="openModal('connectModal')">🔗 Connect League</div>
+          <div class="user-menu-div"></div>
+          <div class="user-menu-item" onclick="openAccountSettings()">⚙️ Account Settings</div>
           <div class="user-menu-div"></div>
           <div class="user-menu-item danger" onclick="signOutUser()">Sign Out</div>
         </div>
@@ -2815,6 +2836,98 @@
       Questions? Email us at <a href="mailto:vestalagencyllc@gmail.com" style="color:var(--primary-l)">vestalagencyllc@gmail.com</a></p>
     </div>
     <button class="btn btn-p" style="width:100%;margin-top:16px;justify-content:center" onclick="closeModal('privacyModal')">Got It</button>
+  </div>
+</div>
+
+<!-- ══ MODAL: ACCOUNT SETTINGS ══ -->
+<div class="mo" id="accountModal" onclick="moBackdropClose(event,'accountModal')">
+  <div class="mo-box" style="max-width:520px">
+    <button class="mo-close" onclick="closeModal('accountModal')">✕</button>
+    <div class="mo-ttl">⚙️ Account Settings</div>
+    <div class="mo-sub" id="acctSubEmail" style="margin-bottom:16px">—</div>
+
+    <!-- Tab bar -->
+    <div class="acct-tabs">
+      <button class="acct-tab on" onclick="acctTab('profile',this)">👤 Profile</button>
+      <button class="acct-tab"   onclick="acctTab('security',this)">🔒 Security</button>
+      <button class="acct-tab"   onclick="acctTab('billing',this)">💳 Subscription</button>
+      <button class="acct-tab"   onclick="acctTab('danger',this)">⚠️ Danger Zone</button>
+    </div>
+
+    <!-- PROFILE PANEL -->
+    <div class="acct-panel on" id="acctPanel-profile">
+      <div class="acct-section-ttl">Your Profile</div>
+      <div class="acct-info-row">
+        <div><div class="acct-info-lbl">Signed in as</div><div class="acct-info-val" id="acctProviderVal">—</div></div>
+      </div>
+      <label class="mo-label">Display Name</label>
+      <input class="mo-input" id="acctNameInput" placeholder="Your display name" autocomplete="name">
+      <button class="btn btn-p btn-sm" onclick="acctUpdateName()" style="margin-top:4px">Save Name</button>
+      <div class="acct-msg" id="acctNameMsg"></div>
+    </div>
+
+    <!-- SECURITY PANEL -->
+    <div class="acct-panel" id="acctPanel-security">
+      <!-- Email update -->
+      <div class="acct-section-ttl">Email Address</div>
+      <div id="acctGoogleNote" style="display:none" class="mo-note" style="margin-bottom:12px">
+        <strong>Google Sign-In</strong> — Your email is managed by your Google account. To change it, update your Google account email.
+      </div>
+      <div id="acctEmailFields">
+        <label class="mo-label">New Email Address</label>
+        <input class="mo-input" id="acctNewEmail" type="email" placeholder="new@example.com" autocomplete="email">
+        <label class="mo-label">Current Password (to confirm)</label>
+        <input class="mo-input" id="acctEmailPass" type="password" placeholder="Enter your current password" autocomplete="current-password">
+        <button class="btn btn-p btn-sm" onclick="acctUpdateEmail()" style="margin-top:4px">Update Email</button>
+        <div class="acct-msg" id="acctEmailMsg"></div>
+      </div>
+
+      <div class="mo-hr"></div>
+
+      <!-- Password update -->
+      <div class="acct-section-ttl">Change Password</div>
+      <div id="acctPasswordFields">
+        <label class="mo-label">Current Password</label>
+        <input class="mo-input" id="acctCurPass" type="password" placeholder="Current password" autocomplete="current-password">
+        <label class="mo-label">New Password</label>
+        <input class="mo-input" id="acctNewPass" type="password" placeholder="At least 8 characters" autocomplete="new-password">
+        <label class="mo-label">Confirm New Password</label>
+        <input class="mo-input" id="acctConfPass" type="password" placeholder="Repeat new password" autocomplete="new-password">
+        <button class="btn btn-p btn-sm" onclick="acctUpdatePassword()" style="margin-top:4px">Change Password</button>
+        <div class="acct-msg" id="acctPassMsg"></div>
+      </div>
+    </div>
+
+    <!-- BILLING PANEL -->
+    <div class="acct-panel" id="acctPanel-billing">
+      <div class="acct-section-ttl">Current Plan</div>
+      <div class="acct-plan-card">
+        <div>
+          <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">Free Plan</div>
+          <div style="font-size:12px;color:var(--text3)">Access to TradeHQ, PlayerHQ, and core rankings</div>
+        </div>
+        <div class="acct-plan-badge">FREE</div>
+      </div>
+      <div style="background:linear-gradient(135deg,rgba(26,86,219,.12),rgba(79,134,245,.08));border:1px solid rgba(79,134,245,.25);border-radius:12px;padding:18px;text-align:center">
+        <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px">🚀 Upgrade to Pro</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.6">Unlock ValueHQ buy/sell alerts, TeamHQ roster grades, LeagueHQ analysis, and DraftHQ tools.</div>
+        <button class="btn btn-p" style="font-size:13px;padding:10px 28px" onclick="showToast('Pro plan coming soon — stay tuned! 🚀')">Coming Soon →</button>
+      </div>
+      <div style="margin-top:14px;font-size:11px;color:var(--text3);text-align:center">Payment processing powered by Stripe · Secure &amp; encrypted</div>
+    </div>
+
+    <!-- DANGER ZONE PANEL -->
+    <div class="acct-panel" id="acctPanel-danger">
+      <div class="acct-section-ttl" style="color:var(--danger)">Danger Zone</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px">Deleting your account permanently removes all your data including connected leagues, saved settings, and trade history. <strong style="color:var(--text)">This cannot be undone.</strong></div>
+      <div id="acctDeleteFields">
+        <label class="mo-label">Enter your password to confirm</label>
+        <input class="mo-input" id="acctDeletePass" type="password" placeholder="Your current password" autocomplete="current-password">
+        <div id="acctDeleteGoogleNote" style="display:none;font-size:12px;color:var(--text3);margin-bottom:8px">You'll be redirected to confirm with Google.</div>
+      </div>
+      <button class="acct-danger-btn" onclick="acctDeleteAccount()">🗑 Delete My Account</button>
+      <div class="acct-msg" id="acctDeleteMsg"></div>
+    </div>
   </div>
 </div>
 
@@ -9102,6 +9215,167 @@ function signOutUser() {
 function toggleUserMenu(e) {
   e.stopPropagation();
   document.getElementById('userMenu').classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════════════════════
+// ACCOUNT SETTINGS
+// ═══════════════════════════════════════════════════════════
+function openAccountSettings() {
+  document.getElementById('userMenu')?.classList.remove('open');
+  const user = fbAuth?.currentUser;
+  if (!user) return;
+
+  // Populate current info
+  const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
+  document.getElementById('acctSubEmail').textContent = user.email || '';
+  document.getElementById('acctNameInput').value = user.displayName || '';
+  document.getElementById('acctProviderVal').textContent = isGoogle
+    ? '🔵 Google Account'
+    : '✉️ ' + (user.email || 'Email / Password');
+
+  // Show/hide fields based on provider
+  const googleNote   = document.getElementById('acctGoogleNote');
+  const emailFields  = document.getElementById('acctEmailFields');
+  const passFields   = document.getElementById('acctPasswordFields');
+  const deletePassFld = document.getElementById('acctDeleteFields');
+  const deleteGoogle = document.getElementById('acctDeleteGoogleNote');
+  if (isGoogle) {
+    if (googleNote)    googleNote.style.display   = 'block';
+    if (emailFields)   emailFields.style.display  = 'none';
+    if (passFields)    passFields.style.display   = 'none';
+    if (deletePassFld) deletePassFld.style.display = 'none';
+    if (deleteGoogle)  deleteGoogle.style.display  = 'block';
+  } else {
+    if (googleNote)    googleNote.style.display   = 'none';
+    if (emailFields)   emailFields.style.display  = 'block';
+    if (passFields)    passFields.style.display   = 'block';
+    if (deletePassFld) deletePassFld.style.display = 'block';
+    if (deleteGoogle)  deleteGoogle.style.display  = 'none';
+  }
+
+  // Reset to profile tab
+  acctTab('profile', document.querySelector('.acct-tab'));
+  // Clear messages
+  ['acctNameMsg','acctEmailMsg','acctPassMsg','acctDeleteMsg'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.className = 'acct-msg'; el.textContent = ''; }
+  });
+
+  openModal('accountModal');
+}
+
+function acctTab(name, btn) {
+  document.querySelectorAll('.acct-tab').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.acct-panel').forEach(p => p.classList.remove('on'));
+  if (btn) btn.classList.add('on');
+  const panel = document.getElementById('acctPanel-' + name);
+  if (panel) panel.classList.add('on');
+}
+
+function _acctMsg(id, text, type) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'acct-msg ' + type;
+}
+
+async function acctUpdateName() {
+  const user = fbAuth?.currentUser;
+  if (!user) return;
+  const name = document.getElementById('acctNameInput').value.trim();
+  if (!name) { _acctMsg('acctNameMsg', 'Please enter a display name.', 'err'); return; }
+  try {
+    await user.updateProfile({ displayName: name });
+    // Update header pill
+    const nm = document.getElementById('userName');
+    const init = document.getElementById('userInitial');
+    if (nm) nm.textContent = name.split(' ')[0];
+    if (init) init.textContent = name[0].toUpperCase();
+    _acctMsg('acctNameMsg', '✓ Name updated successfully.', 'ok');
+  } catch(e) {
+    _acctMsg('acctNameMsg', e.message || 'Failed to update name.', 'err');
+  }
+}
+
+async function acctUpdateEmail() {
+  const user = fbAuth?.currentUser;
+  if (!user) return;
+  const newEmail = document.getElementById('acctNewEmail').value.trim();
+  const pass     = document.getElementById('acctEmailPass').value;
+  if (!newEmail) { _acctMsg('acctEmailMsg', 'Enter a new email address.', 'err'); return; }
+  if (!pass)     { _acctMsg('acctEmailMsg', 'Enter your current password to confirm.', 'err'); return; }
+  try {
+    const cred = firebase.auth.EmailAuthProvider.credential(user.email, pass);
+    await user.reauthenticateWithCredential(cred);
+    await user.updateEmail(newEmail);
+    document.getElementById('acctSubEmail').textContent = newEmail;
+    document.getElementById('acctNewEmail').value = '';
+    document.getElementById('acctEmailPass').value = '';
+    _acctMsg('acctEmailMsg', '✓ Email updated successfully.', 'ok');
+  } catch(e) {
+    const msg = e.code === 'auth/wrong-password' ? 'Incorrect password.'
+              : e.code === 'auth/email-already-in-use' ? 'That email is already in use.'
+              : e.code === 'auth/invalid-email' ? 'Invalid email address.'
+              : e.message || 'Failed to update email.';
+    _acctMsg('acctEmailMsg', msg, 'err');
+  }
+}
+
+async function acctUpdatePassword() {
+  const user = fbAuth?.currentUser;
+  if (!user) return;
+  const cur  = document.getElementById('acctCurPass').value;
+  const nw   = document.getElementById('acctNewPass').value;
+  const conf = document.getElementById('acctConfPass').value;
+  if (!cur)          { _acctMsg('acctPassMsg', 'Enter your current password.', 'err'); return; }
+  if (nw.length < 8) { _acctMsg('acctPassMsg', 'New password must be at least 8 characters.', 'err'); return; }
+  if (nw !== conf)   { _acctMsg('acctPassMsg', 'New passwords do not match.', 'err'); return; }
+  try {
+    const cred = firebase.auth.EmailAuthProvider.credential(user.email, cur);
+    await user.reauthenticateWithCredential(cred);
+    await user.updatePassword(nw);
+    document.getElementById('acctCurPass').value = '';
+    document.getElementById('acctNewPass').value = '';
+    document.getElementById('acctConfPass').value = '';
+    _acctMsg('acctPassMsg', '✓ Password changed successfully.', 'ok');
+  } catch(e) {
+    const msg = e.code === 'auth/wrong-password' ? 'Incorrect current password.'
+              : e.code === 'auth/weak-password' ? 'Password is too weak — try something stronger.'
+              : e.message || 'Failed to change password.';
+    _acctMsg('acctPassMsg', msg, 'err');
+  }
+}
+
+async function acctDeleteAccount() {
+  const user = fbAuth?.currentUser;
+  if (!user) return;
+  const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
+  if (!confirm('Are you absolutely sure? This will permanently delete your account and all data. This cannot be undone.')) return;
+  try {
+    if (isGoogle) {
+      // Re-authenticate with Google popup then delete
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await user.reauthenticateWithPopup(provider);
+    } else {
+      const pass = document.getElementById('acctDeletePass').value;
+      if (!pass) { _acctMsg('acctDeleteMsg', 'Enter your password to confirm deletion.', 'err'); return; }
+      const cred = firebase.auth.EmailAuthProvider.credential(user.email, pass);
+      await user.reauthenticateWithCredential(cred);
+    }
+    // Delete Firestore data if db available
+    if (typeof db !== 'undefined' && db && user.uid) {
+      try { await db.collection('users').doc(user.uid).delete(); } catch(e) {}
+    }
+    await user.delete();
+    closeModal('accountModal');
+    showToast('Account deleted. Goodbye!');
+    signOutUser();
+  } catch(e) {
+    const msg = e.code === 'auth/wrong-password' ? 'Incorrect password.'
+              : e.code === 'auth/popup-closed-by-user' ? 'Verification cancelled.'
+              : e.message || 'Failed to delete account.';
+    _acctMsg('acctDeleteMsg', msg, 'err');
+  }
 }
 
 document.addEventListener('click', () => {
