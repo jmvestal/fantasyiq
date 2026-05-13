@@ -4979,7 +4979,9 @@ function renderValuesTable() {
       if (av < bv) return dir === 'asc' ? -1 : 1;
       if (av > bv) return dir === 'asc' ? 1 : -1;
       return 0;
-    });
+    })
+    // Remove FA / teamless players AFTER sorting so sort order is unchanged
+    .filter(p => p.position === 'PICK' || (p.team && p.team !== 'FA' && p.team !== 'Free Agent' && p.team !== 'N/A'));
 
   const maxV = Math.max(...rows.map(r=>r._val), 1);
   const tbody = document.getElementById('valTbody');
