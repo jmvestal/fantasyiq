@@ -779,7 +779,7 @@
     .dsim-done-stat{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 14px;min-width:90px;text-align:center}
     .dsim-done-stat-val{font-size:18px;font-weight:800;color:var(--text)}
     .dsim-done-stat-lbl{font-size:10px;color:var(--text3);margin-top:2px}
-    #dsimAnalysisGrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+    #dsimAnalysisGrid{display:grid;grid-template-columns:340px 1fr;gap:18px;align-items:start}
     .dsim-done-stat{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 18px;min-width:90px}
     .dsim-done-stat-val{font-size:20px;font-weight:800;color:var(--primary-l)}
     .dsim-done-stat-lbl{font-size:11px;color:var(--text3);margin-top:2px}
@@ -2455,12 +2455,6 @@
                 <option value="linear">Linear</option>
               </select>
             </div>
-            <div class="dsim-ctrl-grp" id="dsimLeagueGrp" style="display:none">
-              <div class="dsim-ctrl-lbl">League</div>
-              <select id="dsimLeagueSel" class="dsim-sel" style="min-width:130px" onchange="dsimOnLeagueSel(this.value)">
-                <option value="">— No League —</option>
-              </select>
-            </div>
             <div class="dsim-ctrl-grp" style="margin-left:auto;justify-content:flex-end">
               <div class="dsim-ctrl-lbl" style="opacity:0">.</div>
               <div style="display:flex;gap:6px;align-items:center">
@@ -2537,11 +2531,11 @@
           <div id="dsimDoneStats" class="dsim-done-stats" style="margin-bottom:20px"></div>
 
           <!-- Two-column analysis layout -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start" id="dsimAnalysisGrid">
+          <div style="display:grid;grid-template-columns:340px 1fr;gap:18px;align-items:start" id="dsimAnalysisGrid">
 
-            <!-- LEFT: Roster by position -->
-            <div class="dsim-setup-bar" style="padding:14px 16px">
-              <div class="draft-board-ttl" style="margin-bottom:12px">📋 Your Drafted Roster</div>
+            <!-- LEFT: Roster by position — matches TeamHQ panel style -->
+            <div class="panel">
+              <h3 style="margin-bottom:4px">📋 Your Roster</h3>
               <div id="dsimRosterByPos"></div>
             </div>
 
@@ -14158,7 +14152,15 @@ function dsimFinish() {
 
       const p   = pk.player;
       const pos = (p.position === 'DST' ? 'DEF' : p.position) || '?';
-      const sid = p.player_id || p.id;
+      // Prefer numeric Sleeper ID for headshots; fall back to name-match in S.players
+      let sid = p.player_id || p.id;
+      if (!/^\d+$/.test(String(sid))) {
+        const match = (S.players || []).find(sp =>
+          /^\d+$/.test(String(sp.player_id || sp.id)) &&
+          normName(sp.full_name || '') === normName(p.full_name || p.name || '')
+        );
+        if (match) sid = match.player_id || match.id;
+      }
       const pickLbl = `Rnd ${pk.round}.${pk.pickInRound}`;
 
       html += `<div class="ros-row">
