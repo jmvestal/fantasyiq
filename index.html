@@ -2430,16 +2430,6 @@
               <div class="dsim-setup-title">Draft Simulator</div>
               <div class="dsim-setup-sub">Simulate a snake draft vs CPU teams with needs-based AI</div>
             </div>
-            <div class="dsim-setup-btns">
-              <div class="dsim-ctrl-grp" id="dsimLeagueGrp" style="display:none">
-                <div class="dsim-ctrl-lbl">League</div>
-                <select id="dsimLeagueSel" class="dsim-sel" style="min-width:130px" onchange="dsimOnLeagueSel(this.value)">
-                  <option value="">— No League —</option>
-                </select>
-              </div>
-              <button class="btn btn-p btn-sm" onclick="startDraftSim()">▶ Start Draft</button>
-              <button class="btn btn-s btn-sm" id="dsimResetBtn" style="display:none" onclick="resetDraftSim()">↺ Reset</button>
-            </div>
           </div>
           <div class="dsim-controls">
             <div class="dsim-ctrl-grp">
@@ -2505,6 +2495,19 @@
                 <option value="snake" selected>Snake</option>
                 <option value="linear">Linear</option>
               </select>
+            </div>
+            <div class="dsim-ctrl-grp" id="dsimLeagueGrp" style="display:none">
+              <div class="dsim-ctrl-lbl">League</div>
+              <select id="dsimLeagueSel" class="dsim-sel" style="min-width:130px" onchange="dsimOnLeagueSel(this.value)">
+                <option value="">— No League —</option>
+              </select>
+            </div>
+            <div class="dsim-ctrl-grp" style="margin-left:auto;justify-content:flex-end">
+              <div class="dsim-ctrl-lbl" style="opacity:0">.</div>
+              <div style="display:flex;gap:6px;align-items:center">
+                <button class="btn btn-p btn-sm" onclick="startDraftSim()">▶ Start Draft</button>
+                <button class="btn btn-s btn-sm" id="dsimResetBtn" style="display:none" onclick="resetDraftSim()">↺ Reset</button>
+              </div>
             </div>
           </div>
         </div>
