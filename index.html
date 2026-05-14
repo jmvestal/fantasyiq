@@ -4696,6 +4696,15 @@ function calcValue(p, _over) {
     if (!se) {
       se = S.sourceValues?.[sk]?.[pid];
     }
+    // For 2QB redraft, no dedicated 2QB CSV files exist — fall back to the matching SF CSV.
+    // SF and 2QB rankings are nearly identical for non-QB positions; the QB szMod below
+    // handles the extra 2QB scarcity boost on top. This PREVENTS the TE double-boost bug
+    // where buildConsensus sets p.redraft_val from the SF TE-premium CSV, and then the
+    // fallback path would apply the ×1.28 TE-premium multiplier a second time.
+    if (!se && mode === 'redraft' && qb === '2qb') {
+      const sfKey = sk.replace('scen_rd_2qb_', 'scen_rd_sf_');
+      se = S.sourceValues?.[sfKey]?.[pid];
+    }
     // IDP: always use the dedicated IDP CSV (dyn_idp/fantasypros.csv) — never external data
     if (!se && IDP_POS.has(pos)) {
       se = S.sourceValues?.['scen_dyn_idp']?.[pid];
@@ -6433,7 +6442,7 @@ function removeSugGive(id) {
 const SCENARIO_BASE    = '/rankings/scenarios';
 const SCENARIO_MANIFEST_URL = '/rankings/scenarios/scenarios.json';
 const SCENARIO_CACHE_TTL    = 7 * 24 * 60 * 60 * 1000; // 7 days
-const SCENARIO_CACHE_PREFIX = 'fhq_scen_v8_'; // bumped — 16-team TE szMod discounts added to prevent inflation above WRs/RBs
+const SCENARIO_CACHE_PREFIX = 'fhq_scen_v9_'; // bumped — 2QB uses SF CSV as fallback; TE double-boost fix
 
 // Manifest cache (avoid refetching scenarios.json on every settings change)
 let _scenManifest = null;
@@ -7666,7 +7675,15 @@ function buildConsensus(p) {
   let rv = 0, rvSources = 0;
   const curRdKey = (() => { try { return scenarioKey({ ...S.settings, mode: 'redraft' }); } catch(e) { return ''; } })();
   const rdKeys = Object.keys(S.sourceValues || {}).filter(k => k.startsWith('scen_rd_'));
-  const orderedRdKeys = curRdKey ? [curRdKey, ...rdKeys.filter(k => k !== curRdKey)] : rdKeys;
+  // Always prefer non-TE-premium CSVs as fallback when the exact key isn't found.
+  // This ensures calcValue's ×1.28 TE-premium multiplier always operates on an
+  // un-inflated base value — preventing TEs from being double-boosted when a
+  // TE-premium CSV is the only available fallback (e.g. in 2QB redraft mode).
+  const noteKeys  = rdKeys.filter(k => k !== curRdKey && !k.endsWith('_te'));
+  const teKeys    = rdKeys.filter(k => k !== curRdKey &&  k.endsWith('_te'));
+  const orderedRdKeys = curRdKey
+    ? [curRdKey, ...noteKeys, ...teKeys]
+    : [...rdKeys.filter(k => !k.endsWith('_te')), ...rdKeys.filter(k => k.endsWith('_te'))];
   for (const k of orderedRdKeys) {
     const e = S.sourceValues[k]?.[pid];
     if (e?.rv > 0) { rv = e.rv; rvSources = 1; break; }
@@ -11678,7 +11695,7 @@ function initWizard() {
   // Apply format settings so calcValue() reflects the chosen draft format
   DS.wizState._savedSettings = { ...S.settings };
   const mode = (draftType === 'rookie' || draftType === 'startup') ? 'dynasty' : 'redraft';
-  S.settings = { ...S.settings, mode, qb: wizQB, scoring: wizScoring, te: wizTE };
+  S.settings = { ...S.settings, mode, size: DS.wizState.totalTeams, qb: wizQB, scoring: wizScoring, te: wizTE };
   _wizRankCache = null; // bust rank cache so new settings take effect
   renderWizAvail();
   updateWizRec();
@@ -13436,7 +13453,7 @@ function startDraftSim() {
   // Override global settings with sim-specific scoring so calcValue() reflects sim format
   DSIM._savedSettings = { ...S.settings };
   const simMode = (DSIM.type === 'rookie' || DSIM.type === 'startup') ? 'dynasty' : 'redraft';
-  S.settings = { ...S.settings, mode: simMode, scoring: DSIM.scoring, qb: DSIM.qb, te: DSIM.te };
+  S.settings = { ...S.settings, mode: simMode, size: DSIM.numTeams, scoring: DSIM.scoring, qb: DSIM.qb, te: DSIM.te };
   DSIM.drafted   = new Set();
   DSIM.picks     = [];
   DSIM.posFilter = 'ALL';
