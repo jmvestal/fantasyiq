@@ -1993,7 +1993,7 @@
       <div class="dsim-setup-bar" id="valSettingsBar" style="margin-bottom:12px">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
           <div style="font-size:12px;font-weight:800;color:var(--text);letter-spacing:-.3px">League Settings</div>
-          <div style="font-size:11px;color:var(--text3)">Connect a league to auto-fill ↓</div>
+          <div style="font-size:11px;color:var(--text3)" id="valSettingsHint">Connect a league to auto-fill ↓</div>
         </div>
         <div class="dsim-controls" style="margin-top:8px">
           <div class="dsim-ctrl-grp">
@@ -5689,8 +5689,6 @@ function loadFromUrl() {
 // PLAYER VALUES TABLE
 // ═══════════════════════════════════════════════════════════
 function _syncValSettingsBar() {
-  const bar = document.getElementById('valSettingsBar');
-  if (bar) bar.style.display = S.connectedLeague ? 'none' : '';
   const s = S.settings;
   const _set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
   _set('valModeSelect',    s.mode    || 'dynasty');
@@ -5698,6 +5696,11 @@ function _syncValSettingsBar() {
   _set('valQBSelect',      s.qb      || 'sf');
   _set('valScoringSelect', s.scoring || 'ppr');
   _set('valTESelect',      s.te      || 'off');
+  // Update hint text
+  const hint = document.getElementById('valSettingsHint');
+  if (hint) hint.textContent = S.connectedLeague
+    ? `From: ${S.connectedLeague.leagueName || 'Connected league'}`
+    : 'Connect a league to auto-fill ↓';
 }
 
 function renderValuesTable() {
