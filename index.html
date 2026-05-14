@@ -10436,7 +10436,6 @@ async function silentSleeperRefresh(lg, { showToastOnSuccess = false } = {}) {
     }
 
     // STEP 3: Build updated league object
-    // Even if we couldn't identify userRoster, we at least update rosterPositions + settings
     const leagueStatus = leagueInfo.status || 'complete'; // 'in_season' | 'pre_draft' | 'complete' | etc.
     let updatedLeague = {
       ...lg,
@@ -10445,6 +10444,38 @@ async function silentSleeperRefresh(lg, { showToastOnSuccess = false } = {}) {
       settings:        freshSettings,
       connectedAt:     Date.now(),
     };
+
+    // STEP 3a: Always rebuild allTeams from the fresh Sleeper roster data.
+    // This runs unconditionally — we have all roster data regardless of whether
+    // we could identify which specific roster belongs to this user.
+    // isMe: prefer uid match; fall back to the stored flag so "my team" is
+    // never accidentally lost if sleeperUserId is temporarily unavailable.
+    const freshAllTeams = rosters.map(r => {
+      const teamIds = [...(r.players||[]), ...(r.reserve||[])].map(String);
+      const existing = (lg.allTeams||[]).find(t => String(t.rosterId) === String(r.roster_id));
+      const teamPlayers = teamIds.map(id => S.players.find(p=>String(p.player_id||p.id)===id)).filter(Boolean);
+      const isMe = uid ? (r.owner_id === uid) : (existing?.isMe || false);
+      return {
+        rosterId:    r.roster_id,
+        ownerId:     r.owner_id,
+        ownerName:   existing?.ownerName   || existing?.displayName || `Team ${r.roster_id}`,
+        displayName: existing?.displayName || existing?.ownerName   || `Team ${r.roster_id}`,
+        isMe,
+        playerIds:   teamIds,
+        players:     teamPlayers,
+        wins:        r.settings?.wins   ?? existing?.wins   ?? 0,
+        losses:      r.settings?.losses ?? existing?.losses ?? 0,
+      };
+    });
+
+    // Attach draft pick inventory to every team (handles dynasty / pick-trading redraft)
+    const picksPerTeam = buildLeaguePicksPerTeam(lg.leagueId, rosters, tradedPicksRaw, leagueInfo);
+    freshAllTeams.forEach(team => {
+      team.picks = picksPerTeam.get(String(team.rosterId)) || [];
+    });
+
+    updatedLeague.allTeams    = freshAllTeams;
+    updatedLeague.tradedPicks = tradedPicksRaw;
 
     if (userRoster) {
       // Deduplicate: Sleeper's `players` already includes reserve players; use Set to avoid dupes
@@ -10484,33 +10515,8 @@ async function silentSleeperRefresh(lg, { showToastOnSuccess = false } = {}) {
       // Remove pure stubs that have zero info (keeps real players + any enriched stubs)
       rosterPlayers = rosterPlayers.filter(p => p.full_name || !p._stub);
 
-      const freshAllTeams = rosters.map(r => {
-        const teamIds = [...(r.players||[]), ...(r.reserve||[])].map(String);
-        const existing = (lg.allTeams||[]).find(t => String(t.rosterId) === String(r.roster_id));
-        const teamPlayers = teamIds.map(id => S.players.find(p=>String(p.player_id||p.id)===id)).filter(Boolean);
-        return {
-          rosterId:    r.roster_id,
-          ownerId:     r.owner_id,
-          ownerName:   existing?.ownerName   || existing?.displayName || `Team ${r.roster_id}`,
-          displayName: existing?.displayName || existing?.ownerName   || `Team ${r.roster_id}`,
-          isMe:        r.owner_id === uid,
-          playerIds:   teamIds,
-          players:     teamPlayers,
-          wins:        r.settings?.wins   ?? existing?.wins   ?? 0,
-          losses:      r.settings?.losses ?? existing?.losses ?? 0,
-        };
-      });
-
-      // Attach each team's draft pick inventory (dynasty leagues and redraft with pick trading)
-      const picksPerTeam = buildLeaguePicksPerTeam(lg.leagueId, rosters, tradedPicksRaw, leagueInfo);
-      freshAllTeams.forEach(team => {
-        team.picks = picksPerTeam.get(String(team.rosterId)) || [];
-      });
-
       updatedLeague = {
         ...updatedLeague,
-        allTeams:     freshAllTeams,
-        tradedPicks:  tradedPicksRaw,
         rosterIds:    allIds,
         starterIds:   (userRoster.starters || []).map(String),
         reserveIds:   (userRoster.reserve  || []).map(String),
