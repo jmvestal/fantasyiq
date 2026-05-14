@@ -2019,55 +2019,6 @@
         <select id="valTabLgSel" class="trade-partner-sel" style="display:none;font-size:12px;padding:6px 10px" onchange="switchLeagueGlobal(this.value)"></select>
       </div>
 
-      <!-- League settings bar — visible when no league connected, hidden when league active -->
-      <div class="dsim-setup-bar" id="valSettingsBar" style="margin-bottom:12px">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-          <div style="font-size:12px;font-weight:800;color:var(--text);letter-spacing:-.3px">League Settings</div>
-          <div style="font-size:11px;color:var(--text3)" id="valSettingsHint">Connect a league to auto-fill ↓</div>
-        </div>
-        <div class="dsim-controls" style="margin-top:8px">
-          <div class="dsim-ctrl-grp">
-            <div class="dsim-ctrl-lbl">Mode</div>
-            <select id="valModeSelect" class="dsim-sel" onchange="setSetting('mode',this.value)">
-              <option value="dynasty">Dynasty</option>
-              <option value="redraft">Redraft</option>
-            </select>
-          </div>
-          <div class="dsim-ctrl-grp">
-            <div class="dsim-ctrl-lbl">Teams</div>
-            <select id="valSizeSelect" class="dsim-sel" onchange="setSetting('size',this.value)">
-              <option value="8">8 Teams</option>
-              <option value="10">10 Teams</option>
-              <option value="12" selected>12 Teams</option>
-              <option value="14">14 Teams</option>
-              <option value="16">16 Teams</option>
-            </select>
-          </div>
-          <div class="dsim-ctrl-grp">
-            <div class="dsim-ctrl-lbl">QB Format</div>
-            <select id="valQBSelect" class="dsim-sel" onchange="setSetting('qb',this.value)">
-              <option value="1qb">1 QB</option>
-              <option value="sf">Superflex</option>
-              <option value="2qb">2 QB</option>
-            </select>
-          </div>
-          <div class="dsim-ctrl-grp">
-            <div class="dsim-ctrl-lbl">Scoring</div>
-            <select id="valScoringSelect" class="dsim-sel" onchange="setSetting('scoring',this.value)">
-              <option value="ppr">PPR</option>
-              <option value="half">Half PPR</option>
-              <option value="std">Non-PPR</option>
-            </select>
-          </div>
-          <div class="dsim-ctrl-grp">
-            <div class="dsim-ctrl-lbl">TE</div>
-            <select id="valTESelect" class="dsim-sel" onchange="setSetting('te',this.value)">
-              <option value="off">Std TE</option>
-              <option value="on">TE Premium</option>
-            </select>
-          </div>
-        </div>
-      </div>
 
       <div class="tbar">
         <div style="display:flex;align-items:center;gap:6px;width:100%">
