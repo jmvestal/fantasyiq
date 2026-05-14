@@ -57,7 +57,7 @@
     .hdr{background:var(--bg);border-bottom:none;box-shadow:none;padding:0 20px;position:sticky;top:0;z-index:100}
     .hdr-inner{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;max-width:1440px;margin:0 auto;height:204px}
     .hdr-spacer{flex:1;min-width:0}
-    .hdr-right{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:1;min-width:0}
+    .hdr-right{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:1;min-width:0;justify-self:end}
     .logo{font-size:32px;font-weight:900;font-style:italic;letter-spacing:1px;white-space:nowrap;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase}
     .logo em{color:var(--primary-l);font-style:italic;text-shadow:0 0 28px rgba(79,134,245,.55)}
     .logo span{color:#fff}
@@ -1011,7 +1011,7 @@
     ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 
     /* ── HEADER NAV LINKS ─────────────────── */
-    .hdr-nav-links{display:flex;align-items:center;gap:2px}
+    .hdr-nav-links{display:flex;align-items:center;gap:2px;justify-self:start}
     .hdr-nav-link{display:inline-flex;background:none;border:1.5px solid transparent;font-size:13px;font-weight:700;font-family:'Orbitron',sans-serif;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;padding:6px 13px;border-radius:999px;transition:all .18s;white-space:nowrap;opacity:1}
     .hdr-nav-link:hover{background:rgba(26,86,219,.1);border-color:rgba(79,134,245,.55);box-shadow:0 0 10px rgba(79,134,245,.2)}
     .hdr-nav-link em{color:#1652d4;font-style:italic;text-shadow:0 0 12px rgba(22,82,212,.5)}
@@ -1375,7 +1375,7 @@
       <button class="hdr-nav-link" onclick="switchTab('draft')"><em>Draft</em><span>HQ</span></button>
     </div>
     <!-- Center: Logo -->
-    <div onclick="switchTab('home')" style="cursor:pointer;display:flex;align-items:center" title="Home">
+    <div onclick="switchTab('home')" style="cursor:pointer;display:flex;align-items:center;justify-self:center" title="Home">
       <img src="fantasy-hq-transparent-logo.png" alt="Fantasy HQ" style="height:200px;width:auto">
     </div>
         <!-- Right: search + auth -->
