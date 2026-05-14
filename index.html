@@ -5762,7 +5762,7 @@ function renderValuesTable() {
       return p.position === pos;
     })
     .filter(p => !q || p.full_name.toLowerCase().includes(q) || (p.team||'').toLowerCase().includes(q))
-    .map(p => ({ ...p, _val: calcValue(p, isLoggedIn ? null : vtSettings) }))   // ← locked to defaults for free users
+    .map(p => ({ ...p, _val: calcValue(p) }))
     .sort((a,b) => {
       let av, bv;
       if (col === 'value') { av = a._val; bv = b._val; }
