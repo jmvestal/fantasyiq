@@ -69,10 +69,6 @@
     .nav-btn.active .nav-icon{stroke:#fff}
     .pro-badge{font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;background:linear-gradient(135deg,#1a56db,#4f86f5);color:#fff;vertical-align:middle;margin-left:3px;letter-spacing:.04em}
     body.logged-in .pro-badge{display:none}
-    /* Player Values sign-in nudge */
-    .val-signin-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;margin-bottom:14px}
-    .val-signin-left{display:flex;align-items:center;gap:12px}
-    body.logged-in .val-signin-banner{display:none}
     .pc-badge{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0}
 
     /* ── LAYOUT ─────────────────────────── */
@@ -1993,25 +1989,58 @@
         <select id="valTabLgSel" class="trade-partner-sel" style="display:none;font-size:12px;padding:6px 10px" onchange="switchLeagueGlobal(this.value)"></select>
       </div>
 
-      <!-- Sign-in nudge — hidden once logged in -->
-      <div class="val-signin-banner" id="valSigninBanner">
-        <div class="val-signin-left">
-          <span style="font-size:18px">⚙️</span>
-          <div>
-            <div style="font-weight:700;font-size:13px" id="valBannerDesc">Showing default Dynasty rankings · 12-Team · 1-QB · PPR</div>
-            <div style="font-size:11px;color:var(--text2);margin-top:2px">Sign in to unlock custom league size, QB format &amp; scoring</div>
+      <!-- League settings bar — visible when no league connected, hidden when league active -->
+      <div class="dsim-setup-bar" id="valSettingsBar" style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div style="font-size:12px;font-weight:800;color:var(--text);letter-spacing:-.3px">League Settings</div>
+          <div style="font-size:11px;color:var(--text3)">Connect a league to auto-fill ↓</div>
+        </div>
+        <div class="dsim-controls" style="margin-top:8px">
+          <div class="dsim-ctrl-grp">
+            <div class="dsim-ctrl-lbl">Mode</div>
+            <select id="valModeSelect" class="dsim-sel" onchange="setSetting('mode',this.value)">
+              <option value="dynasty">Dynasty</option>
+              <option value="redraft">Redraft</option>
+            </select>
+          </div>
+          <div class="dsim-ctrl-grp">
+            <div class="dsim-ctrl-lbl">Teams</div>
+            <select id="valSizeSelect" class="dsim-sel" onchange="setSetting('size',this.value)">
+              <option value="8">8 Teams</option>
+              <option value="10">10 Teams</option>
+              <option value="12" selected>12 Teams</option>
+              <option value="14">14 Teams</option>
+              <option value="16">16 Teams</option>
+            </select>
+          </div>
+          <div class="dsim-ctrl-grp">
+            <div class="dsim-ctrl-lbl">QB Format</div>
+            <select id="valQBSelect" class="dsim-sel" onchange="setSetting('qb',this.value)">
+              <option value="1qb">1 QB</option>
+              <option value="sf">Superflex</option>
+              <option value="2qb">2 QB</option>
+            </select>
+          </div>
+          <div class="dsim-ctrl-grp">
+            <div class="dsim-ctrl-lbl">Scoring</div>
+            <select id="valScoringSelect" class="dsim-sel" onchange="setSetting('scoring',this.value)">
+              <option value="ppr">PPR</option>
+              <option value="half">Half PPR</option>
+              <option value="std">Non-PPR</option>
+            </select>
+          </div>
+          <div class="dsim-ctrl-grp">
+            <div class="dsim-ctrl-lbl">TE</div>
+            <select id="valTESelect" class="dsim-sel" onchange="setSetting('te',this.value)">
+              <option value="off">Std TE</option>
+              <option value="on">TE Premium</option>
+            </select>
           </div>
         </div>
-        <button class="btn btn-p btn-sm" onclick="openModal('authModal')">Sign In to Customize</button>
       </div>
 
       <div class="tbar">
         <div style="display:flex;align-items:center;gap:6px;width:100%">
-          <!-- Dynasty / Redraft toggle — always visible, no login required -->
-          <select id="valModeSelect" class="dsim-sel" style="font-size:11px;padding:5px 7px;font-weight:700;min-width:0;flex-shrink:0" onchange="setSetting('mode',this.value)">
-            <option value="dynasty">Dynasty</option>
-            <option value="redraft">Redraft</option>
-          </select>
           <div class="pos-btns" style="flex:1;min-width:0">
             <button class="pos-btn on" data-pos="ALL">All</button>
             <button class="pos-btn" data-pos="QB">QB</button>
@@ -5659,28 +5688,27 @@ function loadFromUrl() {
 // ═══════════════════════════════════════════════════════════
 // PLAYER VALUES TABLE
 // ═══════════════════════════════════════════════════════════
+function _syncValSettingsBar() {
+  const bar = document.getElementById('valSettingsBar');
+  if (bar) bar.style.display = S.connectedLeague ? 'none' : '';
+  const s = S.settings;
+  const _set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  _set('valModeSelect',    s.mode    || 'dynasty');
+  _set('valSizeSelect',    s.size    || 12);
+  _set('valQBSelect',      s.qb      || 'sf');
+  _set('valScoringSelect', s.scoring || 'ppr');
+  _set('valTESelect',      s.te      || 'off');
+}
+
 function renderValuesTable() {
-  // Keep mode select in sync with current setting
-  const ms = document.getElementById('valModeSelect');
-  if (ms) ms.value = S.settings.mode || 'dynasty';
+  // Sync all settings dropdowns and show/hide settings bar
+  _syncValSettingsBar();
 
   const q = document.getElementById('tblSearch').value.toLowerCase();
   const { col, dir } = S.tableSort;
 
-  // Non-signed-in users: lock Player HQ to default 12T/SF/PPR settings.
-  // Mode (dynasty/redraft) stays free. Only size/qb/scoring/te are gated.
-  const isLoggedIn = !!S.auth;
-  const isPremium  = S.isPremium;
-  const vtSettings = isPremium ? S.settings : {
-    ...S.settings, size: 12, qb: 'sf', scoring: 'ppr', te: 'off'
-  };
-
-  // Update sign-in banner description dynamically
-  const bannerDesc = document.getElementById('valBannerDesc');
-  if (bannerDesc && !isPremium) {
-    const mLbl = S.settings.mode === 'dynasty' ? 'Dynasty' : 'Redraft';
-    bannerDesc.textContent = `Showing default ${mLbl} rankings · 12-Team · SF · PPR`;
-  }
+  // All settings are free — use S.settings directly
+  const vtSettings = S.settings;
 
   const { mode, size, qb, scoring } = vtSettings;
   const isDynasty = mode === 'dynasty';
@@ -6569,11 +6597,11 @@ function setSetting(key, val) {
   });
   // Keep mode selects in sync across tabs
   if (key === 'mode') {
-    const ms = document.getElementById('valModeSelect');
-    if (ms) ms.value = val;
     const ts = document.getElementById('tradeModeSelect');
     if (ts) ts.value = val;
   }
+  // Sync all PlayerHQ settings dropdowns
+  _syncValSettingsBar();
 
   updateModeChip();
   renderTrade();
@@ -10466,6 +10494,7 @@ function updateLeagueBar() {
   }
   updateTradeModeBar();
   _refreshLeagueSels();
+  _syncValSettingsBar();
 }
 
 function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
