@@ -2888,7 +2888,19 @@
       <div id="authSignInErr" class="auth-error"></div>
       <button class="btn btn-p" style="width:100%;justify-content:center;margin-top:8px" onclick="signInWithEmail()">Log In</button>
       <div style="text-align:center;margin-top:10px">
-        <a href="#" style="font-size:12px;color:var(--primary-l)" onclick="event.preventDefault();sendPasswordReset()">Forgot password?</a>
+        <a href="#" style="font-size:12px;color:var(--primary-l)" onclick="event.preventDefault();showForgotPassword()">Forgot password?</a>
+      </div>
+    </div>
+
+    <!-- Forgot Password form (hidden by default) -->
+    <div id="authForgotForm" style="display:none">
+      <div style="font-size:14px;font-weight:600;margin-bottom:6px">Reset your password</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Enter your email and we'll send you a reset link.</div>
+      <input class="mo-input" id="authForgotEmail" type="email" placeholder="Email address" autocomplete="email" onkeydown="if(event.key==='Enter')sendPasswordReset()">
+      <div id="authForgotMsg" class="auth-error"></div>
+      <button class="btn btn-p" style="width:100%;justify-content:center;margin-top:8px" onclick="sendPasswordReset()">Send Reset Email</button>
+      <div style="text-align:center;margin-top:10px">
+        <a href="#" style="font-size:12px;color:var(--text3)" onclick="event.preventDefault();hideForgotPassword()">← Back to log in</a>
       </div>
     </div>
     <!-- Create Account form -->
@@ -9639,10 +9651,12 @@ function authSwitchTab(tab) {
   const isSignIn = tab === 'signin';
   document.getElementById('authSignInForm').style.display   = isSignIn ? '' : 'none';
   document.getElementById('authRegisterForm').style.display = isSignIn ? 'none' : '';
+  document.getElementById('authForgotForm').style.display   = 'none'; // always hide on tab switch
   document.getElementById('authTabSignIn').classList.toggle('auth-tab-active', isSignIn);
   document.getElementById('authTabRegister').classList.toggle('auth-tab-active', !isSignIn);
   document.getElementById('authSignInErr').textContent   = '';
   document.getElementById('authRegisterErr').textContent = '';
+  document.getElementById('authForgotMsg').textContent   = '';
 }
 
 async function signInWithEmail() {
@@ -9704,18 +9718,39 @@ async function registerWithEmail() {
   }
 }
 
+function showForgotPassword() {
+  document.getElementById('authSignInForm').style.display = 'none';
+  document.getElementById('authForgotForm').style.display = 'block';
+  // Pre-fill email if they already typed it on the sign-in form
+  const existing = document.getElementById('authEmailIn').value.trim();
+  if (existing) document.getElementById('authForgotEmail').value = existing;
+  document.getElementById('authForgotMsg').textContent = '';
+  document.getElementById('authForgotEmail').focus();
+}
+
+function hideForgotPassword() {
+  document.getElementById('authForgotForm').style.display = 'none';
+  document.getElementById('authSignInForm').style.display = 'block';
+}
+
 async function sendPasswordReset() {
-  if (!fbAuth) return;
-  const email = document.getElementById('authEmailIn').value.trim();
-  const errEl = document.getElementById('authSignInErr');
-  if (!email) { errEl.textContent = 'Enter your email address first.'; return; }
+  if (!fbAuth) { showToast('Auth not ready — try again in a moment', 'err'); return; }
+  const email = document.getElementById('authForgotEmail').value.trim();
+  const msgEl = document.getElementById('authForgotMsg');
+  msgEl.textContent = '';
+  if (!email) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Please enter your email address.'; return; }
   try {
     await fbAuth.sendPasswordResetEmail(email);
-    errEl.style.color = 'var(--success)';
-    errEl.textContent = 'Reset email sent! Check your inbox.';
+    msgEl.style.color = 'var(--success, #4ade80)';
+    msgEl.textContent = '✅ Reset email sent! Check your inbox (and spam folder).';
+    document.getElementById('authForgotEmail').value = '';
   } catch(e) {
-    errEl.style.color = 'var(--danger)';
-    errEl.textContent = e.message || 'Failed to send reset email.';
+    msgEl.style.color = 'var(--danger)';
+    msgEl.textContent =
+      (e.code === 'auth/user-not-found')    ? 'No account found with that email.' :
+      (e.code === 'auth/invalid-email')     ? 'Please enter a valid email address.' :
+      (e.code === 'auth/too-many-requests') ? 'Too many attempts — wait a few minutes and try again.' :
+      'Failed to send reset email. Please try again.';
   }
 }
 
