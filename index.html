@@ -13593,7 +13593,6 @@ function wizUseLeague() {
 // ── Start / Reset ─────────────────────────────────────────
 
 function startDraftSim() {
-  console.log('[DSIM] startDraftSim called. Snake select value:', document.getElementById('dsimSnake')?.value);
   if (!S.players || !S.players.length) {
     showToast('Player data not loaded yet — try again in a moment', 'err');
     return;
@@ -13826,7 +13825,6 @@ function renderDsimBoard() {
   // Where is the current pick? (which round row and which team column)
   const curRoundIdx  = Math.floor(DSIM.currentOverall / N);          // 0-based row
   const curTeamIdx   = DSIM.pickOrder[DSIM.currentOverall] ?? -1;    // team column index
-  console.log('[BOARD] currentOverall:', DSIM.currentOverall, 'curRound:', curRoundIdx, 'curTeam:', curTeamIdx, 'snake:', DSIM.snake, 'pickOrder:', DSIM.pickOrder.slice(0, 15));
 
   // Column headers
   let html = '<thead><tr><th class="round-num-cell">#</th>';
@@ -14054,6 +14052,7 @@ function dsimFinish() {
   const totalVal = myPicks.reduce((s, pk) => s + calcValue(pk.player), 0);
   const avgVal   = myPicks.length ? Math.round(totalVal / myPicks.length) : 0;
   const steals   = _dsimCountSteals();
+  const isDynasty = DSIM.type === 'rookie' || DSIM.type === 'startup';
 
   // ── Stats bar ──
   const statsEl = document.getElementById('dsimDoneStats');
@@ -14073,149 +14072,135 @@ function dsimFinish() {
   function _pickGrade(pk) {
     const adpRank = DSIM.available.indexOf(pk.player) + 1;
     const diff    = adpRank - pk.overall;
-    if (diff >= 8)  return { cls: 'grade-steal',  lbl: 'Steal' };
-    if (diff >= 3)  return { cls: 'grade-value',  lbl: 'Value' };
-    if (diff <= -8) return { cls: 'grade-bust',   lbl: 'Reach' };
-    if (diff <= -3) return { cls: 'grade-reach',  lbl: 'Slight Reach' };
-    return           { cls: 'grade-fair',   lbl: 'Fair' };
+    if (diff >= 8)  return { cls: 'grade-steal', lbl: 'Steal' };
+    if (diff >= 3)  return { cls: 'grade-value', lbl: 'Value' };
+    if (diff <= -8) return { cls: 'grade-bust',  lbl: 'Reach' };
+    if (diff <= -3) return { cls: 'grade-reach', lbl: 'Slight Reach' };
+    return           { cls: 'grade-fair',  lbl: 'Fair' };
   }
 
-  // ── Roster by position ──
+  // ── Build slot list based on format ──
+  function _buildSlots() {
+    const qb = DSIM.qb, type = DSIM.type;
+    const slots = [];
+    if (qb === '2qb')      { slots.push('QB','QB'); }
+    else                   { slots.push('QB'); }
+    if (qb === 'sf')       { slots.push('SF'); }
+    slots.push('RB','RB','WR','WR','TE','FLEX');
+    if (!isDynasty)        { slots.push('K','DEF'); }
+    // bench = all remaining picks beyond starters
+    const benchCount = Math.max(0, myPicks.length - slots.length);
+    for (let i = 0; i < benchCount; i++) slots.push('BN');
+    return slots;
+  }
+
+  // ── Greedy slot assignment ──
+  function _assignSlots(slots) {
+    // pool: pick objects sorted by value desc
+    const pool   = [...myPicks].sort((a, b) => calcValue(b.player) - calcValue(a.player));
+    const used   = new Set();
+    const result = [];
+
+    const take = (filterFn) => {
+      const idx = pool.findIndex(pk => !used.has(pk.overall) && filterFn(pk.player.position||''));
+      if (idx !== -1) { used.add(pool[idx].overall); return pool[idx]; }
+      return null;
+    };
+
+    slots.forEach(slot => {
+      let pk = null;
+      if (slot === 'QB')   pk = take(p => p === 'QB');
+      else if (slot === 'RB')   pk = take(p => p === 'RB');
+      else if (slot === 'WR')   pk = take(p => p === 'WR');
+      else if (slot === 'TE')   pk = take(p => p === 'TE');
+      else if (slot === 'K')    pk = take(p => p === 'K');
+      else if (slot === 'DEF')  pk = take(p => p === 'DEF' || p === 'DST');
+      else if (slot === 'FLEX') pk = take(p => ['RB','WR','TE'].includes(p));
+      else if (slot === 'SF')   pk = take(p => ['QB','RB','WR','TE'].includes(p));
+      else if (slot === 'BN')   pk = take(() => true); // any remaining
+      result.push({ slot, pk });
+    });
+    return result;
+  }
+
+  // ── Render roster by slot ──
   const rosterEl = document.getElementById('dsimRosterByPos');
   if (rosterEl) {
-    const POS_ORDER = ['QB','RB','WR','TE','K','DEF','DST'];
-    const grouped   = {};
-    myPicks.forEach(pk => {
-      const pos = pk.player.position || 'BN';
-      if (!grouped[pos]) grouped[pos] = [];
-      grouped[pos].push(pk);
+    const slots    = _buildSlots();
+    const assigned = _assignSlots(slots);
+    const slotLabel = { QB:'QB', RB:'RB', WR:'WR', TE:'TE', FLEX:'FLEX', SF:'SuperFlex', K:'K', DEF:'DEF', BN:'BN' };
+    const STARTER_SLOTS = new Set(['QB','RB','WR','TE','FLEX','SF','K','DEF']);
+
+    let html = `<div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.06em;margin-bottom:6px">STARTERS</div>`;
+    let inBench = false;
+
+    assigned.forEach(({ slot, pk }) => {
+      if (slot === 'BN' && !inBench) {
+        inBench = true;
+        html += `<div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.06em;margin:12px 0 6px">BENCH</div>`;
+      }
+      const slotBadge = `<span style="font-size:9px;font-weight:800;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:var(--text3);min-width:42px;text-align:center;display:inline-block">${slotLabel[slot]||slot}</span>`;
+      if (!pk) {
+        html += `<div class="draft-pick-row" style="opacity:.4">${slotBadge}<div class="draft-pick-info" style="color:var(--text3);font-style:italic">Empty</div></div>`;
+        return;
+      }
+      const p   = pk.player;
+      const pos = p.position || '?';
+      const v   = calcValue(p);
+      html += `<div class="draft-pick-row">
+        ${slotBadge}
+        <span class="draft-pick-num" style="font-size:10px;min-width:30px;color:var(--text3)">#${pk.overall}</span>
+        <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
+        <div class="draft-pick-info">
+          <div class="draft-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name||p.name||'?')}</div>
+          <div class="draft-pick-sub">${p.team||''} · ${fmtVal(v)}</div>
+        </div>
+      </div>`;
     });
-    let html = '';
-    POS_ORDER.forEach(pos => {
-      if (!grouped[pos]) return;
-      html += `<div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 4px">${pos}</div>`;
-      grouped[pos].forEach(pk => {
-        const p = pk.player;
-        const v = calcValue(p);
-        const g = _pickGrade(pk);
-        html += `<div class="draft-pick-row">
-          <span class="draft-pick-num" style="font-size:10px;min-width:28px">#${pk.overall}</span>
-          <div class="draft-pick-info">
-            <div class="draft-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name||p.name||'?')}</div>
-            <div class="draft-pick-sub">${p.team||''} · ${fmtVal(v)}</div>
-          </div>
-          <span class="draft-pick-grade ${g.cls}">${g.lbl}</span>
-        </div>`;
-      });
-    });
-    // Bench (any pos not in POS_ORDER)
-    const benchPicks = myPicks.filter(pk => !POS_ORDER.includes(pk.player.position));
-    if (benchPicks.length) {
-      html += `<div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 4px">BN</div>`;
-      benchPicks.forEach(pk => {
-        const p = pk.player;
-        const g = _pickGrade(pk);
-        html += `<div class="draft-pick-row">
-          <span class="draft-pick-num" style="font-size:10px;min-width:28px">#${pk.overall}</span>
-          <div class="draft-pick-info">
-            <div class="draft-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name||p.name||'?')}</div>
-            <div class="draft-pick-sub">${p.team||''} · Rnd ${pk.round}</div>
-          </div>
-          <span class="draft-pick-grade ${g.cls}">${g.lbl}</span>
-        </div>`;
-      });
-    }
     rosterEl.innerHTML = html;
   }
 
-  // ── Pick Analysis (steals vs reaches breakdown) ──
+  // ── Pick Analysis panel ──
   const analysisEl = document.getElementById('dsimPickAnalysis');
   if (analysisEl) {
-    const graded = myPicks.map(pk => ({ pk, g: _pickGrade(pk) }));
+    const graded      = myPicks.map(pk => ({ pk, g: _pickGrade(pk) }));
     const stealPicks  = graded.filter(x => x.g.lbl === 'Steal');
     const valuePicks  = graded.filter(x => x.g.lbl === 'Value');
-    const reachPicks  = graded.filter(x => x.g.lbl === 'Reach');
-    const sReachPicks = graded.filter(x => x.g.lbl === 'Slight Reach');
+    const reachPicks  = graded.filter(x => ['Reach','Slight Reach'].includes(x.g.lbl));
+    const fairPicks   = graded.filter(x => x.g.lbl === 'Fair');
 
-    const _section = (title, items, cls) => {
-      if (!items.length) return '';
-      return `<div style="margin-bottom:14px">
-        <div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">${title} (${items.length})</div>
-        ${items.map(({ pk }) => {
-          const p = pk.player;
-          const pos = p.position || '?';
-          return `<div class="draft-pick-row">
-            <span class="draft-pick-num" style="font-size:10px;min-width:28px">#${pk.overall}</span>
-            <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
-            <div class="draft-pick-info">
-              <div class="draft-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name||p.name||'?')}</div>
-              <div class="draft-pick-sub">${p.team||''} · Rnd ${pk.round}, Pick ${pk.pickInRound}</div>
-            </div>
-            <span class="draft-pick-grade ${cls}">${stealPicks.includes(arguments[0]) ? '▲' : '▼'}</span>
-          </div>`;
-        }).join('')}
+    const _pickRow = ({ pk, g }) => {
+      const p = pk.player, pos = p.position||'?';
+      return `<div class="draft-pick-row">
+        <span class="draft-pick-num" style="font-size:10px;min-width:30px">#${pk.overall}</span>
+        <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
+        <div class="draft-pick-info">
+          <div class="draft-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name||p.name||'?')}</div>
+          <div class="draft-pick-sub">${p.team||''} · Rnd ${pk.round}.${pk.pickInRound}</div>
+        </div>
+        <span class="draft-pick-grade ${g.cls}">${g.lbl}</span>
       </div>`;
     };
 
-    let html = '';
-    if (stealPicks.length)  html += `<div style="margin-bottom:14px">
-      <div style="font-size:11px;font-weight:800;color:var(--success);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">🟢 Steals (${stealPicks.length})</div>
-      ${stealPicks.map(({ pk }) => {
-        const p = pk.player; const pos = p.position||'?';
-        return `<div class="draft-pick-row">
-          <span class="draft-pick-num" style="font-size:10px;min-width:28px">#${pk.overall}</span>
-          <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
-          <div class="draft-pick-info">
-            <div class="draft-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name||p.name||'?')}</div>
-            <div class="draft-pick-sub">${p.team||''} · Rnd ${pk.round}, Pick ${pk.pickInRound}</div>
-          </div>
-          <span class="draft-pick-grade grade-steal">Steal</span>
-        </div>`;
-      }).join('')}
-    </div>`;
+    const _section = (icon, title, items) => !items.length ? '' : `
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:800;color:var(--text2);letter-spacing:.04em;margin-bottom:6px">${icon} ${title} <span style="font-weight:400;color:var(--text3)">(${items.length})</span></div>
+        ${items.map(_pickRow).join('')}
+      </div>`;
 
-    if (valuePicks.length)  html += `<div style="margin-bottom:14px">
-      <div style="font-size:11px;font-weight:800;color:var(--primary-l);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">🔵 Value Picks (${valuePicks.length})</div>
-      ${valuePicks.map(({ pk }) => {
-        const p = pk.player; const pos = p.position||'?';
-        return `<div class="draft-pick-row">
-          <span class="draft-pick-num" style="font-size:10px;min-width:28px">#${pk.overall}</span>
-          <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
-          <div class="draft-pick-info">
-            <div class="draft-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name||p.name||'?')}</div>
-            <div class="draft-pick-sub">${p.team||''} · Rnd ${pk.round}, Pick ${pk.pickInRound}</div>
-          </div>
-          <span class="draft-pick-grade grade-value">Value</span>
-        </div>`;
-      }).join('')}
-    </div>`;
+    let html = _section('🟢','Steals', stealPicks)
+             + _section('🔵','Value Picks', valuePicks)
+             + _section('🔴','Reaches', reachPicks)
+             + _section('⚪','Fair Picks', fairPicks);
 
-    if (reachPicks.length || sReachPicks.length) html += `<div style="margin-bottom:14px">
-      <div style="font-size:11px;font-weight:800;color:var(--warn);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">🔴 Reaches (${reachPicks.length + sReachPicks.length})</div>
-      ${[...reachPicks, ...sReachPicks].map(({ pk, g }) => {
-        const p = pk.player; const pos = p.position||'?';
-        return `<div class="draft-pick-row">
-          <span class="draft-pick-num" style="font-size:10px;min-width:28px">#${pk.overall}</span>
-          <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
-          <div class="draft-pick-info">
-            <div class="draft-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name||p.name||'?')}</div>
-            <div class="draft-pick-sub">${p.team||''} · Rnd ${pk.round}, Pick ${pk.pickInRound}</div>
-          </div>
-          <span class="draft-pick-grade ${g.cls}">${g.lbl}</span>
-        </div>`;
-      }).join('')}
-    </div>`;
-
-    if (!html) html = `<div style="color:var(--text3);font-size:13px;padding:8px 0">All picks graded Fair — solid, value-neutral draft.</div>`;
+    if (!html) html = `<div style="color:var(--text3);font-size:13px;padding:8px 0">No picks to analyze.</div>`;
     analysisEl.innerHTML = html;
   }
 
   // ── Team Power Rankings ──
   _dsimRenderTeamRankings();
-
   // ── All Teams section ──
   _dsimRenderAllTeams();
-
   // Scroll to results
   document.getElementById('dsimDone').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
