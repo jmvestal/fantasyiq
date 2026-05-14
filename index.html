@@ -6221,6 +6221,28 @@ function renderRosterList() {
     for (let i = taxiPlayers.length; i < taxiCount; i++) html += emptyRow('TAXI', 'is-taxi');
   }
 
+  // Draft Picks — shown whenever the league has picks synced (dynasty + redraft with pick trading)
+  const myPicks = (S.connectedLeague?.allTeams?.find(t => t.isMe)?.picks) || [];
+  if (myPicks.length) {
+    html += '<div class="ros-section-hdr" style="margin-top:6px">Draft Picks</div>';
+    myPicks.forEach(pick => {
+      const val = calcValue(pick);
+      html += `<div class="ros-row">
+        <span class="ros-slot-lbl is-bench">PICK</span>
+        <div class="ros-row-info">
+          <div style="display:flex;align-items:center;gap:7px">
+            <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              ${escHtml(pick.full_name)}
+              <span class="pb pb-PICK" style="font-size:9px;vertical-align:middle;margin-left:4px">PICK</span>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text3)">Round ${pick.pickRound} · ${pick.pickYear}</div>
+        </div>
+        <div style="font-weight:700;font-size:13px;color:var(--primary-l);flex-shrink:0">${fmtVal(val)}</div>
+      </div>`;
+    });
+  }
+
   el.innerHTML = html;
   setTimeout(initHeadshots, 0);
 }
@@ -10289,15 +10311,89 @@ async function loadConnectedLeagues() {
   refreshConnectedLeaguesList();
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Build per-team draft pick inventory from Sleeper traded_picks data.
+// Returns a Map of { String(rosterId) → pick[] }.
+// Each pick object mirrors the PICKS array structure so calcValue / Trade HQ
+// treat them identically to manually-added picks.
+// ─────────────────────────────────────────────────────────────────
+function buildLeaguePicksPerTeam(leagueId, rosters, tradedPicks, leagueInfo) {
+  const leagueType  = Number(leagueInfo?.settings?.type ?? leagueInfo?.type ?? 0);
+  const isDynasty   = leagueType === 2 || leagueType === 1;
+  const pickTrading = Number(leagueInfo?.settings?.pick_trading || 0);
+  // Nothing to do for redraft leagues that have pick trading disabled
+  if (!isDynasty && !pickTrading) return new Map();
+
+  const currentSeason = parseInt(leagueInfo?.season || 2026);
+  const years     = isDynasty
+    ? [currentSeason, currentSeason + 1, currentSeason + 2]
+    : [currentSeason];
+  const numRounds = isDynasty ? 5 : 3;
+
+  // Value table — mirrors buildPickInventory / PICKS array
+  const PICK_BASE  = { 1:3600, 2:1200, 3:420, 4:200, 5:100 };
+  const YEAR_DISC  = {};
+  years.forEach((yr, i) => { YEAR_DISC[yr] = [1.0, 0.82, 0.65][i] ?? 0.50; });
+
+  // Resolve current owner for each pick.
+  // Sleeper traded_picks: roster_id = original team, owner_id = current roster holder.
+  // If the same pick is traded multiple times the last entry (chronological) wins.
+  const tradedMap = {};
+  (tradedPicks || []).forEach(tp => {
+    const key = `${tp.season}-${tp.round}-${tp.roster_id}`;
+    tradedMap[key] = String(tp.owner_id);
+  });
+
+  // Initialise result map — one empty array per roster
+  const result = new Map();
+  rosters.forEach(r => result.set(String(r.roster_id), []));
+
+  years.forEach(yr => {
+    for (let rd = 1; rd <= numRounds; rd++) {
+      rosters.forEach(origTeam => {
+        const origId       = String(origTeam.roster_id);
+        const key          = `${yr}-${rd}-${origId}`;
+        const currentOwner = tradedMap[key] ?? origId;
+        const wasTraded    = tradedMap[key] !== undefined;
+
+        const baseVal = Math.round((PICK_BASE[rd] || 100) * (YEAR_DISC[yr] || 0.50));
+        const pickObj = {
+          id:           `slp-${leagueId}-${yr}-r${rd}-t${origId}`,
+          full_name:    wasTraded ? `${yr} Rd ${rd} (via T${origId})` : `${yr} Round ${rd}`,
+          position:     'PICK',
+          team:         'Pick',
+          pickYear:     yr,
+          pickRound:    rd,
+          pickSlot:     'mid',
+          baseVal,
+          dynasty_val:  baseVal,
+          redraft_val:  baseVal,
+          _sleeperPick: true,
+          _origRosterId: origId,
+        };
+
+        if (result.has(currentOwner)) result.get(currentOwner).push(pickObj);
+      });
+    }
+  });
+
+  // Sort each team's picks by year then round
+  result.forEach(picks => picks.sort((a, b) =>
+    a.pickYear !== b.pickYear ? a.pickYear - b.pickYear : a.pickRound - b.pickRound
+  ));
+  return result;
+}
+
 async function silentSleeperRefresh(lg, { showToastOnSuccess = false } = {}) {
   if (!lg?.leagueId) return;
   if (S._sleeperRefreshing === lg.leagueId) return; // prevent concurrent refreshes
   S._sleeperRefreshing = lg.leagueId;
   try {
     const uid = lg.sleeperUserId;
-    const [leagueInfo, rosters] = await Promise.all([
+    const [leagueInfo, rosters, tradedPicksRaw] = await Promise.all([
       fetch(`https://api.sleeper.app/v1/league/${lg.leagueId}`).then(r=>r.json()),
       fetch(`https://api.sleeper.app/v1/league/${lg.leagueId}/rosters`).then(r=>r.json()),
+      fetch(`https://api.sleeper.app/v1/league/${lg.leagueId}/traded_picks`).then(r=>r.json()).catch(()=>[]),
     ]);
     if (!leagueInfo?.league_id || !Array.isArray(rosters)) return;
 
@@ -10405,9 +10501,16 @@ async function silentSleeperRefresh(lg, { showToastOnSuccess = false } = {}) {
         };
       });
 
+      // Attach each team's draft pick inventory (dynasty leagues and redraft with pick trading)
+      const picksPerTeam = buildLeaguePicksPerTeam(lg.leagueId, rosters, tradedPicksRaw, leagueInfo);
+      freshAllTeams.forEach(team => {
+        team.picks = picksPerTeam.get(String(team.rosterId)) || [];
+      });
+
       updatedLeague = {
         ...updatedLeague,
         allTeams:     freshAllTeams,
+        tradedPicks:  tradedPicksRaw,
         rosterIds:    allIds,
         starterIds:   (userRoster.starters || []).map(String),
         reserveIds:   (userRoster.reserve  || []).map(String),
@@ -11184,15 +11287,26 @@ function renderLeagueRosters() {
     ? S.connectedLeague?.allTeams?.find(t => String(t.rosterId) === String(S_tradingWithId))
     : null;
 
+  function _buildRosterHtml(team, side) {
+    const sorted = [...(team.players||[])].sort((a,b) => calcValue(b) - calcValue(a));
+    let html = sorted.length
+      ? sorted.map(p => rosterPickerChip(p, side)).join('')
+      : '<div class="lrp-hint" style="margin-bottom:4px">No players found for this team</div>';
+    // Draft picks section
+    const picks = (team.picks || []);
+    if (picks.length) {
+      html += `<div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:8px 4px 4px;margin-top:4px;border-top:1px solid var(--border)">📋 Draft Picks</div>`;
+      html += picks.map(p => rosterPickerChip(p, side)).join('');
+    }
+    return html;
+  }
+
   // Partner roster → Side A (You Receive)
   const rA = document.getElementById('leagueRosterA');
   if (!partnerTeam) {
     rA.innerHTML = '<div class="lrp-hint">Select a trading partner above to see their roster</div>';
   } else {
-    const sorted = [...(partnerTeam.players||[])].sort((a,b)=>calcValue(b)-calcValue(a));
-    rA.innerHTML = sorted.length
-      ? sorted.map(p => rosterPickerChip(p, 'A')).join('')
-      : '<div class="lrp-hint">No players found for this team</div>';
+    rA.innerHTML = _buildRosterHtml(partnerTeam, 'A');
   }
 
   // My roster → Side B (You Give)
@@ -11200,10 +11314,7 @@ function renderLeagueRosters() {
   if (!myTeam) {
     rB.innerHTML = '<div class="lrp-hint">Import your league roster first</div>';
   } else {
-    const sorted = [...(myTeam.players||[])].sort((a,b)=>calcValue(b)-calcValue(a));
-    rB.innerHTML = sorted.length
-      ? sorted.map(p => rosterPickerChip(p, 'B')).join('')
-      : '<div class="lrp-hint">No players on your roster</div>';
+    rB.innerHTML = _buildRosterHtml(myTeam, 'B');
   }
 }
 
@@ -11221,10 +11332,11 @@ function rosterPickerChip(p, side) {
 }
 
 function toggleLeagueTradePlayer(pid, side) {
-  // Find player in any team roster
+  // Find player or draft pick in any team's roster/picks
   let player = null;
   for (const team of (S.connectedLeague?.allTeams || [])) {
     player = (team.players||[]).find(p => (p.id||p.player_id) === pid);
+    if (!player) player = (team.picks||[]).find(p => p.id === pid);
     if (player) break;
   }
   if (!player) return;
