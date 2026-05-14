@@ -198,10 +198,16 @@
     .lp-rank-card-footer:hover{color:var(--primary-l)}
     .lp-stats-wrap{max-width:1140px;margin:0 auto;padding:0 40px 60px}
     .lp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden}
-    .lp-stat-box{background:var(--bg);padding:28px;text-align:center}
+    .lp-stat-box{background:var(--bg);padding:28px;text-align:center;position:relative}
+    .lp-stat-box.clickable{cursor:pointer;transition:background .15s}
+    .lp-stat-box.clickable:hover{background:var(--bg2)}
     .lp-stat-num{font-size:36px;font-weight:900;letter-spacing:-1.5px;color:var(--text)}
     .lp-stat-num em{color:var(--primary-l);font-style:normal}
     .lp-stat-lbl{font-size:12px;color:var(--text3);margin-top:4px}
+    /* Stat-box hover tooltip */
+    .lp-stat-tip{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px 16px;min-width:210px;text-align:left;font-size:12px;color:var(--text2);line-height:1.7;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .15s;z-index:99}
+    .lp-stat-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--border)}
+    .lp-stat-box:hover .lp-stat-tip{opacity:1}
     .lp-section{max-width:1140px;margin:0 auto;padding:60px 40px;display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
     .lp-section.rev .lp-section-text{order:2}
     .lp-section.rev .lp-section-widget{order:1}
@@ -1492,7 +1498,7 @@
 
           <!-- ── TOP TAGLINE ── -->
           <div class="lp-top-banner">
-            <div class="lp-top-banner-headline">The <em>Ultimate</em> Fantasy Headquarters<br>for Every Fantasy League</div>
+            <div class="lp-top-banner-headline">The <em>Ultimate</em> Fantasy <span style="white-space:nowrap"><span style="color:#fff">H</span><span style="color:var(--primary-l)">ead</span><span style="color:#fff;text-transform:uppercase">Q</span><span style="color:var(--primary-l)">uarters</span></span><br>for Every Fantasy League</div>
             <div class="lp-top-banner-sub">Dynasty · Redraft · Superflex · 2QB · 1QB · TE Premium · IDP · and every league in between</div>
           </div>
 
@@ -1529,13 +1535,21 @@
                 <div class="lp-stat-num">1,000<em>+</em></div>
                 <div class="lp-stat-lbl">Players Ranked</div>
               </div>
-              <div class="lp-stat-box">
+              <div class="lp-stat-box clickable" onclick="S.tablePos='IDP';document.querySelectorAll('.pos-btn').forEach(b=>b.classList.toggle('on',b.dataset.pos==='IDP'));switchTab('values');" title="View IDP Rankings">
                 <div class="lp-stat-num"><em>IDP</em></div>
-                <div class="lp-stat-lbl">Rankings Included</div>
+                <div class="lp-stat-lbl">Rankings Included →</div>
               </div>
               <div class="lp-stat-box">
                 <div class="lp-stat-num"><em>6</em></div>
                 <div class="lp-stat-lbl">Built-In Tools</div>
+                <div class="lp-stat-tip">
+                  ⚖️ <strong>TradeHQ</strong> — Trade analyzer &amp; grades<br>
+                  📊 <strong>PlayerHQ</strong> — Dynasty &amp; redraft rankings<br>
+                  🎯 <strong>DraftHQ</strong> — Mock draft simulator<br>
+                  🏈 <strong>TeamHQ</strong> — Roster &amp; team analysis<br>
+                  🏆 <strong>LeagueHQ</strong> — Full league power rankings<br>
+                  📋 <strong>WireHQ</strong> — Waiver wire &amp; buy/sell alerts
+                </div>
               </div>
             </div>
           </div>
