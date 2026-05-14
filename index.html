@@ -161,7 +161,12 @@
     .home-posrank-arrow.up{color:var(--success)}
     .home-posrank-arrow.down{color:var(--danger)}
     /* ── LANDING PAGE SECTIONS ─────────── */
-    .lp-hero{padding:70px 40px 50px;max-width:1140px;margin:0 auto;display:grid;grid-template-columns:1fr 400px;gap:56px;align-items:center}
+    .lp-top-banner{text-align:center;padding:56px 24px 20px;background:linear-gradient(180deg,var(--bg2) 0%,transparent 100%)}
+    .lp-top-banner-headline{font-size:46px;font-weight:900;letter-spacing:-2px;line-height:1.1;color:var(--text);margin-bottom:10px}
+    .lp-top-banner-headline em{color:var(--primary-l);font-style:normal}
+    .lp-top-banner-sub{font-size:17px;color:var(--text2);line-height:1.55}
+    @media(max-width:768px){.lp-top-banner{padding:40px 20px 12px}.lp-top-banner-headline{font-size:32px;letter-spacing:-1.2px}.lp-top-banner-sub{font-size:14px}}
+    .lp-hero{padding:36px 40px 50px;max-width:1140px;margin:0 auto;display:grid;grid-template-columns:1fr 400px;gap:56px;align-items:center}
     .lp-label{display:inline-flex;align-items:center;gap:0;background:rgba(26,86,219,.12);border:1px solid rgba(79,134,245,.28);font-size:14px;font-weight:900;letter-spacing:-.5px;padding:5px 16px;border-radius:999px;margin-bottom:18px}
     .lp-label-dot{margin-right:8px}
     .lp-label em{color:var(--primary-l);font-style:normal}
@@ -1485,12 +1490,18 @@
       <div id="homeOptionA">
         <div class="home-landing">
 
+          <!-- ── TOP TAGLINE ── -->
+          <div class="lp-top-banner">
+            <div class="lp-top-banner-headline">The <em>Ultimate</em> Fantasy Headquarters<br>for Every Fantasy League</div>
+            <div class="lp-top-banner-sub">Dynasty · Redraft · Superflex · 2QB · 1QB · TE Premium · IDP · and every league in between</div>
+          </div>
+
           <!-- ── HERO ── -->
           <div class="lp-hero">
             <div>
               <div class="lp-label"><span class="lp-label-dot"></span><em>Player</em><span>HQ</span></div>
               <h1 class="lp-h1">Fantasy Player<br><em>Rankings.</em></h1>
-              <p class="lp-pitch">Multi-source consensus values across Dynasty, Redraft, Superflex, and 2QB. Built-in tiers, trend signals, and FHQ scores to keep you ahead of your league.</p>
+              <p class="lp-pitch">Dynasty, re-draft, super flex, two quarterback or one quarterback — and every league in between.</p>
               <div class="lp-cta-row">
                 <button class="lp-btn-p" onclick="switchTab('values')">Dynasty Rankings →</button>
                 <button class="lp-btn-s" onclick="switchTab('values')">Redraft Rankings →</button>
