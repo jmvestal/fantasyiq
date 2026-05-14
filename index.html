@@ -1524,8 +1524,8 @@
               <h1 class="lp-h1">Fantasy Player<br><em>Rankings.</em></h1>
               <p class="lp-pitch">Dynasty, re-draft, super flex, two quarterback or one quarterback — and every league in between. Built-in tiers, trend signals, and our one-of-a-kind, league-winning FHQ score.</p>
               <div class="lp-cta-row">
-                <button class="lp-btn-p" onclick="switchTab('values')">Dynasty Rankings →</button>
-                <button class="lp-btn-s" onclick="switchTab('values')">Redraft Rankings →</button>
+                <button type="button" class="lp-btn-p" data-tab="values" onclick="switchTab('values')">Dynasty Rankings →</button>
+                <button type="button" class="lp-btn-s" data-tab="values" onclick="switchTab('values')">Redraft Rankings →</button>
               </div>
             </div>
             <div>
@@ -1575,7 +1575,7 @@
               <div class="lp-sect-label"><em>Trade</em><span>HQ</span></div>
               <h2 class="lp-sect-h2">Compare Football Trades</h2>
               <p class="lp-sect-desc">Pressure-test any trade with multi-source consensus values. Get instant grades, value gaps, and tier context to evaluate every offer faster — and stop getting burned.</p>
-              <button class="lp-btn-p" onclick="switchTab('analyzer')">Analyze a Trade →</button>
+              <button type="button" class="lp-btn-p" data-tab="analyzer" onclick="switchTab('analyzer')">Analyze a Trade →</button>
             </div>
             <div class="lp-section-widget">
               <div class="lp-mock-trade">
@@ -1615,7 +1615,7 @@
               <div class="lp-sect-label"><em>Value</em><span>HQ</span></div>
               <h2 class="lp-sect-h2">Find the Edge</h2>
               <p class="lp-sect-desc">Identify undervalued players before your league does. Buy low, sell high alerts based on current value trends — so you always know when to act.</p>
-              <button class="lp-btn-p" onclick="switchTab('buysell')">View Buy/Sell Alerts →</button>
+              <button type="button" class="lp-btn-p" data-tab="buysell" onclick="switchTab('buysell')">View Buy/Sell Alerts →</button>
             </div>
             <div class="lp-section-widget">
               <div class="lp-mock-bsh">
@@ -1654,22 +1654,22 @@
               <div class="lp-tools-sub">Six tools, one app, zero cost.</div>
             </div>
             <div class="lp-tools-grid">
-              <div class="lp-tool" onclick="switchTab('analyzer')">
+              <div class="lp-tool" data-tab="analyzer" onclick="switchTab('analyzer')">
                 <div class="lp-tool-icon">⚖️</div>
                 <div class="lp-tool-name"><em>Trade</em><span>HQ</span></div>
                 <div class="lp-tool-desc">Multi-source consensus trade grades with instant value breakdowns.</div>
               </div>
-              <div class="lp-tool" onclick="switchTab('values')">
+              <div class="lp-tool" data-tab="values" onclick="switchTab('values')">
                 <div class="lp-tool-icon">📊</div>
                 <div class="lp-tool-name"><em>Player</em><span>HQ</span></div>
                 <div class="lp-tool-desc">Full dynasty and redraft rankings with FHQ scores and tiers.</div>
               </div>
-              <div class="lp-tool" onclick="switchTab('draft')">
+              <div class="lp-tool" data-tab="draft" onclick="switchTab('draft')">
                 <div class="lp-tool-icon">🎯</div>
                 <div class="lp-tool-name"><em>Draft</em><span>HQ</span></div>
                 <div class="lp-tool-desc">Big board, draft assistant, and a full mock draft simulator.</div>
               </div>
-              <div class="lp-tool" onclick="switchTab('roster')">
+              <div class="lp-tool" data-tab="roster" onclick="switchTab('roster')">
                 <div class="lp-tool-icon">🏈</div>
                 <div class="lp-tool-name"><em>Team</em><span>HQ</span></div>
                 <div class="lp-tool-desc">Roster valuations and personalized team analysis.</div>
@@ -1744,7 +1744,7 @@
                 <div class="lp-sect-label" style="margin-bottom:8px"><em>Rookie</em><span> Spotlight</span></div>
                 <div style="font-size:11px;color:var(--text3)">Top 2026 dynasty rookies by FHQ dynasty value</div>
               </div>
-              <button class="lp-btn-s" style="font-size:12px;padding:9px 20px" onclick="switchTab('values')">Full Rookie Rankings →</button>
+              <button type="button" class="lp-btn-s" data-tab="values" style="font-size:12px;padding:9px 20px" onclick="switchTab('values')">Full Rookie Rankings →</button>
             </div>
             <div class="lp-rookie-grid" id="lpRookieGrid">
               <div style="grid-column:1/-1;color:var(--text3);font-size:12px;padding:20px 0">Loading rookies…</div>
@@ -9538,6 +9538,12 @@ async function init() {
   try { renderTrade(); }       catch(e) {}
   if (location.search.includes('a=') || location.search.includes('b=')) loadFromUrl();
   try { renderLandingWidgets(); } catch(e) {}
+  // Belt-and-suspenders: homepage [data-tab] buttons navigate via capture-phase listener
+  // This fires before any potential overlay can block the click
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.lp-btn-p[data-tab], .lp-btn-s[data-tab], .lp-tool[data-tab]');
+    if (btn) switchTab(btn.dataset.tab);
+  }, true);
   document.getElementById('pcBadge').innerHTML =
     `${S.players.length.toLocaleString()} players <span class="spin" style="display:inline-block;width:10px;height:10px;border-width:2px;vertical-align:middle;margin-left:3px"></span>`;
 
