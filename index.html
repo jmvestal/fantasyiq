@@ -14158,8 +14158,8 @@ function dsimFinish() {
 
       const p   = pk.player;
       const pos = (p.position === 'DST' ? 'DEF' : p.position) || '?';
-      const v   = calcValue(p);
       const sid = p.player_id || p.id;
+      const pickLbl = `Rnd ${pk.round}.${pk.pickInRound}`;
 
       html += `<div class="ros-row">
         <span class="ros-slot-lbl ${slotCls}">${slotLbl}</span>
@@ -14171,9 +14171,9 @@ function dsimFinish() {
               <span class="pb pb-${pos}" style="font-size:9px;vertical-align:middle;margin-left:4px">${pos}</span>
             </div>
           </div>
-          <div style="font-size:11px;color:var(--text3)">${p.team||'FA'} · Pick #${pk.overall}</div>
+          <div style="font-size:11px;color:var(--text3)">${p.team||'FA'}${p.age ? ' · Age '+p.age : ''}</div>
         </div>
-        <div style="font-weight:700;font-size:13px;color:var(--primary-l);flex-shrink:0">${fmtVal(v)}</div>
+        <div style="font-weight:700;font-size:13px;color:var(--text2);flex-shrink:0">${pickLbl}</div>
       </div>`;
     });
 
