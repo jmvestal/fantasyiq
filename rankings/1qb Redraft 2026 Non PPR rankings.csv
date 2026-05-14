@@ -1,4 +1,4 @@
-Rank,Team,Player,"Fantasy Position",Games,ADP,Bye,SOS,InjuryRisk,"Floor Proj","Consensus Proj","DS Proj",CeilingProj,"3D Value"
+﻿Rank,Team,Player,"Fantasy Position",Games,ADP,Bye,SOS,InjuryRisk,"Floor Proj","Consensus Proj","DS Proj",CeilingProj,"3D Value"
 1,ATL,"Bijan Robinson",RB,17,1.01,5,0%,39%,235.3,263,277,323.9,100
 2,DET,"Jahmyr Gibbs",RB,17,1.02,8,0%,70%,229.4,257,276,323.4,98.9
 3,LAR,"Puka Nacua",WR,17,1.05,8,0%,83%,188.9,191,230,253.4,96
@@ -45,7 +45,6 @@ Rank,Team,Player,"Fantasy Position",Games,ADP,Bye,SOS,InjuryRisk,"Floor Proj","C
 44,CAR,"Tetairoa McMillan",WR,17,4.02,14,0%,45%,131.6,143,146,190.1,38.4
 45,DEN,"Jaylen Waddle",WR,17,5.10,12,0%,93%,128.2,124,147,188.7,38.1
 46,BAL,"Lamar Jackson",QB,17,3.09,7,0%,45%,298.8,331,340,438.1,37
-47,CHI,"Luther Burden III",WR,17,10.09,5,0%,39%,124.1,105,144,191.9,36.9
 48,WAS,"Terry McLaurin",WR,17,4.11,12,0%,93%,130.7,144,145,184.4,36.7
 49,TB,"Emeka Egbuka",WR,17,6.04,9,0%,38%,127.4,123,143,190.4,36.5
 50,CHI,"D'Andre Swift",RB,17,6.01,5,0%,73%,169.4,167,188,244.7,35.9

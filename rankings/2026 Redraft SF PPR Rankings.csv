@@ -1,4 +1,4 @@
-"RK",TIERS,"PLAYER NAME",TEAM,"POS","BEST","WORST","AVG.","STD.DEV","ECR VS. ADP"
+﻿"RK",TIERS,"PLAYER NAME",TEAM,"POS","BEST","WORST","AVG.","STD.DEV","ECR VS. ADP"
 "1",1,"Josh Allen",BUF,"QB1","1","2","1.0","0.2","-"
 "2",1,"Lamar Jackson",BAL,"QB2","2","4","2.3","0.5","-"
 "3",1,"Drake Maye",NE,"QB3","2","5","3.2","0.8","-"
@@ -54,7 +54,6 @@
 "53",6,"Jeremiyah Love",ARI,"RB13","33","77","55.8","10.5","-"
 "54",7,"Ladd McConkey",LAC,"WR18","43","79","56.9","8.3","-"
 "55",7,"Zay Flowers",BAL,"WR19","36","73","57.3","8.1","-"
-"56",7,"Luther Burden III",CHI,"WR20","45","69","58.0","6.3","-"
 "57",7,"C.J. Stroud",HOU,"QB22","25","70","59.2","8.4","-"
 "58",7,"Jaylen Waddle",DEN,"WR21","44","77","59.3","9.0","-"
 "59",7,"Colston Loveland",CHI,"TE3","47","90","60.3","16.2","-"

@@ -1,4 +1,4 @@
-"RK",TIERS,"PLAYER NAME",TEAM,"POS","AGE","BEST","WORST","AVG.","STD.DEV","ECR VS. ADP"
+﻿"RK",TIERS,"PLAYER NAME",TEAM,"POS","AGE","BEST","WORST","AVG.","STD.DEV","ECR VS. ADP"
 "1",1,"Josh Allen",BUF,"QB1","29","1","2","1.1","0.4","-"
 "2",1,"Drake Maye",NE,"QB2","23","1","10","2.8","2.0","-"
 "3",1,"Jayden Daniels",WAS,"QB3","25","2","10","5.0","2.7","-"
@@ -44,7 +44,6 @@
 "43",5,"Carnell Tate",TEN,"WR16","21","30","76","45.6","9.8","-"
 "44",5,"Ladd McConkey",LAC,"WR17","24","37","88","46.9","10.9","-"
 "45",6,"DeVonta Smith",PHI,"WR18","27","40","63","50.0","7.1","-"
-"46",6,"Luther Burden III",CHI,"WR19","22","42","82","51.8","11.8","-"
 "47",6,"A.J. Brown",PHI,"WR20","28","33","77","52.0","12.2","-"
 "48",6,"Tee Higgins",CIN,"WR21","27","39","68","52.4","7.7","-"
 "49",6,"Colston Loveland",CHI,"TE3","22","31","70","52.5","8.7","-"

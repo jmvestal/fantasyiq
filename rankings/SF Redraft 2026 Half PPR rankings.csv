@@ -1,4 +1,4 @@
-Rank,Team,Player,"Fantasy Position",Games,ADP,Bye,SOS,InjuryRisk,"Floor Proj","Consensus Proj","DS Proj",CeilingProj,"3D Value"
+﻿Rank,Team,Player,"Fantasy Position",Games,ADP,Bye,SOS,InjuryRisk,"Floor Proj","Consensus Proj","DS Proj",CeilingProj,"3D Value"
 1,BUF,"Josh Allen",QB,17,1.01,7,0%,22%,306.9,361,379,443.3,100
 2,LAR,"Puka Nacua",WR,17,1.06,8,0%,83%,242.6,248,296,325.4,84
 3,DET,"Jahmyr Gibbs",RB,17,1.04,8,0%,70%,259.8,289,313,366.2,81
@@ -60,7 +60,6 @@ Rank,Team,Player,"Fantasy Position",Games,ADP,Bye,SOS,InjuryRisk,"Floor Proj","C
 59,NO,"Tyler Shough",QB,17,7.06,11,0%,5%,274.1,246,298,402.3,30.2
 60,GB,"Christian Watson",WR,17,7.09,5,0%,52%,162,129,188,235.4,30.1
 61,CAR,"Tetairoa McMillan",WR,17,4.11,14,0%,45%,166,181,184,239.8,30.1
-62,CHI,"Luther Burden III",WR,17,5.04,5,0%,39%,157.7,137,183,243.9,29.7
 63,TB,"Baker Mayfield",QB,17,6.04,9,0%,26%,278.1,279,290,402.6,29.2
 64,DET,"Jameson Williams",WR,17,5.12,8,0%,68%,164.2,165,182,235.3,29
 65,NYG,"Cameron Skattebo",RB,17,6.10,14,0%,52%,180.2,168,207,277.6,28.8

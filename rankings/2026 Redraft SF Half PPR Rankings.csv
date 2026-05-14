@@ -1,4 +1,4 @@
-"RK",TIERS,"PLAYER NAME",TEAM,"POS","BEST","WORST","AVG.","STD.DEV","ECR VS. ADP"
+﻿"RK",TIERS,"PLAYER NAME",TEAM,"POS","BEST","WORST","AVG.","STD.DEV","ECR VS. ADP"
 "1",1,"Josh Allen",BUF,"QB1","1","2","1.0","0.2","-"
 "2",1,"Lamar Jackson",BAL,"QB2","2","5","2.4","0.7","-"
 "3",1,"Drake Maye",NE,"QB3","2","5","3.2","0.9","-"
@@ -63,7 +63,6 @@
 "62",7,"Travis Etienne Jr.",NO,"RB18","47","73","61.9","7.0","-"
 "63",7,"Sam Darnold",SEA,"QB23","48","76","62.1","6.0","-"
 "64",7,"Ladd McConkey",LAC,"WR20","47","82","62.2","8.4","-"
-"65",7,"Luther Burden III",CHI,"WR21","52","74","62.9","6.1","-"
 "66",7,"Jaylen Waddle",DEN,"WR22","46","79","64.9","8.6","-"
 "67",7,"Terry McLaurin",WAS,"WR23","54","79","66.5","6.1","-"
 "68",7,"Emeka Egbuka",TB,"WR24","46","89","67.7","9.2","-"
