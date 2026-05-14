@@ -2192,6 +2192,7 @@
               <div class="dsim-setup-sub">Rankings update live — mark picks as they happen and get best-value recommendations each round</div>
             </div>
             <div class="dsim-setup-btns">
+              <button class="btn btn-s btn-sm" id="wizUseLeagueBtn" style="display:none" onclick="wizUseLeague()">My League</button>
               <button class="btn btn-p btn-sm" onclick="resetWizard()">↺ Reset</button>
             </div>
           </div>
@@ -11961,7 +11962,16 @@ function setDraftMode(mode) {
   document.getElementById('draftWizardPane').style.display = mode==='wizard' ? 'block' : 'none';
   document.getElementById('draftAnalyzerPane').style.display = mode==='analyzer' ? 'block' : 'none';
   document.getElementById('draftSimPane').style.display = mode==='simulator' ? 'block' : 'none';
-  if (mode === 'simulator') dsimUpdateSetup();
+  if (mode === 'simulator') {
+    dsimUpdateSetup();
+    // Auto-load league settings on first open if league connected and sim not active
+    if (S.connectedLeague && !DSIM.active) dsimUseLeague();
+  }
+  if (mode === 'wizard') {
+    dsimUpdateSetup(); // shows/hides My League btn on wizard too
+    // Auto-load league settings on first open
+    if (S.connectedLeague) wizUseLeague();
+  }
 }
 
 function setAnlFilter(f) {
@@ -13278,22 +13288,69 @@ function dsimUpdateSetup() {
     });
   }
 
-  // Show Use My League button if league connected
+  // Show Use My League buttons if league connected
   const leagueBtn = document.getElementById('dsimUseLeagueBtn');
   if (leagueBtn) leagueBtn.style.display = S.connectedLeague ? 'inline-flex' : 'none';
+  const wizLeagueBtn = document.getElementById('wizUseLeagueBtn');
+  if (wizLeagueBtn) wizLeagueBtn.style.display = S.connectedLeague ? 'inline-flex' : 'none';
 }
 
-function dsimUseLeague() {
+function _applyLeagueToDraftControls(prefix) {
+  // prefix = 'dsim' (sim) or 'wiz' (wizard)
   const lg = S.connectedLeague;
   if (!lg) return;
-  const teamsSel = document.getElementById('dsimTeams');
+  const s = lg.settings || {};
+
+  // Team count
+  const teamsSel = document.getElementById(prefix === 'dsim' ? 'dsimTeams' : 'wizTotalTeams');
   if (teamsSel && lg.totalTeams) {
     const v = String(lg.totalTeams);
     const opt = Array.from(teamsSel.options).find(o => o.value === v);
     if (opt) teamsSel.value = v;
   }
+
+  // Draft type — dynasty league → startup, redraft → redraft
+  const typeSel = document.getElementById(prefix === 'dsim' ? 'dsimType' : 'wizDraftType');
+  if (typeSel && s.mode) {
+    const mapped = s.mode === 'dynasty' ? 'startup' : 'redraft';
+    const opt = Array.from(typeSel.options).find(o => o.value === mapped);
+    if (opt) typeSel.value = mapped;
+  }
+
+  // QB format
+  const qbSel = document.getElementById(prefix === 'dsim' ? 'dsimQB' : 'wizQB');
+  if (qbSel && s.qb) {
+    const opt = Array.from(qbSel.options).find(o => o.value === s.qb);
+    if (opt) qbSel.value = s.qb;
+  }
+
+  // Scoring
+  const scoringSel = document.getElementById(prefix === 'dsim' ? 'dsimScoring' : 'wizScoring');
+  if (scoringSel && s.scoring) {
+    const opt = Array.from(scoringSel.options).find(o => o.value === s.scoring);
+    if (opt) scoringSel.value = s.scoring;
+  }
+
+  // TE premium
+  const teSel = document.getElementById(prefix === 'dsim' ? 'dsimTE' : 'wizTE');
+  if (teSel && s.te) {
+    const opt = Array.from(teSel.options).find(o => o.value === s.te);
+    if (opt) teSel.value = s.te;
+  }
+
+  const modeLabel = s.mode === 'dynasty' ? 'Dynasty' : 'Redraft';
+  const teLabel   = s.te === 'on' ? ' · TE+' : '';
+  showToast(`✅ ${lg.leagueName || 'League'} loaded: ${lg.totalTeams}-team ${modeLabel} · ${(s.qb||'').toUpperCase()} · ${(s.scoring||'').toUpperCase()}${teLabel}`);
+}
+
+function dsimUseLeague() {
+  _applyLeagueToDraftControls('dsim');
   dsimUpdateSetup();
-  showToast('League settings applied');
+}
+
+function wizUseLeague() {
+  _applyLeagueToDraftControls('wiz');
+  initWizard();
 }
 
 // ── Start / Reset ─────────────────────────────────────────
@@ -13942,16 +13999,27 @@ function dsimExportRoster() {
   const myPicks = DSIM.picks.filter(pk => pk.teamIdx === DSIM.mySlot);
   if (!myPicks.length) return;
 
-  // Build sim-appropriate rosterPositions so renderRosterList() uses greedy
-  // assignment (QB to QB slot, RB to RB slot, etc.) instead of the real
-  // Sleeper lineup which would put sim players on bench.
-  const isSF = DSIM.qb === 'sf';
-  const simPositions = ['QB'];
-  if (isSF) simPositions.push('SUPER_FLEX');
-  simPositions.push('RB', 'RB', 'WR', 'WR', 'TE', 'FLEX');
-  if (DSIM.type === 'redraft') { simPositions.push('K'); simPositions.push('DEF'); }
-  const benchCount = Math.max(0, myPicks.length - simPositions.length);
-  for (let i = 0; i < benchCount; i++) simPositions.push('BN');
+  // Use connected league's actual roster positions if available,
+  // otherwise fall back to format-based defaults
+  let simPositions;
+  const lgPos = S.connectedLeague?.rosterPositions;
+  if (lgPos && lgPos.length > 0) {
+    // Use the real league roster structure
+    simPositions = [...lgPos];
+    // Pad with bench spots if we drafted more players than the league has slots
+    const filledSlots = simPositions.filter(p => !['IR','IL','TAXI'].includes(p)).length;
+    for (let i = filledSlots; i < myPicks.length; i++) simPositions.push('BN');
+  } else {
+    // Fallback: build from sim format settings
+    const isSF  = DSIM.qb === 'sf';
+    const is2QB = DSIM.qb === '2qb';
+    simPositions = is2QB ? ['QB','QB'] : ['QB'];
+    if (isSF) simPositions.push('SUPER_FLEX');
+    simPositions.push('RB', 'RB', 'WR', 'WR', 'TE', 'FLEX');
+    if (DSIM.type === 'redraft') { simPositions.push('K', 'DEF'); }
+    const benchCount = Math.max(0, myPicks.length - simPositions.length);
+    for (let i = 0; i < benchCount; i++) simPositions.push('BN');
+  }
 
   // Override connectedLeague with sim structure — clears real starterIds so
   // hasRealStarters is false and greedy slot assignment takes over.
