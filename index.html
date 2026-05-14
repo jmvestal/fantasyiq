@@ -5828,11 +5828,7 @@ function renderValuesTable() {
   // update sub
   const modeStr = isDynasty ? 'Dynasty' : 'Redraft';
   const qbStr   = qb === 'sf' ? 'SF' : qb === '2qb' ? '2-QB' : '1-QB';
-  if (isLoggedIn) {
-    document.getElementById('valTableSub').textContent = `${rows.length} players · ${modeStr} · ${size}-Team · ${qbStr} · ${scoring.toUpperCase()} — rankings adjust to your settings`;
-  } else {
-    document.getElementById('valTableSub').textContent = `${rows.length} players · ${modeStr} · 12-Team · 1-QB · PPR — sign in to customize`;
-  }
+  document.getElementById('valTableSub').textContent = `${rows.length} players · ${modeStr} · ${size}-Team · ${qbStr} · ${scoring.toUpperCase()}`;
 
   // Update value column header to match current mode
   const valTh = document.querySelector('#valTable thead th:nth-child(3)');
@@ -6579,14 +6575,8 @@ function clearScenarioCache() {
 // ═══════════════════════════════════════════════════════════
 // SETTINGS
 // ═══════════════════════════════════════════════════════════
-// UI wrapper — checks premium before calling setSetting (for mobile onclick buttons)
+// UI wrapper for mobile onclick buttons — all settings now free
 function uiSetSetting(key, val) {
-  if (key !== 'mode' && !S.isPremium) {
-    const el = document.getElementById('proModalFeatureText');
-    if (el) el.textContent = 'Upgrade to Pro to customize league size, QB format, scoring, and more.';
-    openModal('proModal');
-    return;
-  }
   setSetting(key, val);
 }
 
