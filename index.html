@@ -3369,6 +3369,13 @@ const DYNASTY_DB = {
   'Kareem Hunt':            {val:900,trend:'down'},
   'Austin Ekeler':          {val:600,trend:'down'},
   'Rashaad Penny':          {val:400},
+  // Veteran RBs with overinflated rank-based estimates
+  'Aaron Jones':            {val:300,trend:'down'},
+  'Aaron Jones Sr.':        {val:300,trend:'down'},
+  'Kenneth Gainwell':       {val:150,trend:'down'},
+  'Damien Harris':          {val:50},
+  'Gus Edwards':            {val:50},
+  'Latavius Murray':        {val:50},
   // 2026 RB Rookies
   'Jeremiyah Love':         {val:6500,trend:'up'},
   'Jadarian Price':         {val:3200,trend:'up'},
@@ -3909,6 +3916,15 @@ const REDRAFT_DB = {
   'Kareem Hunt':            {val:500},
   'Austin Ekeler':          {val:500},
   'Rashaad Penny':          {val:1000},
+  // Veteran RBs with overinflated rank-based estimates
+  'Aaron Jones':            {val:350,trend:'down'},
+  'Aaron Jones Sr.':        {val:350,trend:'down'},
+  'Kenneth Gainwell':       {val:150,trend:'down'},
+  'Damien Harris':          {val:50},
+  'Gus Edwards':            {val:50},
+  'Latavius Murray':        {val:50},
+  'Sony Michel':            {val:50},
+  'Giovani Bernard':        {val:50},
   // 2026 RB Rookies
   'Jeremiyah Love':         {val:4845},
   'Jadarian Price':         {val:1400},
@@ -3979,13 +3995,13 @@ const REDRAFT_DB = {
   'Nico Collins':           {val:5200},
   'George Pickens':         {val:5140},
   'Zay Flowers':            {val:4342},
-  'Luther Burden III':      {val:2200},
+  'Luther Burden III':      {val:1400},
   'Tee Higgins':            {val:4123},
   'Ladd McConkey':          {val:2888},
   'Travis Hunter':          {val:800},
   'Chris Olave':            {val:4313},
   'Rome Odunze':            {val:2480},
-  'Brian Thomas Jr.':       {val:1644},
+  'Brian Thomas Jr.':       {val:1200},
   'Jayden Higgins':         {val:865},
   'Ricky Pearsall':         {val:1644},
   'Marvin Harrison Jr.':    {val:1910},
@@ -9367,13 +9383,13 @@ const FALLBACK_PLAYERS = [
   {id:'fb-84', full_name:'George Pickens',        position:'WR', team:'DAL', age:25, dynasty_val:5700, redraft_val:5140, trend:'up'},
   {id:'fb-79', full_name:'Nico Collins',          position:'WR', team:'HOU', age:27, dynasty_val:5700, redraft_val:5757, trend:'flat'},
   {id:'fb-92', full_name:'Zay Flowers',           position:'WR', team:'BAL', age:25, dynasty_val:5500, redraft_val:4342, trend:'up'},
-  {id:'fb-90', full_name:'Luther Burden III',     position:'WR', team:'CHI', age:23, dynasty_val:3800, redraft_val:2200, trend:'up'},
+  {id:'fb-90', full_name:'Luther Burden III',     position:'WR', team:'CHI', age:23, dynasty_val:3800, redraft_val:1400, trend:'up'},
   {id:'fb-96', full_name:'Tee Higgins',           position:'WR', team:'CIN', age:27, dynasty_val:5200, redraft_val:4123, trend:'flat'},
   {id:'fb-80', full_name:'Ladd McConkey',         position:'WR', team:'LAC', age:25, dynasty_val:5100, redraft_val:2888, trend:'up'},
   {id:'fb-91', full_name:'Travis Hunter',         position:'WR', team:'JAX', age:22, dynasty_val:5000, redraft_val:800,  trend:'up'},
   {id:'fb-97', full_name:'Chris Olave',           position:'WR', team:'NO',  age:26, dynasty_val:4900, redraft_val:4313, trend:'flat'},
   {id:'fb-87', full_name:'Rome Odunze',           position:'WR', team:'CHI', age:23, dynasty_val:4800, redraft_val:2480, trend:'up'},
-  {id:'fb-85', full_name:'Brian Thomas Jr.',      position:'WR', team:'JAX', age:23, dynasty_val:4700, redraft_val:1644, trend:'up'},
+  {id:'fb-85', full_name:'Brian Thomas Jr.',      position:'WR', team:'JAX', age:23, dynasty_val:4700, redraft_val:1200, trend:'up'},
   {id:'fb-wr1', full_name:'Jayden Higgins',       position:'WR', team:'HOU', age:22, dynasty_val:4600, redraft_val:865,  trend:'up'},
   {id:'fb-95', full_name:'Ricky Pearsall',        position:'WR', team:'SF',  age:24, dynasty_val:4500, redraft_val:1644, trend:'up'},
   {id:'fb-86', full_name:'Marvin Harrison Jr.',   position:'WR', team:'ARI', age:23, dynasty_val:4300, redraft_val:1910, trend:'flat'},
@@ -13628,6 +13644,10 @@ function startDraftSim() {
   }
 
   // Build available player pool
+  // FA filter: never allow unsigned/cut players into any sim pool
+  const FA_VALS = new Set(['FA','Free Agent','','N/A',null,undefined]);
+  const _hasTeam = p => p.team && !FA_VALS.has(p.team);
+
   if (DSIM.type === 'rookie') {
     DSIM.available = (S.players || [])
       .filter(p => p.rookie && p.position !== 'PICK')
@@ -13636,13 +13656,13 @@ function startDraftSim() {
     // Startup dynasty: all dynasty-relevant positions sorted by dynasty value
     const DYNASTY_POS = new Set(['QB','RB','WR','TE']);
     DSIM.available = (S.players || [])
-      .filter(p => DYNASTY_POS.has(p.position) && (p.dynasty_val || 0) > 100)
-      .sort((a, b) => (b.dynasty_val || 0) - (a.dynasty_val || 0));
+      .filter(p => _hasTeam(p) && DYNASTY_POS.has(p.position) && calcValue(p) > 100)
+      .sort((a, b) => calcValue(b) - calcValue(a));
   } else {
     // Redraft: standard fantasy positions only — no IDP (DE/DT/LB/CB/S/DB/IDP)
     const REDRAFT_POS = new Set(['QB','RB','WR','TE','K','DEF','DST']);
     DSIM.available = (S.players || [])
-      .filter(p => REDRAFT_POS.has(p.position) && calcValue(p) > 200)
+      .filter(p => _hasTeam(p) && REDRAFT_POS.has(p.position) && calcValue(p) > 200)
       .sort((a, b) => calcValue(b) - calcValue(a));
   }
 
