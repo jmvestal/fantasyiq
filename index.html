@@ -2918,6 +2918,19 @@
 </div>
 
 <!-- ══ MODAL: DRAFT IMPORT ══ -->
+<!-- ══ MODAL: PASSWORD RESET (handles Firebase action URL redirect) ══ -->
+<div class="mo" id="resetPasswordModal">
+  <div class="mo-box" style="max-width:380px">
+    <div style="font-size:22px;margin-bottom:8px">🔑</div>
+    <div style="font-size:17px;font-weight:700;margin-bottom:6px">Set new password</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Choose a new password for your account.</div>
+    <input class="mo-input" id="resetPassNew" type="password" placeholder="New password (min 6 characters)" autocomplete="new-password">
+    <input class="mo-input" id="resetPassConfirm" type="password" placeholder="Confirm new password" autocomplete="new-password" style="margin-bottom:4px" onkeydown="if(event.key==='Enter')confirmPasswordReset()">
+    <div id="resetPassMsg" class="auth-error"></div>
+    <button class="btn btn-p" style="width:100%;justify-content:center;margin-top:10px" onclick="confirmPasswordReset()">Set New Password</button>
+  </div>
+</div>
+
 <div class="mo" id="draftImportModal" onclick="moBackdropClose(event,'draftImportModal')">
   <div class="mo-box wide">
     <button class="mo-close" onclick="closeModal('draftImportModal')">✕</button>
@@ -9718,6 +9731,66 @@ async function registerWithEmail() {
   }
 }
 
+// ── Handle Firebase Auth action URLs (password reset redirect) ──────────────
+// Firebase redirects to myfantasyhq.com?mode=resetPassword&oobCode=XXXX
+function handleFirebaseAuthAction() {
+  const params = new URLSearchParams(window.location.search);
+  const mode   = params.get('mode');
+  const oobCode = params.get('oobCode');
+  if (!mode || !oobCode) return;
+
+  if (mode === 'resetPassword') {
+    // Verify the code is still valid before showing the form
+    const check = () => {
+      if (!fbAuth) { setTimeout(check, 300); return; }
+      fbAuth.verifyPasswordResetCode(oobCode)
+        .then(() => {
+          // Code is valid — show the set-new-password modal
+          window._resetOobCode = oobCode;
+          document.getElementById('resetPasswordModal').style.display = 'flex';
+          // Clean the URL so the code isn't re-used accidentally
+          window.history.replaceState({}, document.title, window.location.pathname);
+        })
+        .catch(() => {
+          showToast('This reset link has expired or already been used. Please request a new one.', 'err');
+          window.history.replaceState({}, document.title, window.location.pathname);
+          openModal('authModal');
+          showForgotPassword();
+        });
+    };
+    check();
+  }
+}
+
+async function confirmPasswordReset() {
+  const oobCode = window._resetOobCode;
+  const newPass = document.getElementById('resetPassNew').value;
+  const confirm = document.getElementById('resetPassConfirm').value;
+  const msgEl   = document.getElementById('resetPassMsg');
+  msgEl.textContent = '';
+
+  if (!newPass || newPass.length < 6) {
+    msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Password must be at least 6 characters.'; return;
+  }
+  if (newPass !== confirm) {
+    msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Passwords do not match.'; return;
+  }
+  try {
+    await fbAuth.confirmPasswordReset(oobCode, newPass);
+    document.getElementById('resetPasswordModal').style.display = 'none';
+    window._resetOobCode = null;
+    showToast('Password updated! You can now log in with your new password.', 'ok');
+    openModal('authModal');
+  } catch(e) {
+    msgEl.style.color = 'var(--danger)';
+    msgEl.textContent =
+      (e.code === 'auth/expired-action-code')  ? 'This link has expired. Please request a new one.' :
+      (e.code === 'auth/invalid-action-code')  ? 'This link is invalid or already used.' :
+      (e.code === 'auth/weak-password')        ? 'Password must be at least 6 characters.' :
+      'Something went wrong. Please try again.';
+  }
+}
+
 function showForgotPassword() {
   document.getElementById('authSignInForm').style.display = 'none';
   document.getElementById('authForgotForm').style.display = 'block';
@@ -11508,6 +11581,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initFirebase();
   init();
+  handleFirebaseAuthAction(); // handle ?mode=resetPassword&oobCode=... redirects
 });
 
 // Close modals on Escape key
