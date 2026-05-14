@@ -9660,9 +9660,10 @@ async function signInWithEmail() {
   } catch(e) {
     // Firebase 9.x consolidated user-not-found + wrong-password → invalid-credential
     errEl.textContent =
-      (e.code === 'auth/invalid-credential' ||
-       e.code === 'auth/user-not-found'     ||
-       e.code === 'auth/wrong-password')      ? 'Incorrect email or password.' :
+      (e.code === 'auth/invalid-credential'         ||
+       e.code === 'auth/invalid-login-credentials'  ||
+       e.code === 'auth/user-not-found'             ||
+       e.code === 'auth/wrong-password')              ? 'Incorrect email or password.' :
       e.code === 'auth/invalid-email'          ? 'Invalid email address.' :
       e.code === 'auth/too-many-requests'      ? 'Too many attempts — try again later.' :
       e.code === 'auth/user-disabled'          ? 'This account has been disabled.' :
