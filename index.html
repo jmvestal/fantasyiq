@@ -774,8 +774,12 @@
     .dsim-hist-pick{font-size:10px;font-weight:800;color:var(--text3);min-width:30px}
     .dsim-hist-name{flex:1;font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .dsim-cpu-badge{font-size:9px;background:var(--bg2);color:var(--text3);padding:1px 5px;border-radius:4px;flex-shrink:0}
-    .dsim-grade-big{font-size:56px;font-weight:900;line-height:1;color:var(--primary-l);margin-bottom:8px}
-    .dsim-done-stats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:16px 0}
+    .dsim-grade-big{font-size:48px;font-weight:900;line-height:1;color:var(--primary-l)}
+    .dsim-done-stats{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 4px}
+    .dsim-done-stat{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 14px;min-width:90px;text-align:center}
+    .dsim-done-stat-val{font-size:18px;font-weight:800;color:var(--text)}
+    .dsim-done-stat-lbl{font-size:10px;color:var(--text3);margin-top:2px}
+    #dsimAnalysisGrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
     .dsim-done-stat{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 18px;min-width:90px}
     .dsim-done-stat-val{font-size:20px;font-weight:800;color:var(--primary-l)}
     .dsim-done-stat-lbl{font-size:11px;color:var(--text3);margin-top:2px}
@@ -941,6 +945,8 @@
       .mo-box{padding:20px 18px}
       /* Home dashboard header */
       .home-dash-hdr{flex-direction:column;align-items:flex-start}
+      /* Draft sim analysis: stack on tablet */
+      #dsimAnalysisGrid{grid-template-columns:1fr!important}
     }
 
     /* ── 480px: phones (iPhone SE → iPhone 15 Pro) ─────────── */
@@ -2511,29 +2517,57 @@
         </div>
 
         <!-- Done state -->
-        <div id="dsimDone" style="display:none;text-align:center;padding:40px 20px">
-          <div style="font-size:28px;margin-bottom:8px">🏆</div>
-          <div style="font-size:20px;font-weight:800;margin-bottom:4px">Draft Complete!</div>
-          <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Here's how your draft stacked up</div>
-          <div class="dsim-grade-big" id="dsimFinalGrade">B</div>
-          <div id="dsimDoneStats" class="dsim-done-stats"></div>
-          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:28px">
-            <button class="btn btn-p btn-sm" onclick="resetDraftSim()">↺ Draft Again</button>
-            <button class="btn btn-s btn-sm" onclick="dsimExportRoster()">View Roster Analysis</button>
+        <div id="dsimDone" style="display:none">
+          <!-- Header bar -->
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:20px 0 16px">
+            <div style="display:flex;align-items:center;gap:16px">
+              <div style="font-size:28px">🏆</div>
+              <div>
+                <div style="font-size:18px;font-weight:800">Draft Complete!</div>
+                <div style="font-size:12px;color:var(--text3)">Here's how your draft stacked up</div>
+              </div>
+              <div class="dsim-grade-big" id="dsimFinalGrade" style="margin:0">B</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-p btn-sm" onclick="resetDraftSim()">↺ Draft Again</button>
+            </div>
           </div>
-          <!-- Team power rankings -->
-          <div id="dsimTeamRankings" class="dsim-rank-section"></div>
 
-          <div style="text-align:left;max-width:700px;margin:0 auto">
-            <div class="draft-board-ttl">Your Draft Summary</div>
-            <div id="dsimDonePicks"></div>
+          <!-- Stats bar -->
+          <div id="dsimDoneStats" class="dsim-done-stats" style="margin-bottom:20px"></div>
+
+          <!-- Two-column analysis layout -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start" id="dsimAnalysisGrid">
+
+            <!-- LEFT: Roster by position -->
+            <div class="dsim-setup-bar" style="padding:14px 16px">
+              <div class="draft-board-ttl" style="margin-bottom:12px">📋 Your Drafted Roster</div>
+              <div id="dsimRosterByPos"></div>
+            </div>
+
+            <!-- RIGHT: Analysis + Team Rankings -->
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <!-- Pick analysis -->
+              <div class="dsim-setup-bar" style="padding:14px 16px">
+                <div class="draft-board-ttl" style="margin-bottom:12px">🔍 Pick Analysis</div>
+                <div id="dsimPickAnalysis"></div>
+              </div>
+              <!-- Team power rankings -->
+              <div class="dsim-setup-bar" style="padding:14px 16px">
+                <div class="draft-board-ttl" style="margin-bottom:10px">📊 Team Power Rankings</div>
+                <div id="dsimTeamRankings"></div>
+              </div>
+            </div>
           </div>
 
           <!-- All teams breakdown -->
-          <div style="text-align:left;max-width:700px;margin:24px auto 0">
+          <div style="margin-top:18px">
             <button class="dsim-all-teams-toggle" onclick="dsimToggleAllTeams(this)">▼ Show All Teams' Rosters</button>
             <div id="dsimAllTeams" style="display:none"></div>
           </div>
+
+          <!-- Hidden legacy elements kept for JS compat -->
+          <div id="dsimDonePicks" style="display:none"></div>
         </div>
 
       </div><!-- /draftSimPane -->
@@ -14011,62 +14045,179 @@ function dsimFinish() {
   DSIM.done   = true;
 
   document.getElementById('dsimActive').style.display = 'none';
-  document.getElementById('dsimDone').style.display = 'block';
+  document.getElementById('dsimDone').style.display   = 'block';
 
-  const grade = dsimFinalGrade();
+  const grade   = dsimFinalGrade();
   document.getElementById('dsimFinalGrade').textContent = grade;
 
-  // ── Stats bar ──
   const myPicks  = DSIM.picks.filter(pk => pk.teamIdx === DSIM.mySlot);
   const totalVal = myPicks.reduce((s, pk) => s + calcValue(pk.player), 0);
   const avgVal   = myPicks.length ? Math.round(totalVal / myPicks.length) : 0;
   const steals   = _dsimCountSteals();
 
+  // ── Stats bar ──
   const statsEl = document.getElementById('dsimDoneStats');
   if (statsEl) {
     statsEl.innerHTML = [
-      { val: myPicks.length, lbl: 'Picks Made' },
+      { val: myPicks.length,   lbl: 'Picks Made' },
       { val: fmtVal(totalVal), lbl: 'Total Value' },
-      { val: fmtVal(avgVal), lbl: 'Avg Pick Value' },
-      { val: steals, lbl: 'Steals' },
+      { val: fmtVal(avgVal),   lbl: 'Avg Pick Value' },
+      { val: steals,           lbl: 'Steals' },
     ].map(s => `<div class="dsim-done-stat">
       <div class="dsim-done-stat-val">${s.val}</div>
       <div class="dsim-done-stat-lbl">${s.lbl}</div>
     </div>`).join('');
   }
 
+  // ── Helper: grade a pick ──
+  function _pickGrade(pk) {
+    const adpRank = DSIM.available.indexOf(pk.player) + 1;
+    const diff    = adpRank - pk.overall;
+    if (diff >= 8)  return { cls: 'grade-steal',  lbl: 'Steal' };
+    if (diff >= 3)  return { cls: 'grade-value',  lbl: 'Value' };
+    if (diff <= -8) return { cls: 'grade-bust',   lbl: 'Reach' };
+    if (diff <= -3) return { cls: 'grade-reach',  lbl: 'Slight Reach' };
+    return           { cls: 'grade-fair',   lbl: 'Fair' };
+  }
+
+  // ── Roster by position ──
+  const rosterEl = document.getElementById('dsimRosterByPos');
+  if (rosterEl) {
+    const POS_ORDER = ['QB','RB','WR','TE','K','DEF','DST'];
+    const grouped   = {};
+    myPicks.forEach(pk => {
+      const pos = pk.player.position || 'BN';
+      if (!grouped[pos]) grouped[pos] = [];
+      grouped[pos].push(pk);
+    });
+    let html = '';
+    POS_ORDER.forEach(pos => {
+      if (!grouped[pos]) return;
+      html += `<div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 4px">${pos}</div>`;
+      grouped[pos].forEach(pk => {
+        const p = pk.player;
+        const v = calcValue(p);
+        const g = _pickGrade(pk);
+        html += `<div class="draft-pick-row">
+          <span class="draft-pick-num" style="font-size:10px;min-width:28px">#${pk.overall}</span>
+          <div class="draft-pick-info">
+            <div class="draft-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name||p.name||'?')}</div>
+            <div class="draft-pick-sub">${p.team||''} · ${fmtVal(v)}</div>
+          </div>
+          <span class="draft-pick-grade ${g.cls}">${g.lbl}</span>
+        </div>`;
+      });
+    });
+    // Bench (any pos not in POS_ORDER)
+    const benchPicks = myPicks.filter(pk => !POS_ORDER.includes(pk.player.position));
+    if (benchPicks.length) {
+      html += `<div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 4px">BN</div>`;
+      benchPicks.forEach(pk => {
+        const p = pk.player;
+        const g = _pickGrade(pk);
+        html += `<div class="draft-pick-row">
+          <span class="draft-pick-num" style="font-size:10px;min-width:28px">#${pk.overall}</span>
+          <div class="draft-pick-info">
+            <div class="draft-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name||p.name||'?')}</div>
+            <div class="draft-pick-sub">${p.team||''} · Rnd ${pk.round}</div>
+          </div>
+          <span class="draft-pick-grade ${g.cls}">${g.lbl}</span>
+        </div>`;
+      });
+    }
+    rosterEl.innerHTML = html;
+  }
+
+  // ── Pick Analysis (steals vs reaches breakdown) ──
+  const analysisEl = document.getElementById('dsimPickAnalysis');
+  if (analysisEl) {
+    const graded = myPicks.map(pk => ({ pk, g: _pickGrade(pk) }));
+    const stealPicks  = graded.filter(x => x.g.lbl === 'Steal');
+    const valuePicks  = graded.filter(x => x.g.lbl === 'Value');
+    const reachPicks  = graded.filter(x => x.g.lbl === 'Reach');
+    const sReachPicks = graded.filter(x => x.g.lbl === 'Slight Reach');
+
+    const _section = (title, items, cls) => {
+      if (!items.length) return '';
+      return `<div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">${title} (${items.length})</div>
+        ${items.map(({ pk }) => {
+          const p = pk.player;
+          const pos = p.position || '?';
+          return `<div class="draft-pick-row">
+            <span class="draft-pick-num" style="font-size:10px;min-width:28px">#${pk.overall}</span>
+            <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
+            <div class="draft-pick-info">
+              <div class="draft-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name||p.name||'?')}</div>
+              <div class="draft-pick-sub">${p.team||''} · Rnd ${pk.round}, Pick ${pk.pickInRound}</div>
+            </div>
+            <span class="draft-pick-grade ${cls}">${stealPicks.includes(arguments[0]) ? '▲' : '▼'}</span>
+          </div>`;
+        }).join('')}
+      </div>`;
+    };
+
+    let html = '';
+    if (stealPicks.length)  html += `<div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:800;color:var(--success);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">🟢 Steals (${stealPicks.length})</div>
+      ${stealPicks.map(({ pk }) => {
+        const p = pk.player; const pos = p.position||'?';
+        return `<div class="draft-pick-row">
+          <span class="draft-pick-num" style="font-size:10px;min-width:28px">#${pk.overall}</span>
+          <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
+          <div class="draft-pick-info">
+            <div class="draft-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name||p.name||'?')}</div>
+            <div class="draft-pick-sub">${p.team||''} · Rnd ${pk.round}, Pick ${pk.pickInRound}</div>
+          </div>
+          <span class="draft-pick-grade grade-steal">Steal</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+    if (valuePicks.length)  html += `<div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:800;color:var(--primary-l);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">🔵 Value Picks (${valuePicks.length})</div>
+      ${valuePicks.map(({ pk }) => {
+        const p = pk.player; const pos = p.position||'?';
+        return `<div class="draft-pick-row">
+          <span class="draft-pick-num" style="font-size:10px;min-width:28px">#${pk.overall}</span>
+          <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
+          <div class="draft-pick-info">
+            <div class="draft-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name||p.name||'?')}</div>
+            <div class="draft-pick-sub">${p.team||''} · Rnd ${pk.round}, Pick ${pk.pickInRound}</div>
+          </div>
+          <span class="draft-pick-grade grade-value">Value</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+    if (reachPicks.length || sReachPicks.length) html += `<div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:800;color:var(--warn);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">🔴 Reaches (${reachPicks.length + sReachPicks.length})</div>
+      ${[...reachPicks, ...sReachPicks].map(({ pk, g }) => {
+        const p = pk.player; const pos = p.position||'?';
+        return `<div class="draft-pick-row">
+          <span class="draft-pick-num" style="font-size:10px;min-width:28px">#${pk.overall}</span>
+          <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
+          <div class="draft-pick-info">
+            <div class="draft-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name||p.name||'?')}</div>
+            <div class="draft-pick-sub">${p.team||''} · Rnd ${pk.round}, Pick ${pk.pickInRound}</div>
+          </div>
+          <span class="draft-pick-grade ${g.cls}">${g.lbl}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+    if (!html) html = `<div style="color:var(--text3);font-size:13px;padding:8px 0">All picks graded Fair — solid, value-neutral draft.</div>`;
+    analysisEl.innerHTML = html;
+  }
+
   // ── Team Power Rankings ──
   _dsimRenderTeamRankings();
 
-  // ── Your draft summary picks ──
-  const picksEl = document.getElementById('dsimDonePicks');
-  if (picksEl) {
-    picksEl.innerHTML = myPicks.map(pk => {
-      const p   = pk.player;
-      const pos = p.position || '?';
-      const v   = calcValue(p);
-      const adpRank = DSIM.available.indexOf(p) + 1;
-      const pickNum = pk.overall;
-      const diff    = adpRank - pickNum;
-      let gradeClass = 'grade-fair', gradeLabel = 'Fair';
-      if (diff >= 8) { gradeClass = 'grade-steal'; gradeLabel = 'Steal'; }
-      else if (diff >= 3) { gradeClass = 'grade-value'; gradeLabel = 'Value'; }
-      else if (diff <= -8) { gradeClass = 'grade-bust'; gradeLabel = 'Reach'; }
-      else if (diff <= -3) { gradeClass = 'grade-reach'; gradeLabel = 'Slight Reach'; }
-      return `<div class="draft-pick-row">
-        <span class="draft-pick-num">${pk.overall}</span>
-        <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
-        <div class="draft-pick-info">
-          <div class="draft-pick-name">${p.full_name || p.name || '?'}</div>
-          <div class="draft-pick-sub">${p.team || ''} · ${fmtVal(v)}</div>
-        </div>
-        <span class="draft-pick-grade ${gradeClass}">${gradeLabel}</span>
-      </div>`;
-    }).join('');
-  }
-
-  // ── All Teams section (hidden until toggled) ──
+  // ── All Teams section ──
   _dsimRenderAllTeams();
+
+  // Scroll to results
+  document.getElementById('dsimDone').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function _dsimTeamTotals() {
