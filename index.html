@@ -9813,7 +9813,10 @@ async function sendPasswordReset() {
   msgEl.textContent = '';
   if (!email) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Please enter your email address.'; return; }
   try {
-    await fbAuth.sendPasswordResetEmail(email);
+    await fbAuth.sendPasswordResetEmail(email, {
+      url: 'https://myfantasyhq.com',
+      handleCodeInApp: false,
+    });
     msgEl.style.color = 'var(--success, #4ade80)';
     msgEl.textContent = '✅ Reset email sent! Check your inbox (and spam folder).';
     document.getElementById('authForgotEmail').value = '';
