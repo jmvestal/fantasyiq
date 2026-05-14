@@ -2371,9 +2371,14 @@
               <div class="dsim-setup-sub">Simulate a snake draft vs CPU teams with needs-based AI</div>
             </div>
             <div class="dsim-setup-btns">
+              <div class="dsim-ctrl-grp" id="dsimLeagueGrp" style="display:none">
+                <div class="dsim-ctrl-lbl">League</div>
+                <select id="dsimLeagueSel" class="dsim-sel" style="min-width:130px" onchange="dsimOnLeagueSel(this.value)">
+                  <option value="">— No League —</option>
+                </select>
+              </div>
               <button class="btn btn-p btn-sm" onclick="startDraftSim()">▶ Start Draft</button>
               <button class="btn btn-s btn-sm" id="dsimResetBtn" style="display:none" onclick="resetDraftSim()">↺ Reset</button>
-              <button class="btn btn-s btn-sm" id="dsimUseLeagueBtn" style="display:none" onclick="dsimUseLeague()">My League</button>
             </div>
           </div>
           <div class="dsim-controls">
@@ -4698,10 +4703,11 @@ function calcValue(p, _over) {
           }
           // IDP / DST / K / non-QB: szMod stays 1.0 in dynasty
         } else if (pos === 'QB') {
-            // Redraft: small-league discounts + 14/16-team boosts for SF/2QB so QBs
-            // land at the top of large-league rankings. Fractional cap below handles ties.
-            szMod = qb === '2qb' ? ({ 8:0.88,10:0.94,12:1.00,14:1.10,16:1.15 }[size]||1)
-                  : qb === 'sf'  ? ({ 8:0.85,10:0.92,12:1.00,14:1.16,16:1.16 }[size]||1)
+            // 2QB/SF: QBs are always more valuable than 1QB at every league size —
+            // never discount them even in 8-team 2QB leagues.
+            // 1QB: small-league discounts still apply (QBs genuinely not scarce in 1QB).
+            szMod = qb === '2qb' ? ({ 8:1.10,10:1.12,12:1.15,14:1.20,16:1.25 }[size]||1.15)
+                  : qb === 'sf'  ? ({ 8:1.05,10:1.08,12:1.12,14:1.16,16:1.18 }[size]||1.12)
                   :                ({ 8:0.78,10:0.88,12:1.00,14:1.00,16:1.00 }[size]||1);
         } else if (pos === 'TE') {
             const eTE = sv > 4000;
@@ -4897,12 +4903,13 @@ function calcValue(p, _over) {
   // genuinely has no starting value.
   let szMod;
   if (pos === 'QB') {
-    // Redraft QB sizing: small-league discounts for 1QB, plus large-league boosts
-    // for SF/2QB (14/16-team) so top QBs land at the top of rankings.
+    // 2QB/SF: QBs always boosted at every team count — even 8-team 2QB leagues
+    // require 2 starting QBs per team, making QBs more valuable than any 1QB league.
+    // 1QB: small-league discounts remain (QBs not scarce in standard formats).
     if (qb === '2qb') {
-      szMod = { 8: 0.88, 10: 0.94, 12: 1.00, 14: 1.10, 16: 1.15 }[size] || 1.0;
+      szMod = { 8: 1.10, 10: 1.12, 12: 1.15, 14: 1.20, 16: 1.25 }[size] || 1.15;
     } else if (qb === 'sf') {
-      szMod = { 8: 0.85, 10: 0.92, 12: 1.00, 14: 1.16, 16: 1.16 }[size] || 1.0;
+      szMod = { 8: 1.05, 10: 1.08, 12: 1.12, 14: 1.16, 16: 1.18 }[size] || 1.12;
     } else {
       szMod = { 8: 0.78, 10: 0.88, 12: 1.00, 14: 1.00, 16: 1.00 }[size] || 1.0;
     }
@@ -12815,6 +12822,20 @@ function _refreshLeagueSels() {
     }
   });
 
+  // Draft Sim league selector — show when any league connected; includes No League
+  const dsimLgSel = document.getElementById('dsimLeagueSel');
+  const dsimLgGrp = document.getElementById('dsimLeagueGrp');
+  if (dsimLgSel && dsimLgGrp) {
+    const show = leagues.length >= 1;
+    dsimLgGrp.style.display = show ? 'flex' : 'none';
+    if (show) {
+      const prev = dsimLgSel.value;
+      dsimLgSel.innerHTML = `<option value="">— No League —</option>` + leagueOpts;
+      // Re-select previously chosen league if still valid
+      if (prev && Array.from(dsimLgSel.options).find(o => o.value === prev)) dsimLgSel.value = prev;
+    }
+  }
+
   // Player HQ league selector — show when any league connected; includes No League
   const valTabLgSel = document.getElementById('valTabLgSel');
   if (valTabLgSel) {
@@ -13288,16 +13309,25 @@ function dsimUpdateSetup() {
     });
   }
 
-  // Show Use My League buttons if league connected
-  const leagueBtn = document.getElementById('dsimUseLeagueBtn');
-  if (leagueBtn) leagueBtn.style.display = S.connectedLeague ? 'inline-flex' : 'none';
+  // Show sim league dropdown group when any leagues are connected
+  const dsimLgGrp = document.getElementById('dsimLeagueGrp');
+  if (dsimLgGrp) dsimLgGrp.style.display = (S.connectedLeagues?.length >= 1) ? 'flex' : 'none';
+  // Show wizard My League button when a league is connected
   const wizLeagueBtn = document.getElementById('wizUseLeagueBtn');
   if (wizLeagueBtn) wizLeagueBtn.style.display = S.connectedLeague ? 'inline-flex' : 'none';
 }
 
-function _applyLeagueToDraftControls(prefix) {
+function dsimOnLeagueSel(leagueId) {
+  if (!leagueId) return; // "No League" — keep manual settings as-is
+  const found = (S.connectedLeagues || []).find(l => l.leagueId === leagueId);
+  if (!found) return;
+  _applyLeagueToDraftControls('dsim', found);
+  dsimUpdateSetup();
+}
+
+function _applyLeagueToDraftControls(prefix, lgOverride) {
   // prefix = 'dsim' (sim) or 'wiz' (wizard)
-  const lg = S.connectedLeague;
+  const lg = lgOverride || S.connectedLeague;
   if (!lg) return;
   const s = lg.settings || {};
 
