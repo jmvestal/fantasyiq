@@ -4747,7 +4747,9 @@ function calcValue(p, _over) {
             // 1QB: small-league discounts still apply (QBs genuinely not scarce in 1QB).
             szMod = qb === '2qb' ? ({ 8:1.03,10:1.05,12:1.08,14:1.10,16:1.12 }[size]||1.08)
                   : qb === 'sf'  ? ({ 8:1.05,10:1.08,12:1.12,14:1.16,16:1.18 }[size]||1.12)
-                  :                ({ 8:0.78,10:0.88,12:1.00,14:1.00,16:1.00 }[size]||1);
+                  :                ({ 8:0.78,10:0.88,12:1.00,14:1.02,16:1.05 }[size]||1);
+                  // 1QB: +2% at 14-team, +5% at 16-team (matches elite WR/RB boost)
+                  // prevents QBs from drifting down the board as skill players get boosted
         } else if (pos === 'TE') {
             const eTE = sv > 4000;
             const te16 = te === 'on' ? 1.00 : 0.90;
@@ -4951,7 +4953,8 @@ function calcValue(p, _over) {
     } else if (qb === 'sf') {
       szMod = { 8: 1.05, 10: 1.08, 12: 1.12, 14: 1.16, 16: 1.18 }[size] || 1.12;
     } else {
-      szMod = { 8: 0.78, 10: 0.88, 12: 1.00, 14: 1.00, 16: 1.00 }[size] || 1.0;
+      szMod = { 8: 0.78, 10: 0.88, 12: 1.00, 14: 1.02, 16: 1.05 }[size] || 1.0;
+      // 1QB redraft: +2%/+5% at 14/16 teams matches the elite WR/RB boost so QBs don't slide
     }
   } else if (pos === 'TE') {
     // At 16 teams, always apply a mild downward modifier to prevent the TE-premium
@@ -10303,10 +10306,11 @@ async function loadConnectedLeagues() {
     if (S.roster.length) document.getElementById('bshBtn').disabled = false;
     // Render home with fresh league data
     if (document.getElementById('tab-home')?.classList.contains('active')) renderHome();
-    // Always refresh Sleeper leagues on load — works even without saved credentials
-    if (latest.platform === 'sleeper' && latest.leagueId) {
-      silentSleeperRefresh(latest);
-    }
+    // Refresh ALL connected Sleeper leagues on load so every league has current
+    // rosterPositions, roster, and pick data — not just the most recently active one.
+    // Each call is independent (guarded by leagueId), so they run concurrently.
+    arr.filter(l => l.platform === 'sleeper' && l.leagueId)
+       .forEach(l => silentSleeperRefresh(l));
   }
   refreshConnectedLeaguesList();
 }
@@ -12936,6 +12940,8 @@ function switchLeagueGlobal(leagueId) {
   if (document.getElementById('tab-league')?.classList.contains('active')) renderLeagueAnalyzer();
   _refreshLeagueSels();
   showToast(`🏈 Switched to ${found.leagueName || 'league'}`);
+  // Refresh from Sleeper so rosterPositions/roster/picks are always current on switch
+  if (found.platform === 'sleeper' && found.leagueId) silentSleeperRefresh(found);
 }
 
 function switchTradeLeague(leagueId) {
