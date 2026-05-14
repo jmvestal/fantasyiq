@@ -10319,7 +10319,7 @@ async function silentSleeperRefresh(lg, { showToastOnSuccess = false } = {}) {
     // Even if we couldn't identify userRoster, we at least update rosterPositions + settings
     const leagueStatus = leagueInfo.status || 'complete'; // 'in_season' | 'pre_draft' | 'complete' | etc.
     let updatedLeague = {
-      ...S.connectedLeague,
+      ...lg,
       rosterPositions: freshPositions,
       leagueStatus,
       settings:        freshSettings,
@@ -10366,7 +10366,7 @@ async function silentSleeperRefresh(lg, { showToastOnSuccess = false } = {}) {
 
       const freshAllTeams = rosters.map(r => {
         const teamIds = [...(r.players||[]), ...(r.reserve||[])].map(String);
-        const existing = (S.connectedLeague?.allTeams||[]).find(t => String(t.rosterId) === String(r.roster_id));
+        const existing = (lg.allTeams||[]).find(t => String(t.rosterId) === String(r.roster_id));
         const teamPlayers = teamIds.map(id => S.players.find(p=>String(p.player_id||p.id)===id)).filter(Boolean);
         return {
           rosterId:    r.roster_id,
@@ -10396,12 +10396,21 @@ async function silentSleeperRefresh(lg, { showToastOnSuccess = false } = {}) {
       if (S.roster.length) document.getElementById('bshBtn').disabled = false;
     }
 
-    S.connectedLeague = updatedLeague;
+    // Always save the updated league data back to storage
     saveConnectedLeague(updatedLeague);
-    applyLeagueSettings(freshSettings);
-    renderRosterList();
-    if (showToastOnSuccess) showToast('🏈 Roster synced from Sleeper');
-    if (document.getElementById('tab-home')?.classList.contains('active')) renderHome();
+    // Only update the active league state if this is the currently selected league
+    const isActiveLeague = S.connectedLeague?.leagueId === lg.leagueId;
+    if (isActiveLeague) {
+      S.connectedLeague = updatedLeague;
+      applyLeagueSettings(freshSettings);
+      renderRosterList();
+      if (showToastOnSuccess) showToast('🏈 Roster synced from Sleeper');
+      if (document.getElementById('tab-home')?.classList.contains('active')) renderHome();
+    } else {
+      // League refreshed in background — just update the in-memory array so it's fresh next time user switches
+      const idx = (S.connectedLeagues||[]).findIndex(l => l.leagueId === updatedLeague.leagueId);
+      if (idx >= 0) S.connectedLeagues[idx] = updatedLeague;
+    }
   } catch(e) {
     console.warn('[FantasyIQ] Sleeper refresh failed:', e);
   } finally {
