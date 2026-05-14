@@ -14123,41 +14123,62 @@ function dsimFinish() {
     return result;
   }
 
-  // ── Render roster by slot ──
+  // ── Render roster by slot (TeamHQ-style) ──
   const rosterEl = document.getElementById('dsimRosterByPos');
   if (rosterEl) {
     const slots    = _buildSlots();
     const assigned = _assignSlots(slots);
-    const slotLabel = { QB:'QB', RB:'RB', WR:'WR', TE:'TE', FLEX:'FLEX', SF:'SuperFlex', K:'K', DEF:'DEF', BN:'BN' };
-    const STARTER_SLOTS = new Set(['QB','RB','WR','TE','FLEX','SF','K','DEF']);
 
-    let html = `<div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.06em;margin-bottom:6px">STARTERS</div>`;
+    // Map draft-sim slot names → SLOT_CSS / SLOT_LABEL keys
+    const slotCssKey   = { QB:'QB', RB:'RB', WR:'WR', TE:'TE', FLEX:'FLEX', SF:'SUPER_FLEX', K:'K', DEF:'DEF', BN:'BN' };
+    const slotLabelMap = { SF:'SFLX' };  // overrides only; rest use slot name
+
+    const _slotCls = s => SLOT_CSS[slotCssKey[s] || s] || 'is-bench';
+    const _slotLbl = s => slotLabelMap[s] || SLOT_LABEL[slotCssKey[s] || s] || s;
+
+    let html = '<div class="ros-section-hdr">Starters</div>';
     let inBench = false;
 
     assigned.forEach(({ slot, pk }) => {
       if (slot === 'BN' && !inBench) {
         inBench = true;
-        html += `<div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.06em;margin:12px 0 6px">BENCH</div>`;
+        html += '<div class="ros-section-hdr ros-section-bench">Bench</div>';
       }
-      const slotBadge = `<span style="font-size:9px;font-weight:800;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:var(--text3);min-width:42px;text-align:center;display:inline-block">${slotLabel[slot]||slot}</span>`;
+
+      const slotCls = _slotCls(slot);
+      const slotLbl = _slotLbl(slot);
+
       if (!pk) {
-        html += `<div class="draft-pick-row" style="opacity:.4">${slotBadge}<div class="draft-pick-info" style="color:var(--text3);font-style:italic">Empty</div></div>`;
+        html += `<div class="ros-empty">
+          <span class="ros-slot-lbl ${slotCls}" style="opacity:.55">${slotLbl}</span>
+          <span class="ros-empty-name">Empty</span>
+        </div>`;
         return;
       }
+
       const p   = pk.player;
-      const pos = p.position || '?';
+      const pos = (p.position === 'DST' ? 'DEF' : p.position) || '?';
       const v   = calcValue(p);
-      html += `<div class="draft-pick-row">
-        ${slotBadge}
-        <span class="draft-pick-num" style="font-size:10px;min-width:30px;color:var(--text3)">#${pk.overall}</span>
-        <span class="pb pb-${pos}" style="font-size:9px;padding:1px 5px">${pos}</span>
-        <div class="draft-pick-info">
-          <div class="draft-pick-name pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name||p.name||'?')}</div>
-          <div class="draft-pick-sub">${p.team||''} · ${fmtVal(v)}</div>
+      const sid = p.player_id || p.id;
+
+      html += `<div class="ros-row">
+        <span class="ros-slot-lbl ${slotCls}">${slotLbl}</span>
+        <div class="ros-row-info">
+          <div style="display:flex;align-items:center;gap:7px">
+            ${playerHsHtml(sid, p.position)}
+            <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              <span class="pnr-name" data-pcname="${escHtml(p.full_name||p.name||'')}" onclick="_openPc(event)">${escHtml(p.full_name||p.name||'?')}</span>
+              <span class="pb pb-${pos}" style="font-size:9px;vertical-align:middle;margin-left:4px">${pos}</span>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text3)">${p.team||'FA'} · Pick #${pk.overall}</div>
         </div>
+        <div style="font-weight:700;font-size:13px;color:var(--primary-l);flex-shrink:0">${fmtVal(v)}</div>
       </div>`;
     });
+
     rosterEl.innerHTML = html;
+    setTimeout(initHeadshots, 0);
   }
 
   // ── Pick Analysis panel ──
