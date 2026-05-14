@@ -2050,6 +2050,7 @@
             <button class="pos-btn" data-pos="K">K</button>
             <button class="pos-btn" data-pos="DEF">DST</button>
             <button class="pos-btn" data-pos="IDP">IDP</button>
+            <button class="pos-btn" data-pos="ROOKIE">Rookies</button>
             <button class="pos-btn" data-pos="PICK">Picks</button>
           </div>
         </div>
@@ -5769,8 +5770,9 @@ function renderValuesTable() {
         if (isDynasty && p.position === 'K') return false;
         return true;
       }
-      if (pos === 'IDP') return IDP_POSITIONS.has(p.position);
-      if (pos === 'DEF') return DST_POSITIONS.has(p.position);
+      if (pos === 'IDP')    return IDP_POSITIONS.has(p.position);
+      if (pos === 'DEF')    return DST_POSITIONS.has(p.position);
+      if (pos === 'ROOKIE') return p.rookie === true && ['QB','RB','WR','TE'].includes(p.position);
       return p.position === pos;
     })
     .filter(p => !q || p.full_name.toLowerCase().includes(q) || (p.team||'').toLowerCase().includes(q))
@@ -5837,7 +5839,9 @@ function renderValuesTable() {
   // update sub
   const modeStr = isDynasty ? 'Dynasty' : 'Redraft';
   const qbStr   = qb === 'sf' ? 'SF' : qb === '2qb' ? '2-QB' : '1-QB';
-  document.getElementById('valTableSub').textContent = `${rows.length} players · ${modeStr} · ${size}-Team · ${qbStr} · ${scoring.toUpperCase()}`;
+  document.getElementById('valTableSub').textContent = pos === 'ROOKIE'
+    ? `${rows.length} rookies · ${modeStr} · ${size}-Team · ${qbStr} · ${scoring.toUpperCase()}`
+    : `${rows.length} players · ${modeStr} · ${size}-Team · ${qbStr} · ${scoring.toUpperCase()}`;
 
   // Update value column header to match current mode
   const valTh = document.querySelector('#valTable thead th:nth-child(3)');
