@@ -2443,6 +2443,13 @@
           </div>
           <div class="dsim-controls">
             <div class="dsim-ctrl-grp">
+              <div class="dsim-ctrl-lbl"><strong>Draft Style</strong></div>
+              <select id="dsimSnake" class="dsim-sel">
+                <option value="snake" selected>Snake</option>
+                <option value="linear">Linear</option>
+              </select>
+            </div>
+            <div class="dsim-ctrl-grp">
               <div class="dsim-ctrl-lbl">Type</div>
               <select id="dsimType" class="dsim-sel" onchange="dsimUpdateSetup()">
                 <option value="rookie">Rookie Draft</option>
@@ -13595,6 +13602,7 @@ function wizUseLeague() {
 // ── Start / Reset ─────────────────────────────────────────
 
 function startDraftSim() {
+  console.log('[DSIM] startDraftSim called. Snake select value:', document.getElementById('dsimSnake')?.value);
   if (!S.players || !S.players.length) {
     showToast('Player data not loaded yet — try again in a moment', 'err');
     return;
@@ -13608,6 +13616,7 @@ function startDraftSim() {
   DSIM.scoring   = document.getElementById('dsimScoring')?.value || 'ppr';
   DSIM.qb        = document.getElementById('dsimQB')?.value || '1qb';
   DSIM.te        = document.getElementById('dsimTE')?.value || 'off';
+  DSIM.snake     = (document.getElementById('dsimSnake')?.value || 'snake') === 'snake';
   DSIM.active    = true;
   DSIM.done      = false;
 
@@ -13812,36 +13821,51 @@ function renderDsimBoard() {
   const tbl = document.getElementById('dsimBoardTable');
   if (!tbl) return;
 
-  const currentRound = Math.floor(DSIM.currentOverall / DSIM.numTeams) + 1;
+  const N = DSIM.numTeams;
+  const currentRound = Math.floor(DSIM.currentOverall / N) + 1;   // 1-indexed
   const visRounds    = Math.min(currentRound + 1, DSIM.rounds);
 
+  // Build 2D lookup: picksMap[roundOneBased][teamIdx] = pick object
+  const picksMap = {};
+  DSIM.picks.forEach(pk => {
+    if (!picksMap[pk.round]) picksMap[pk.round] = {};
+    picksMap[pk.round][pk.teamIdx] = pk;
+  });
+
+  // Where is the current pick? (which round row and which team column)
+  const curRoundIdx  = Math.floor(DSIM.currentOverall / N);          // 0-based row
+  const curTeamIdx   = DSIM.pickOrder[DSIM.currentOverall] ?? -1;    // team column index
+  console.log('[BOARD] currentOverall:', DSIM.currentOverall, 'curRound:', curRoundIdx, 'curTeam:', curTeamIdx, 'snake:', DSIM.snake, 'pickOrder:', DSIM.pickOrder.slice(0, 15));
+
+  // Column headers
   let html = '<thead><tr><th class="round-num-cell">#</th>';
-  for (let t = 0; t < DSIM.numTeams; t++) {
-    const isMine = t === DSIM.mySlot;
-    html += `<th class="${isMine ? 'my-col' : ''}">${isMine ? '★ You' : `T${t+1}`}</th>`;
+  for (let t = 0; t < N; t++) {
+    const mine = t === DSIM.mySlot;
+    html += `<th class="${mine ? 'my-col' : ''}">${mine ? '★ You' : 'T'+(t+1)}</th>`;
   }
   html += '</tr></thead><tbody>';
 
   for (let r = 0; r < visRounds; r++) {
-    html += '<tr>';
-    html += `<td class="round-num-cell">R${r+1}</td>`;
-    for (let t = 0; t < DSIM.numTeams; t++) {
-      const isMine   = t === DSIM.mySlot;
-      const ti       = DSIM.snake && r % 2 === 1 ? DSIM.numTeams - 1 - t : t;
-      const overall  = r * DSIM.numTeams + t;
-      const pick     = DSIM.picks.find(pk => pk.overall === overall + 1);
-      const isCurrent = overall === DSIM.currentOverall && !DSIM.done;
-      const cellClass = [isMine ? 'my-col' : '', isCurrent ? 'dsim-cur-cell' : ''].filter(Boolean).join(' ');
+    // Snake direction arrow: even rounds go →, odd rounds go ← (when snake is on)
+    const isSnakeReverse = DSIM.snake && r % 2 === 1;
+    const dirArrow = DSIM.snake ? (isSnakeReverse ? ' ←' : ' →') : '';
+    html += `<tr><td class="round-num-cell">R${r+1}${dirArrow}</td>`;
+
+    for (let t = 0; t < N; t++) {
+      const mine      = t === DSIM.mySlot;
+      const pick      = (picksMap[r+1] || {})[t];               // round is 1-based key
+      const isCurrent = !DSIM.done && r === curRoundIdx && t === curTeamIdx;
+      const cls       = [mine ? 'my-col' : '', isCurrent ? 'dsim-cur-cell' : ''].filter(Boolean).join(' ');
 
       if (pick) {
         const pos  = pick.player.position || '?';
         const team = pick.player.team || '';
-        html += `<td class="${cellClass}">
-          <div class="dsim-pick pnr-name" data-pcname="${escHtml(pick.player.full_name||pick.player.name||'')}" onclick="_openPc(event)">${escHtml(pick.player.full_name || pick.player.name || '?')}</div>
-          <div class="dsim-pick-pos" style="color:${_posColor(pos)}">${pos}${team ? ' · ' + team : ''}</div>
+        html += `<td class="${cls}">
+          <div class="dsim-pick pnr-name" data-pcname="${escHtml(pick.player.full_name||pick.player.name||'')}" onclick="_openPc(event)">${escHtml(pick.player.full_name||pick.player.name||'?')}</div>
+          <div class="dsim-pick-pos" style="color:${_posColor(pos)}">${pos}${team?' · '+team:''}</div>
         </td>`;
       } else {
-        html += `<td class="${cellClass}"></td>`;
+        html += `<td class="${cls}"></td>`;
       }
     }
     html += '</tr>';
