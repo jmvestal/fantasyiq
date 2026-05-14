@@ -6747,8 +6747,9 @@ function updateModeChip() {
 // ═══════════════════════════════════════════════════════════
 // PREMIUM FEATURE GATING
 // ═══════════════════════════════════════════════════════════
-const PRO_TABS    = new Set(['roster','league','buysell','draft']);
+const PRO_TABS    = new Set(['wire','roster','league','buysell','draft']);
 const PRO_LABELS  = {
+  wire:    'Waiver HQ — get weekly waiver wire targets and streamers ranked for your league format.',
   roster:  'Team HQ — see your full roster valuation, position grades, and personalized trade targets.',
   league:  'League HQ — compare all teams, find the best trade partners, and track league-wide value.',
   buysell: 'Value HQ — get AI-powered buy low, sell high, and hold advice for every player.',
