@@ -24,14 +24,14 @@
   <!-- PWA / icons -->
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="icon" type="image/png" href="favicon-32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="fhq-icon.png" sizes="any">
+  <link rel="apple-touch-icon" href="fhq-icon.png">
   <title>Fantasy HQ — NFL Fantasy Analyzer</title>
   <!-- Structured data for Google -->
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Fantasy HQ","url":"https://www.myfantasyhq.com/","description":"Free NFL fantasy tools: Trade HQ, Player HQ, Waiver HQ, Team HQ, League HQ, and Draft HQ — all-in-one analyzer built for serious fantasy players.","applicationCategory":"SportsApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"keywords":"fantasy football trade analyzer, dynasty trade calculator, NFL dynasty rankings, dynasty buy sell, waiver wire, fantasy football draft tool, fantasy IQ"}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- Firebase SDK (compat v9) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -50,16 +50,16 @@
       --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
       --radius:10px;--shadow:0 8px 32px rgba(0,0,0,.5)
     }
-    body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
+    body{font-family:'Barlow Condensed','Barlow',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;line-height:1.5;letter-spacing:.2px}
 
     /* ── HEADER ─────────────────────────── */
     .hdr{background:linear-gradient(180deg,#090c12 0%,#111318 100%);border-bottom:1px solid rgba(26,86,219,.35);box-shadow:0 1px 0 rgba(79,134,245,.06),0 4px 24px rgba(0,0,0,.5);padding:0 20px;position:sticky;top:0;z-index:100}
     .hdr-inner{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;max-width:1440px;margin:0 auto;height:68px}
     .hdr-spacer{flex:1;min-width:0}
     .hdr-right{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:1;min-width:0}
-    .logo{font-size:32px;font-weight:900;letter-spacing:-1.5px;white-space:nowrap}
-    .logo em{color:var(--primary-l);font-style:normal;text-shadow:0 0 28px rgba(79,134,245,.55)}
-    .logo span{color:var(--text)}
+    .logo{font-size:32px;font-weight:900;font-style:italic;letter-spacing:1px;white-space:nowrap;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase}
+    .logo em{color:var(--primary-l);font-style:italic;text-shadow:0 0 28px rgba(79,134,245,.55)}
+    .logo span{color:#fff}
     .nav{display:flex;gap:2px;flex:1;overflow-x:auto;background:rgba(0,0,0,.3);border-radius:10px;padding:3px;border:1px solid rgba(255,255,255,.07)}
     .nav::-webkit-scrollbar{display:none}
     .nav-btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;border:none;background:none;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
@@ -125,7 +125,7 @@
     body.landing-mode .main { padding:0 }
     body.landing-mode #tab-home { display:block }
     /* Landing header overrides */
-    body.landing-mode .logo{font-size:38px;letter-spacing:-2px;text-align:center;justify-self:center}
+    body.landing-mode .logo{font-size:38px;letter-spacing:1px;text-align:center;justify-self:center}
     body.landing-mode .hdr-right{justify-content:flex-end;gap:8px}
     body.landing-mode .glb-srch-wrap,body.landing-mode .pc-badge{display:none}
     /* Landing — full-screen centered content */
@@ -1011,9 +1011,9 @@
 
     /* ── HEADER NAV LINKS ─────────────────── */
     .hdr-nav-links{display:flex;align-items:center;gap:2px}
-    .hdr-nav-link{display:inline-flex;background:none;border:1.5px solid transparent;font-size:13px;font-weight:900;letter-spacing:-.5px;cursor:pointer;padding:6px 13px;border-radius:999px;transition:all .18s;white-space:nowrap;opacity:.75}
+    .hdr-nav-link{display:inline-flex;background:none;border:1.5px solid transparent;font-size:14px;font-weight:800;font-style:italic;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;padding:6px 13px;border-radius:999px;transition:all .18s;white-space:nowrap;opacity:.75}
     .hdr-nav-link:hover{opacity:1;background:rgba(26,86,219,.1);border-color:rgba(79,134,245,.55);box-shadow:0 0 10px rgba(79,134,245,.2)}
-    .hdr-nav-link em{color:var(--primary-l);font-style:normal}
+    .hdr-nav-link em{color:var(--primary-l);font-style:italic}
     .hdr-nav-link span{color:var(--text)}
     /* ── AUTH ───────────────────────────── */
     .auth-btn{padding:6px 14px;border-radius:999px;border:1.5px solid transparent;background:none;box-shadow:none;font-size:13px;font-weight:900;letter-spacing:-.5px;cursor:pointer;transition:all .15s;white-space:nowrap;opacity:.75}
@@ -1276,8 +1276,8 @@
 
     /* Auth sign-in page */
     .auth-hero{text-align:center;padding:12px 0 20px}
-    .auth-hero .logo-big{font-size:36px;font-weight:900;letter-spacing:-2px;margin-bottom:6px}
-    .auth-hero .logo-big em{color:var(--primary-l);font-style:normal}
+    .auth-hero .logo-big{font-size:36px;font-weight:900;font-style:italic;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .auth-hero .logo-big em{color:var(--primary-l);font-style:italic}
     .or-divider{display:flex;align-items:center;gap:10px;color:var(--text3);font-size:12px;margin:14px 0}
     .or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:var(--border)}
     .auth-tab-btn{flex:1;padding:9px;background:none;border:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
@@ -1374,8 +1374,12 @@
       <button class="hdr-nav-link" onclick="switchTab('draft')"><em>Draft</em><span>HQ</span></button>
     </div>
     <!-- Center: Logo -->
-    <div class="logo" onclick="switchTab('home')" style="cursor:pointer" title="Home"><em>Fantasy</em><span>HQ</span></div>
-    <!-- Right: search + auth -->
+    <div onclick="switchTab('home')" style="cursor:pointer;display:flex;align-items:center;gap:0" title="Home">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;font-size:34px;text-transform:uppercase;letter-spacing:1px;line-height:1">
+        <span style="color:#4F86F5;text-shadow:0 0 20px rgba(79,134,245,.6)">Fantasy</span><span style="color:#ffffff">HQ</span>
+      </span>
+    </div>
+        <!-- Right: search + auth -->
     <div class="hdr-right">
       <!-- Global Player Search -->
       <div class="glb-srch-wrap">
@@ -2393,10 +2397,10 @@
           <div class="dsim-controls">
             <div class="dsim-ctrl-grp">
               <div class="dsim-ctrl-lbl">Type</div>
-              <select id="dsimType" class="dsim-sel" onchange="dsimUpdateSetup()">
-                <option value="rookie">Rookie Draft</option>
+              <select id="dsimType" class="dsim-sel" autocomplete="off" onchange="dsimUpdateSetup()">
+                <option value="redraft" selected>Full Redraft</option>
                 <option value="startup">Startup Dynasty</option>
-                <option value="redraft">Full Redraft</option>
+                <option value="rookie">Rookie Draft</option>
               </select>
             </div>
             <div class="dsim-ctrl-grp">
@@ -2420,8 +2424,8 @@
             <div class="dsim-ctrl-grp">
               <div class="dsim-ctrl-lbl">Format</div>
               <select id="dsimQB" class="dsim-sel">
-                <option value="1qb" selected>1 QB</option>
-                <option value="sf">Superflex</option>
+                <option value="1qb">1 QB</option>
+                <option value="sf" selected>Superflex</option>
                 <option value="2qb">2 QB</option>
               </select>
             </div>
@@ -2873,7 +2877,9 @@
   <div class="mo-box" style="max-width:400px">
     <button class="mo-close" onclick="closeModal('authModal')">✕</button>
     <div class="auth-hero">
-      <div class="logo-big"><em>Fantasy</em><span style="color:var(--text)">HQ</span></div>
+      <div class="logo-big" style="display:flex;justify-content:center;align-items:center">
+        <img src="fhq-icon.png" alt="FHQ" style="height:64px;object-fit:contain;filter:drop-shadow(0 0 16px rgba(79,134,245,.5))" onerror="this.outerHTML='<span><em>Fantasy</em><span style=\'color:var(--text)\'>HQ</span></span>'">
+      </div>
       <div style="font-size:13px;color:var(--text2);margin-top:4px">Save your leagues, sync across devices &amp; unlock team analysis</div>
     </div>
     <!-- Tab switcher -->
@@ -11592,9 +11598,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Force draft sim defaults — rebuild innerHTML to prevent browser form cache from restoring old values
+  (function() {
+    const typeEl = document.getElementById('dsimType');
+    if (typeEl) typeEl.innerHTML = '<option value="redraft" selected>Full Redraft</option><option value="startup">Startup Dynasty</option><option value="rookie">Rookie Draft</option>';
+    const qbEl = document.getElementById('dsimQB');
+    if (qbEl) qbEl.innerHTML = '<option value="1qb">1 QB</option><option value="sf" selected>Superflex</option><option value="2qb">2 QB</option>';
+    const teamsEl = document.getElementById('dsimTeams');
+    if (teamsEl) teamsEl.value = '12';
+    const scEl = document.getElementById('dsimScoring');
+    if (scEl) scEl.value = 'ppr';
+    const teEl = document.getElementById('dsimTE');
+    if (teEl) teEl.value = 'off';
+    const spEl = document.getElementById('dsimSpeed');
+    if (spEl) spEl.value = 'normal';
+    const snEl = document.getElementById('dsimSnake');
+    if (snEl) snEl.value = 'snake';
+  })();
+
   initFirebase();
   init();
   handleFirebaseAuthAction(); // handle ?mode=resetPassword&oobCode=... redirects
+});
+
+// Force sim defaults on every page show — handles bfcache restores where browser
+// overrides select values AFTER DOMContentLoaded
+window.addEventListener('pageshow', function() {
+  if (!DSIM || DSIM.active) return;
+  const typeEl = document.getElementById('dsimType');
+  if (typeEl) typeEl.value = 'redraft';
+  const qbEl = document.getElementById('dsimQB');
+  if (qbEl) qbEl.value = 'sf';
 });
 
 // Close modals on Escape key
@@ -12307,9 +12341,14 @@ function setDraftMode(mode) {
   document.getElementById('draftAnalyzerPane').style.display = mode==='analyzer' ? 'block' : 'none';
   document.getElementById('draftSimPane').style.display = mode==='simulator' ? 'block' : 'none';
   if (mode === 'simulator') {
+    // Re-apply defaults every time sim tab is opened (unless draft is in progress)
+    if (!DSIM.active) {
+      const t = document.getElementById('dsimType');
+      if (t) t.value = 'redraft';
+      const q = document.getElementById('dsimQB');
+      if (q) q.value = 'sf';
+    }
     dsimUpdateSetup();
-    // Auto-load league settings on first open if league connected and sim not active
-    if (S.connectedLeague && !DSIM.active) dsimUseLeague();
   }
   if (mode === 'wizard') {
     dsimUpdateSetup(); // shows/hides My League btn on wizard too
@@ -13638,7 +13677,7 @@ function dsimUpdateSetup() {
     const isRookie = type === 'rookie';
     const isStartup = type === 'startup';
     const opts = isRookie ? [3,4,5,6] : isStartup ? [20,22,24,25,26,28,30] : [10,12,14,15,16,17,18,20];
-    const def  = isRookie ? 4 : isStartup ? 25 : 15;
+    const def  = isRookie ? 4 : isStartup ? 25 : 20;
     opts.forEach(r => {
       const o = document.createElement('option');
       o.value = r;
