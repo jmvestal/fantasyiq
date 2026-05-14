@@ -14366,46 +14366,9 @@ function dsimFinalGrade() {
   return 'F';
 }
 
+// dsimExportRoster — replaced: analysis now shown inline on DraftHQ
 function dsimExportRoster() {
-  const myPicks = DSIM.picks.filter(pk => pk.teamIdx === DSIM.mySlot);
-  if (!myPicks.length) return;
-
-  // Use connected league's actual roster positions if available,
-  // otherwise fall back to format-based defaults
-  let simPositions;
-  const lgPos = S.connectedLeague?.rosterPositions;
-  if (lgPos && lgPos.length > 0) {
-    // Use the real league roster structure
-    simPositions = [...lgPos];
-    // Pad with bench spots if we drafted more players than the league has slots
-    const filledSlots = simPositions.filter(p => !['IR','IL','TAXI'].includes(p)).length;
-    for (let i = filledSlots; i < myPicks.length; i++) simPositions.push('BN');
-  } else {
-    // Fallback: build from sim format settings
-    const isSF  = DSIM.qb === 'sf';
-    const is2QB = DSIM.qb === '2qb';
-    simPositions = is2QB ? ['QB','QB'] : ['QB'];
-    if (isSF) simPositions.push('SUPER_FLEX');
-    simPositions.push('RB', 'RB', 'WR', 'WR', 'TE', 'FLEX');
-    if (DSIM.type === 'redraft') { simPositions.push('K', 'DEF'); }
-    const benchCount = Math.max(0, myPicks.length - simPositions.length);
-    for (let i = 0; i < benchCount; i++) simPositions.push('BN');
-  }
-
-  // Override connectedLeague with sim structure — clears real starterIds so
-  // hasRealStarters is false and greedy slot assignment takes over.
-  S.connectedLeague = {
-    ...(S.connectedLeague || {}),
-    rosterPositions: simPositions,
-    starterIds:  [],
-    reserveIds:  [],
-    taxiIds:     [],
-  };
-
-  S.roster = myPicks.map(pk => pk.player);
-  renderRosterList();
-  switchTab('roster');
-  showToast('Drafted roster copied to Roster tab');
+  document.getElementById('dsimDone')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ════════════════════════════════════════════════════════════
