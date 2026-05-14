@@ -79,9 +79,11 @@
     .main{flex:1;padding:22px;overflow:auto}
     /* Hide sidebar on Waiver HQ + Value HQ — full-width content */
     .layout:has(#tab-wire.active) .sidebar,
-    .layout:has(#tab-buysell.active) .sidebar{display:none}
+    .layout:has(#tab-buysell.active) .sidebar,
+    .layout:has(#tab-draft.active) .sidebar{display:none}
     .layout:has(#tab-wire.active) .main,
-    .layout:has(#tab-buysell.active) .main{max-width:none}
+    .layout:has(#tab-buysell.active) .main,
+    .layout:has(#tab-draft.active) .main{max-width:none}
     /* Hide sidebar on Home tab — it has its own layout */
     .layout:has(#tab-home.active) .sidebar{display:none}
 
