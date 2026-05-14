@@ -217,9 +217,9 @@
     .lp-section{max-width:1140px;margin:0 auto;padding:60px 40px;display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
     .lp-section.rev .lp-section-text{order:2}
     .lp-section.rev .lp-section-widget{order:1}
-    .lp-sect-label{display:inline-flex;align-items:center;gap:0;background:rgba(26,86,219,.12);border:1px solid rgba(79,134,245,.28);font-size:14px;font-weight:900;letter-spacing:-.5px;padding:5px 16px;border-radius:999px;margin-bottom:16px}
-    .lp-sect-label em{color:var(--primary-l);font-style:normal}
-    .lp-sect-label span{color:var(--text)}
+    .lp-sect-label{display:inline-flex;align-items:center;gap:0;background:rgba(26,86,219,.12);border:1px solid rgba(79,134,245,.28);font-size:13px;font-weight:700;font-family:'Orbitron',sans-serif;text-transform:uppercase;letter-spacing:.5px;padding:5px 16px;border-radius:999px;margin-bottom:16px}
+    .lp-sect-label em{color:#1652d4;font-style:italic}
+    .lp-sect-label span{color:#ffffff}
     .lp-sect-h2{font-size:38px;font-weight:900;letter-spacing:-1.5px;line-height:1.1;margin-bottom:14px;color:var(--text)}
     .lp-sect-desc{font-size:14px;color:var(--text2);line-height:1.75;margin-bottom:24px}
     .lp-mock-trade{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.45)}
@@ -256,9 +256,9 @@
     .lp-tool{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px 18px;cursor:pointer;transition:all .18s;text-align:left}
     .lp-tool:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.35)}
     .lp-tool-icon{font-size:28px;margin-bottom:12px}
-    .lp-tool-name{font-size:14px;font-weight:900;letter-spacing:-.5px;margin-bottom:6px}
-    .lp-tool-name em{color:var(--primary-l);font-style:normal}
-    .lp-tool-name span{color:var(--text)}
+    .lp-tool-name{font-size:13px;font-weight:700;font-family:'Orbitron',sans-serif;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+    .lp-tool-name em{color:#1652d4;font-style:italic}
+    .lp-tool-name span{color:#ffffff}
     .lp-tool-desc{font-size:11px;color:var(--text3);line-height:1.55}
     .lp-cta-sec{text-align:center;padding:80px 40px;background:radial-gradient(ellipse at 50% 0%,rgba(26,86,219,.13) 0%,transparent 65%)}
     .lp-cta-h2{font-size:52px;font-weight:900;letter-spacing:-2px;line-height:1.1;margin-bottom:14px;color:var(--text)}
@@ -1375,8 +1375,8 @@
       <button class="hdr-nav-link" onclick="switchTab('draft')"><em>Draft</em><span>HQ</span></button>
     </div>
     <!-- Center: Logo -->
-    <div onclick="switchTab('home')" style="cursor:pointer;position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;pointer-events:auto" title="Home">
-      <img src="fantasy-hq-transparent-logo.png" alt="Fantasy HQ" style="height:200px;width:auto">
+    <div onclick="switchTab('home')" style="cursor:pointer;position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;pointer-events:none" title="Home">
+      <img src="fantasy-hq-transparent-logo.png" alt="Fantasy HQ" style="height:200px;width:auto;pointer-events:auto;cursor:pointer" onclick="switchTab('home')">
     </div>
         <!-- Right: search + auth -->
     <div class="hdr-right">
