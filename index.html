@@ -32,6 +32,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Stripe.js -->
+  <script src="https://js.stripe.com/v3/"></script>
   <!-- Firebase SDK (compat v9) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -3074,25 +3076,57 @@
 
 <!-- ══ MODAL: UPGRADE TO PRO ══ -->
 <div class="mo" id="proModal" onclick="moBackdropClose(event,'proModal')">
-  <div class="mo-box" style="max-width:460px;text-align:center">
+  <div class="mo-box" style="max-width:480px">
     <button class="mo-close" onclick="closeModal('proModal')">✕</button>
-    <div style="font-size:32px;margin-bottom:10px">⚡</div>
-    <div style="font-size:20px;font-weight:800;margin-bottom:6px">Fantasy HQ Pro</div>
-    <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6" id="proModalFeatureText">This feature requires a Pro subscription.</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;text-align:left">
-      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Free</div>
-        <div style="font-size:12px;color:var(--text2);line-height:2">✅ Trade HQ<br>✅ Player HQ<br>✅ Waiver HQ<br>✅ Basic Rankings</div>
-      </div>
-      <div style="background:var(--primary-d);border:1px solid rgba(26,86,219,.3);border-radius:8px;padding:12px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--primary-l);margin-bottom:8px">Pro ⚡</div>
-        <div style="font-size:12px;color:var(--text);line-height:2">⭐ My Team Analysis<br>⭐ Buy/Sell/Hold<br>⭐ League Analyzer<br>⭐ Draft Simulator<br>⭐ Multiple Leagues<br>⭐ Personalized Intel</div>
-      </div>
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:28px;margin-bottom:8px">⚡</div>
+      <div style="font-size:20px;font-weight:800;margin-bottom:6px">Unlock This Feature</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6" id="proModalFeatureText">This feature requires a paid plan.</div>
     </div>
-    <div style="font-size:22px;font-weight:900;color:var(--primary-l);margin-bottom:4px">$4.99<span style="font-size:13px;font-weight:400;color:var(--text2)">/month</span></div>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:18px">Cancel anytime · Free trial coming soon</div>
-    <button class="btn btn-p" style="width:100%;justify-content:center;font-size:14px;padding:12px" onclick="closeModal('proModal');openModal('authModal')">Get Started →</button>
-    <div style="font-size:11px;color:var(--text3);margin-top:10px">Already have an account? <span style="color:var(--primary-l);cursor:pointer" onclick="closeModal('proModal');openModal('authModal')">Sign in</span></div>
+
+    <!-- Plan cards -->
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+
+      <!-- DraftHQ -->
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div>
+          <div style="font-size:13px;font-weight:800;color:var(--text)">⚡ DraftHQ</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Draft ranks · ADP · Tiers · Simulator</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:14px;font-weight:900;color:var(--primary-l)">$3.99<span style="font-size:10px;font-weight:400;color:var(--text3)">/mo</span></div>
+          <button class="btn btn-s" style="font-size:10px;padding:4px 10px;margin-top:4px" onclick="closeModal('proModal');startCheckout('draft','monthly')">Get DraftHQ</button>
+        </div>
+      </div>
+
+      <!-- TradeHQ Pro -->
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div>
+          <div style="font-size:13px;font-weight:800;color:var(--text)">🔥 TradeHQ Pro</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Trade tool · Dynasty ranks · FHQ scores</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:14px;font-weight:900;color:var(--primary-l)">$4.99<span style="font-size:10px;font-weight:400;color:var(--text3)">/mo</span></div>
+          <button class="btn btn-s" style="font-size:10px;padding:4px 10px;margin-top:4px" onclick="closeModal('proModal');startCheckout('trade','monthly')">Get TradeHQ</button>
+        </div>
+      </div>
+
+      <!-- FantasyHQ Pro -->
+      <div style="background:linear-gradient(135deg,rgba(26,86,219,.14),rgba(79,134,245,.08));border:1px solid rgba(79,134,245,.35);border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative">
+        <div style="position:absolute;top:0;right:0;background:var(--primary);font-size:9px;font-weight:800;color:#fff;padding:2px 8px;border-radius:0 10px 0 7px;letter-spacing:.05em">BEST VALUE</div>
+        <div>
+          <div style="font-size:13px;font-weight:800;color:var(--text)">⭐ FantasyHQ Pro</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Everything · All tools · Full access</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:14px;font-weight:900;color:#ffd700">$7.99<span style="font-size:10px;font-weight:400;color:var(--text3)">/mo</span></div>
+          <button class="btn btn-p" style="font-size:10px;padding:4px 10px;margin-top:4px" onclick="closeModal('proModal');startCheckout('fantasy','monthly')">Get All Access</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="text-align:center;font-size:11px;color:var(--text3)">🔒 Secure checkout via Stripe · Cancel anytime<br><span style="margin-top:5px;display:block">Don't have an account? <span style="color:var(--primary-l);cursor:pointer" onclick="closeModal('proModal');openModal('authModal')">Sign up free first →</span></span></div>
   </div>
 </div>
 
@@ -3210,19 +3244,66 @@
     <!-- BILLING PANEL -->
     <div class="acct-panel" id="acctPanel-billing">
       <div class="acct-section-ttl">Current Plan</div>
-      <div class="acct-plan-card">
+      <div class="acct-plan-card" id="billingCurrentPlan">
         <div>
-          <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">Free Plan</div>
-          <div style="font-size:12px;color:var(--text3)">Access to TradeHQ, PlayerHQ, and core rankings</div>
+          <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px" id="billingPlanName">Free Plan</div>
+          <div style="font-size:12px;color:var(--text3)" id="billingPlanDesc">Access to TradeHQ, PlayerHQ, and core rankings</div>
         </div>
-        <div class="acct-plan-badge">FREE</div>
+        <div class="acct-plan-badge" id="billingPlanBadge">FREE</div>
       </div>
-      <div style="background:linear-gradient(135deg,rgba(26,86,219,.12),rgba(79,134,245,.08));border:1px solid rgba(79,134,245,.25);border-radius:12px;padding:18px;text-align:center">
-        <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px">🚀 Upgrade to Pro</div>
-        <div style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.6">Unlock ValueHQ buy/sell alerts, TeamHQ roster grades, LeagueHQ analysis, and DraftHQ tools.</div>
-        <button class="btn btn-p" style="font-size:13px;padding:10px 28px" onclick="showToast('Pro plan coming soon — stay tuned! 🚀')">Coming Soon →</button>
+
+      <!-- Billing toggle -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:18px 0 14px">
+        <span style="font-size:12px;color:var(--text2);font-weight:600">Monthly</span>
+        <div id="billingCycleToggle" onclick="toggleBillingCycle()" style="width:44px;height:24px;background:var(--primary);border-radius:12px;position:relative;cursor:pointer;transition:background .2s">
+          <div id="billingCycleKnob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:left .2s"></div>
+        </div>
+        <span style="font-size:12px;color:var(--text2);font-weight:600">Annual <span style="color:#22c55e;font-size:10px;font-weight:800">SAVE 40%+</span></span>
       </div>
-      <div style="margin-top:14px;font-size:11px;color:var(--text3);text-align:center">Payment processing powered by Stripe · Secure &amp; encrypted</div>
+
+      <!-- Plan cards -->
+      <div style="display:flex;flex-direction:column;gap:10px" id="billingPlanCards">
+
+        <!-- DraftHQ -->
+        <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:3px">⚡ DraftHQ</div>
+            <div style="font-size:11px;color:var(--text3);line-height:1.5">Draft rankings · ADP data · Positional tiers · Draft simulator</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:16px;font-weight:900;color:var(--primary-l)" id="draftHQPrice">$3.99<span style="font-size:10px;font-weight:400;color:var(--text3)">/mo</span></div>
+            <button class="btn btn-s" style="font-size:11px;padding:5px 12px;margin-top:5px" onclick="startCheckout('draft','monthly')">Subscribe</button>
+          </div>
+        </div>
+
+        <!-- TradeHQ Pro -->
+        <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:3px">🔥 TradeHQ Pro</div>
+            <div style="font-size:11px;color:var(--text3);line-height:1.5">Trade analyzer · Dynasty rankings · FHQ scores · Player values</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:16px;font-weight:900;color:var(--primary-l)" id="tradeHQPrice">$4.99<span style="font-size:10px;font-weight:400;color:var(--text3)">/mo</span></div>
+            <button class="btn btn-s" style="font-size:11px;padding:5px 12px;margin-top:5px" onclick="startCheckout('trade','monthly')">Subscribe</button>
+          </div>
+        </div>
+
+        <!-- FantasyHQ Pro -->
+        <div style="background:linear-gradient(135deg,rgba(26,86,219,.14),rgba(79,134,245,.08));border:1px solid rgba(79,134,245,.35);border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;overflow:hidden">
+          <div style="position:absolute;top:0;right:0;background:var(--primary);font-size:9px;font-weight:800;color:#fff;padding:3px 8px;border-radius:0 12px 0 8px;letter-spacing:.05em">BEST VALUE</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:3px">⭐ FantasyHQ Pro</div>
+            <div style="font-size:11px;color:var(--text3);line-height:1.5">Everything in DraftHQ + TradeHQ Pro · Waiver HQ · Team &amp; League analysis</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:16px;font-weight:900;color:#ffd700" id="fantasyHQPrice">$7.99<span style="font-size:10px;font-weight:400;color:var(--text3)">/mo</span></div>
+            <button class="btn btn-p" style="font-size:11px;padding:5px 12px;margin-top:5px" onclick="startCheckout('fantasy','monthly')">Subscribe</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="margin-top:14px;font-size:11px;color:var(--text3);text-align:center">🔒 Secure checkout powered by Stripe · Cancel anytime</div>
     </div>
 
     <!-- DANGER ZONE PANEL -->
@@ -6782,6 +6863,94 @@ function updateModeChip() {
 // ═══════════════════════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// STRIPE CONFIG
+// ═══════════════════════════════════════════════════════════
+const STRIPE_PK = 'pk_test_51TXG11DvH58soUaLFs2MEGvwvhEEpg8v7rjMWSMZj5HH5Dyv4RQTaYqpNMPo1Lif0CtrgSqcLaGQIJlY7dyvsgHQ00Ck3BwcrD';
+const STRIPE_PRICES = {
+  draft:   { monthly: 'price_1TXPEfDvH58soUaLGhZ9rJV5', annual: 'price_1TXPEfDvH58soUaLZNswHhAr' },
+  trade:   { monthly: 'price_1TXPIjDvH58soUaLDj0bRX3s', annual: 'price_1TXPIjDvH58soUaLDSIGub0W' },
+  fantasy: { monthly: 'price_1TXPNaDvH58soUaL6t2hQzQO', annual: 'price_1TXPNaDvH58soUaLkacA2xUc' },
+};
+const STRIPE_PLAN_LABELS = {
+  draft:   { name: 'DraftHQ',        monthly: '$3.99/mo', annual: '$24.99/yr' },
+  trade:   { name: 'TradeHQ Pro',    monthly: '$4.99/mo', annual: '$34.99/yr' },
+  fantasy: { name: 'FantasyHQ Pro',  monthly: '$7.99/mo', annual: '$54.99/yr' },
+};
+
+let _stripeInstance = null;
+function getStripe() {
+  if (!_stripeInstance) _stripeInstance = Stripe(STRIPE_PK);
+  return _stripeInstance;
+}
+
+let _billingCycle = 'monthly'; // 'monthly' | 'annual'
+
+function toggleBillingCycle() {
+  _billingCycle = _billingCycle === 'monthly' ? 'annual' : 'monthly';
+  const knob = document.getElementById('billingCycleKnob');
+  if (knob) knob.style.left = _billingCycle === 'annual' ? '23px' : '3px';
+  // Update all price displays and button onclick
+  const labels = STRIPE_PLAN_LABELS;
+  const draftEl = document.getElementById('draftHQPrice');
+  const tradeEl = document.getElementById('tradeHQPrice');
+  const fantEl  = document.getElementById('fantasyHQPrice');
+  const suffix  = _billingCycle === 'annual' ? '/yr' : '/mo';
+  if (draftEl) draftEl.innerHTML = (_billingCycle === 'annual' ? '$24.99' : '$3.99') + `<span style="font-size:10px;font-weight:400;color:var(--text3)">${suffix}</span>`;
+  if (tradeEl) tradeEl.innerHTML = (_billingCycle === 'annual' ? '$34.99' : '$4.99') + `<span style="font-size:10px;font-weight:400;color:var(--text3)">${suffix}</span>`;
+  if (fantEl)  fantEl.innerHTML  = (_billingCycle === 'annual' ? '$54.99' : '$7.99') + `<span style="font-size:10px;font-weight:400;color:var(--text3)">${suffix}</span>`;
+  // Update button handlers
+  document.querySelectorAll('[onclick*="startCheckout"]').forEach(btn => {
+    const m = btn.getAttribute('onclick').match(/startCheckout\('(\w+)'/);
+    if (m) btn.setAttribute('onclick', btn.getAttribute('onclick').replace(/startCheckout\('(\w+)','(monthly|annual)'\)/, `startCheckout('${m[1]}','${_billingCycle}')`));
+  });
+}
+
+async function startCheckout(plan, cycle) {
+  if (!S.auth) {
+    showToast('Please sign in or create a free account first.');
+    openModal('authModal');
+    return;
+  }
+  const priceId = STRIPE_PRICES[plan]?.[cycle];
+  if (!priceId) { showToast('Plan not found. Please try again.'); return; }
+  showToast('Redirecting to secure checkout…');
+  try {
+    const stripe = getStripe();
+    const result = await stripe.redirectToCheckout({
+      lineItems: [{ price: priceId, quantity: 1 }],
+      mode: 'subscription',
+      successUrl: 'https://www.myfantasyhq.com/?checkout=success',
+      cancelUrl:  'https://www.myfantasyhq.com/?checkout=cancel',
+      customerEmail: S.auth.email || undefined,
+    });
+    if (result.error) showToast('Checkout error: ' + result.error.message);
+  } catch(e) {
+    showToast('Could not start checkout. Please try again.');
+    console.error('[Stripe]', e);
+  }
+}
+
+function handleCheckoutReturn() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('checkout') === 'success') {
+    history.replaceState({}, '', window.location.pathname);
+    setTimeout(() => {
+      showToast('🎉 Welcome to the HQ! Your subscription is active.');
+      // Update billing panel to show active plan
+      const nameEl = document.getElementById('billingPlanName');
+      const descEl = document.getElementById('billingPlanDesc');
+      const badgeEl = document.getElementById('billingPlanBadge');
+      if (nameEl)  nameEl.textContent  = 'FantasyHQ Pro';
+      if (descEl)  descEl.textContent  = 'Full access to all HQ tools';
+      if (badgeEl) { badgeEl.textContent = 'PRO'; badgeEl.style.background = 'rgba(26,86,219,.25)'; badgeEl.style.color = '#60a5fa'; }
+    }, 800);
+  } else if (params.get('checkout') === 'cancel') {
+    history.replaceState({}, '', window.location.pathname);
+    showToast('Checkout cancelled — no charge was made.');
+  }
+}
+
 // ═══════════════════════════════════════════════════════════
 // PREMIUM FEATURE GATING
 // ═══════════════════════════════════════════════════════════
@@ -11625,6 +11794,9 @@ function toggleLeagueTradePlayer(pid, side) {
 // EVENT LISTENERS
 // ═══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
+  // Handle Stripe checkout return (?checkout=success|cancel)
+  handleCheckoutReturn();
+
   // Nav tabs — skip mobile settings button (it uses data-mob-settings, not a real tab)
   document.querySelectorAll('[data-tab]').forEach(btn => {
     if (btn.hasAttribute('data-mob-settings')) return;
