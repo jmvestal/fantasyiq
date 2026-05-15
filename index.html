@@ -3078,49 +3078,58 @@
 <div class="mo" id="proModal" onclick="moBackdropClose(event,'proModal')">
   <div class="mo-box" style="max-width:480px">
     <button class="mo-close" onclick="closeModal('proModal')">✕</button>
-    <div style="text-align:center;margin-bottom:16px">
-      <div style="font-size:28px;margin-bottom:8px">⚡</div>
-      <div style="font-size:20px;font-weight:800;margin-bottom:6px">Unlock This Feature</div>
-      <div style="font-size:13px;color:var(--text2);line-height:1.6" id="proModalFeatureText">This feature requires a paid plan.</div>
+    <div style="text-align:center;margin-bottom:14px">
+      <div style="font-size:26px;margin-bottom:6px">⚡</div>
+      <div style="font-size:19px;font-weight:800;margin-bottom:5px">Unlock This Feature</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6" id="proModalFeatureText">This feature requires a paid plan.</div>
+    </div>
+
+    <!-- Billing cycle toggle -->
+    <div style="display:flex;align-items:center;justify-content:center;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:4px;margin-bottom:14px;gap:4px">
+      <button id="pmCycleMonthly" onclick="setModalCycle('monthly')" style="flex:1;padding:7px 0;border-radius:7px;border:none;cursor:pointer;font-size:12px;font-weight:700;background:var(--primary);color:#fff;transition:all .15s">Monthly</button>
+      <button id="pmCycleAnnual" onclick="setModalCycle('annual')" style="flex:1;padding:7px 0;border-radius:7px;border:none;cursor:pointer;font-size:12px;font-weight:700;background:transparent;color:var(--text3);transition:all .15s">Annual &nbsp;<span style="color:#22c55e;font-size:10px;font-weight:800">SAVE 40%+</span></button>
     </div>
 
     <!-- Plan cards -->
-    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
 
       <!-- DraftHQ -->
-      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px">
         <div>
           <div style="font-size:13px;font-weight:800;color:var(--text)">⚡ DraftHQ</div>
           <div style="font-size:11px;color:var(--text3);margin-top:2px">Draft ranks · ADP · Tiers · Simulator</div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:14px;font-weight:900;color:var(--primary-l)">$3.99<span style="font-size:10px;font-weight:400;color:var(--text3)">/mo</span></div>
-          <button class="btn btn-s" style="font-size:10px;padding:4px 10px;margin-top:4px" onclick="closeModal('proModal');startCheckout('draft','monthly')">Get DraftHQ</button>
+          <div style="font-size:14px;font-weight:900;color:var(--primary-l)" id="pmDraftPrice">$3.99<span style="font-size:10px;font-weight:400;color:var(--text3)">/mo</span></div>
+          <div style="font-size:10px;color:#22c55e;font-weight:700;min-height:14px" id="pmDraftSave"></div>
+          <button class="btn btn-s" style="font-size:10px;padding:4px 10px;margin-top:3px" id="pmDraftBtn" onclick="closeModal('proModal');startCheckout('draft','monthly')">Get DraftHQ</button>
         </div>
       </div>
 
       <!-- TradeHQ Pro -->
-      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px">
         <div>
           <div style="font-size:13px;font-weight:800;color:var(--text)">🔥 TradeHQ Pro</div>
           <div style="font-size:11px;color:var(--text3);margin-top:2px">Trade tool · Dynasty ranks · FHQ scores</div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:14px;font-weight:900;color:var(--primary-l)">$4.99<span style="font-size:10px;font-weight:400;color:var(--text3)">/mo</span></div>
-          <button class="btn btn-s" style="font-size:10px;padding:4px 10px;margin-top:4px" onclick="closeModal('proModal');startCheckout('trade','monthly')">Get TradeHQ</button>
+          <div style="font-size:14px;font-weight:900;color:var(--primary-l)" id="pmTradePrice">$4.99<span style="font-size:10px;font-weight:400;color:var(--text3)">/mo</span></div>
+          <div style="font-size:10px;color:#22c55e;font-weight:700;min-height:14px" id="pmTradeSave"></div>
+          <button class="btn btn-s" style="font-size:10px;padding:4px 10px;margin-top:3px" id="pmTradeBtn" onclick="closeModal('proModal');startCheckout('trade','monthly')">Get TradeHQ</button>
         </div>
       </div>
 
       <!-- FantasyHQ Pro -->
-      <div style="background:linear-gradient(135deg,rgba(26,86,219,.14),rgba(79,134,245,.08));border:1px solid rgba(79,134,245,.35);border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative">
+      <div style="background:linear-gradient(135deg,rgba(26,86,219,.14),rgba(79,134,245,.08));border:1px solid rgba(79,134,245,.35);border-radius:10px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative">
         <div style="position:absolute;top:0;right:0;background:var(--primary);font-size:9px;font-weight:800;color:#fff;padding:2px 8px;border-radius:0 10px 0 7px;letter-spacing:.05em">BEST VALUE</div>
         <div>
           <div style="font-size:13px;font-weight:800;color:var(--text)">⭐ FantasyHQ Pro</div>
           <div style="font-size:11px;color:var(--text3);margin-top:2px">Everything · All tools · Full access</div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:14px;font-weight:900;color:#ffd700">$7.99<span style="font-size:10px;font-weight:400;color:var(--text3)">/mo</span></div>
-          <button class="btn btn-p" style="font-size:10px;padding:4px 10px;margin-top:4px" onclick="closeModal('proModal');startCheckout('fantasy','monthly')">Get All Access</button>
+          <div style="font-size:14px;font-weight:900;color:#ffd700" id="pmFantasyPrice">$7.99<span style="font-size:10px;font-weight:400;color:var(--text3)">/mo</span></div>
+          <div style="font-size:10px;color:#22c55e;font-weight:700;min-height:14px" id="pmFantasySave"></div>
+          <button class="btn btn-p" style="font-size:10px;padding:4px 10px;margin-top:3px" id="pmFantasyBtn" onclick="closeModal('proModal');startCheckout('fantasy','monthly')">Get All Access</button>
         </div>
       </div>
 
@@ -6886,24 +6895,68 @@ function getStripe() {
 
 let _billingCycle = 'monthly'; // 'monthly' | 'annual'
 
-function toggleBillingCycle() {
-  _billingCycle = _billingCycle === 'monthly' ? 'annual' : 'monthly';
+const _PRICES = {
+  monthly: { draft: { amt: '$3.99',  sfx: '/mo', save: '' },
+             trade: { amt: '$4.99',  sfx: '/mo', save: '' },
+             fantasy:{ amt: '$7.99', sfx: '/mo', save: '' } },
+  annual:  { draft: { amt: '$24.99', sfx: '/yr', save: 'Save 48% vs monthly' },
+             trade: { amt: '$34.99', sfx: '/yr', save: 'Save 42% vs monthly' },
+             fantasy:{ amt: '$54.99', sfx: '/yr', save: 'Save 43% vs monthly' } },
+};
+
+function setModalCycle(cycle) {
+  _billingCycle = cycle;
+  const isAnnual = cycle === 'annual';
+  const p = _PRICES[cycle];
+
+  // ── Billing panel toggle knob ──
   const knob = document.getElementById('billingCycleKnob');
-  if (knob) knob.style.left = _billingCycle === 'annual' ? '23px' : '3px';
-  // Update all price displays and button onclick
-  const labels = STRIPE_PLAN_LABELS;
-  const draftEl = document.getElementById('draftHQPrice');
-  const tradeEl = document.getElementById('tradeHQPrice');
-  const fantEl  = document.getElementById('fantasyHQPrice');
-  const suffix  = _billingCycle === 'annual' ? '/yr' : '/mo';
-  if (draftEl) draftEl.innerHTML = (_billingCycle === 'annual' ? '$24.99' : '$3.99') + `<span style="font-size:10px;font-weight:400;color:var(--text3)">${suffix}</span>`;
-  if (tradeEl) tradeEl.innerHTML = (_billingCycle === 'annual' ? '$34.99' : '$4.99') + `<span style="font-size:10px;font-weight:400;color:var(--text3)">${suffix}</span>`;
-  if (fantEl)  fantEl.innerHTML  = (_billingCycle === 'annual' ? '$54.99' : '$7.99') + `<span style="font-size:10px;font-weight:400;color:var(--text3)">${suffix}</span>`;
-  // Update button handlers
-  document.querySelectorAll('[onclick*="startCheckout"]').forEach(btn => {
-    const m = btn.getAttribute('onclick').match(/startCheckout\('(\w+)'/);
-    if (m) btn.setAttribute('onclick', btn.getAttribute('onclick').replace(/startCheckout\('(\w+)','(monthly|annual)'\)/, `startCheckout('${m[1]}','${_billingCycle}')`));
+  if (knob) knob.style.left = isAnnual ? '23px' : '3px';
+
+  // ── proModal pill buttons ──
+  const mBtn  = document.getElementById('pmCycleMonthly');
+  const aBtn  = document.getElementById('pmCycleAnnual');
+  if (mBtn) { mBtn.style.background = isAnnual ? 'transparent' : 'var(--primary)'; mBtn.style.color = isAnnual ? 'var(--text3)' : '#fff'; }
+  if (aBtn) { aBtn.style.background = isAnnual ? 'var(--primary)' : 'transparent'; aBtn.style.color = isAnnual ? '#fff' : 'var(--text3)'; }
+
+  // ── Helper to set a price element ──
+  function setPrice(id, plan, color) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = `${p[plan].amt}<span style="font-size:10px;font-weight:400;color:var(--text3)">${p[plan].sfx}</span>`;
+  }
+  function setSave(id, plan) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = p[plan].save;
+  }
+  function setBtn(id, plan) {
+    const el = document.getElementById(id);
+    if (el) el.setAttribute('onclick', el.getAttribute('onclick').replace(/'(monthly|annual)'/, `'${cycle}'`));
+  }
+
+  // ── proModal prices ──
+  setPrice('pmDraftPrice',   'draft');
+  setPrice('pmTradePrice',   'trade');
+  setPrice('pmFantasyPrice', 'fantasy');
+  setSave('pmDraftSave',     'draft');
+  setSave('pmTradeSave',     'trade');
+  setSave('pmFantasySave',   'fantasy');
+  setBtn('pmDraftBtn',       'draft');
+  setBtn('pmTradeBtn',       'trade');
+  setBtn('pmFantasyBtn',     'fantasy');
+
+  // ── Billing panel prices ──
+  setPrice('draftHQPrice',   'draft');
+  setPrice('tradeHQPrice',   'trade');
+  setPrice('fantasyHQPrice', 'fantasy');
+
+  // Update billing panel subscribe buttons (they use inline onclick with current cycle)
+  document.querySelectorAll('#billingPlanCards [onclick*="startCheckout"]').forEach(btn => {
+    btn.setAttribute('onclick', btn.getAttribute('onclick').replace(/'(monthly|annual)'/, `'${cycle}'`));
   });
+}
+
+function toggleBillingCycle() {
+  setModalCycle(_billingCycle === 'monthly' ? 'annual' : 'monthly');
 }
 
 async function startCheckout(plan, cycle) {
