@@ -2229,7 +2229,9 @@
               <div class="dsim-setup-sub">Rankings update live — mark picks as they happen and get best-value recommendations each round</div>
             </div>
             <div class="dsim-setup-btns">
-              <button class="btn btn-s btn-sm" id="wizUseLeagueBtn" style="display:none" onclick="wizUseLeague()">My League</button>
+              <select id="wizLeagueSel" class="dsim-sel" style="display:none;min-width:180px" onchange="wizUseLeagueFromSelect(this.value)">
+                <option value="">Use League Settings…</option>
+              </select>
               <button class="btn btn-p btn-sm" onclick="resetWizard()">↺ Reset</button>
             </div>
           </div>
@@ -13671,6 +13673,14 @@ function _refreshLeagueSels() {
     }
   });
 
+  // Draft HQ Assistant league selector — show when any league connected
+  const wizLgSel = document.getElementById('wizLeagueSel');
+  if (wizLgSel) {
+    const show = leagues.length >= 1;
+    wizLgSel.style.display = show ? '' : 'none';
+    if (show) wizLgSel.innerHTML = `<option value="">Use League Settings…</option>${leagueOpts}`;
+  }
+
   // Draft Sim league selector — show when any league connected; includes No League
   const dsimLgSel = document.getElementById('dsimLeagueSel');
   const dsimLgGrp = document.getElementById('dsimLeagueGrp');
@@ -14161,9 +14171,7 @@ function dsimUpdateSetup() {
   // Show sim league dropdown group when any leagues are connected
   const dsimLgGrp = document.getElementById('dsimLeagueGrp');
   if (dsimLgGrp) dsimLgGrp.style.display = (S.connectedLeagues?.length >= 1) ? 'flex' : 'none';
-  // Show wizard My League button when a league is connected
-  const wizLeagueBtn = document.getElementById('wizUseLeagueBtn');
-  if (wizLeagueBtn) wizLeagueBtn.style.display = S.connectedLeague ? 'inline-flex' : 'none';
+  // Wizard league dropdown visibility is handled by _refreshLeagueSels()
 }
 
 function dsimOnLeagueSel(leagueId) {
@@ -14229,6 +14237,14 @@ function dsimUseLeague() {
 
 function wizUseLeague() {
   _applyLeagueToDraftControls('wiz');
+  initWizard();
+}
+
+function wizUseLeagueFromSelect(leagueId) {
+  if (!leagueId) return; // placeholder option chosen
+  const found = (S.connectedLeagues || []).find(l => l.leagueId === leagueId);
+  if (!found) return;
+  _applyLeagueToDraftControls('wiz', found);
   initWizard();
 }
 
