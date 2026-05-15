@@ -5642,8 +5642,21 @@ function addSugPairToTrade(id1, id2) {
 // RENDER TRADE
 // ═══════════════════════════════════════════════════════════
 function renderTrade() {
-  const ts = document.getElementById('tradeModeSelect');
-  if (ts) ts.value = S.settings.mode || 'dynasty';
+  // Update TradeHQ default settings chips
+  const { mode, size, qb, scoring, te } = S.settings;
+  const _qbLabel      = qb === 'sf' ? 'Superflex' : qb === '2qb' ? '2-QB' : '1-QB';
+  const _scoringLabel = scoring === 'half' ? 'Half PPR' : scoring === 'std' ? 'STD' : 'PPR';
+  const _teLabel      = te === 'off' ? 'Std TE' : 'TE Premium';
+  const _modeLabel    = mode === 'dynasty' ? 'Dynasty' : 'Redraft';
+  const _modeEl = document.getElementById('tradeDefaultMode');
+  if (_modeEl) {
+    _modeEl.textContent = _modeLabel;
+    _modeEl.classList.toggle('mode-dynasty', mode === 'dynasty');
+    _modeEl.classList.toggle('mode-redraft', mode === 'redraft');
+  }
+  const _chips = document.querySelectorAll('#tradeDefaultSettings .hq-default-chip:not(#tradeDefaultMode)');
+  const _labels = [`${size}-Team`, _qbLabel, _scoringLabel, _teLabel];
+  _chips.forEach((el, i) => { if (_labels[i]) el.textContent = _labels[i]; });
 
   const vA = adjustedTotal(S.tradeA), vB = adjustedTotal(S.tradeB);
   const { grade, cls, verdict, pct } = calcGrade(vA, vB);
