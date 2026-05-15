@@ -6026,7 +6026,8 @@ function renderValuesTable() {
     // Remove FA / teamless players AFTER sorting so sort order is unchanged
     .filter(p => p.position === 'PICK' || (p.team && p.team !== 'FA' && p.team !== 'Free Agent' && p.team !== 'N/A'))
     // Dynasty mode + FHQ data loaded: hide players not in pipeline (inactive/retired/no 2025 data)
-    .filter(p => !isDynasty || !FHQ_MAP || p.position === 'PICK' || p._hasFhq === true);
+    .filter(p => !isDynasty || !FHQ_MAP || p.position === 'PICK' || p._hasFhq === true
+              || ['DE','DT','LB','CB','S','FS','SS','DB','OLB','ILB','MLB','DL','K','DEF','DST'].includes(p.position));
 
   const maxV = Math.max(...rows.map(r=>r._val), 1);
   const tbody = document.getElementById('valTbody');
