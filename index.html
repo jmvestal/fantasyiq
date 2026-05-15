@@ -2040,6 +2040,7 @@
         <div>
           <div class="sec-ttl"><em>Player</em><span>HQ</span></div>
           <div class="sec-sub" id="valTableSub">Adjusted for your league settings</div>
+          <div id="playerHeaderChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
         </div>
         <!-- League selector — visible when a league is connected; includes No League option -->
         <select id="valTabLgSel" class="trade-partner-sel" style="display:none;font-size:12px;padding:6px 10px" onchange="switchLeagueGlobal(this.value)"></select>
@@ -2165,17 +2166,9 @@
         <div>
           <div class="sec-ttl"><em>League</em><span>HQ</span></div>
           <div class="sec-sub" id="leagueAnalyzerSub">Connect a league to rank all teams</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-            <span class="hq-default-chip" id="leagueDefaultMode">Dynasty</span>
-            <span class="hq-default-chip">12 Team</span>
-            <span class="hq-default-chip">Superflex</span>
-            <span class="hq-default-chip">Half PPR</span>
-            <span class="hq-default-chip">Std TE</span>
-          </div>
+          <div id="leagueHeaderChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <!-- League switcher (visible when 2+ leagues connected) -->
-          <select id="leagueTabLgSel" class="trade-partner-sel" style="display:none;font-size:12px;padding:6px 10px" onchange="switchLeagueGlobal(this.value)"></select>
           <div class="league-view-toggle" id="leagueViewToggle">
             <button class="lvt-btn on" data-lv="dynasty" onclick="setLeagueView('dynasty')">🏆 Dynasty</button>
             <button class="lvt-btn" data-lv="winnow" onclick="setLeagueView('winnow')">⚡ Win Now</button>
@@ -4919,7 +4912,7 @@ function calcValue(p, _over) {
   // use that value directly — it is already calibrated for this format.
   // Only league size is applied on top (scenarios don't encode league size).
   // ══════════════════════════════════════════════════════════════
-  if (pos !== 'PICK') {
+  if (pos !== 'PICK' && !DST_POS.has(pos) && pos !== 'K') {
     const sk  = scenarioKey({ mode, qb, scoring, te });
     const pid = normName(p.full_name || '');
     // For dynasty skill positions, scen_dyn_sf_hppr_note (position-specific files:
@@ -5663,24 +5656,52 @@ function addSugPairToTrade(id1, id2) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// SHARED SETTINGS CHIPS UPDATER
+// Rebuilds PlayerHQ + TradeHQ chip rows from S.settings on every change.
+// LeagueHQ chips come from renderLeagueAnalyzer when a league is connected.
+// ═══════════════════════════════════════════════════════════
+function _updateAllSettingsChips() {
+  const { mode, size, qb, scoring, te } = S.settings;
+  const isDynasty    = mode === 'dynasty';
+  const modeLabel    = isDynasty ? 'Dynasty' : 'Redraft';
+  const modeClass    = isDynasty ? 'mode-dynasty' : 'mode-redraft';
+  const qbLabel      = qb === 'sf' ? 'Superflex' : qb === '2qb' ? '2-QB' : '1-QB';
+  const scoringLabel = scoring === 'half' ? 'Half PPR' : scoring === 'std' ? 'STD' : 'PPR';
+  const teLabel      = te === 'off' ? 'Std TE' : 'TE Premium';
+  const sizeLabel    = `${size}-Team`;
+
+  const chipsHtml = [
+    `<span class="hq-default-chip ${modeClass}">${modeLabel}</span>`,
+    `<span class="hq-default-chip">${sizeLabel}</span>`,
+    `<span class="hq-default-chip">${qbLabel}</span>`,
+    `<span class="hq-default-chip">${scoringLabel}</span>`,
+    `<span class="hq-default-chip">${teLabel}</span>`,
+  ].join('');
+
+  // Rebuild all three chip rows — always from S.settings.
+  // applyLeagueSettings() already copies league settings into S.settings,
+  // so these chips stay in sync whether the source is a league connect or a manual toggle.
+  ['playerHeaderChips', 'leagueHeaderChips'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = chipsHtml;
+  });
+
+  // TradeHQ: update existing spans in-place (keeps static IDs referenced elsewhere)
+  const modeEl = document.getElementById('tradeDefaultMode');
+  if (modeEl) {
+    modeEl.textContent = modeLabel;
+    modeEl.className = `hq-default-chip ${modeClass}`;
+  }
+  const tradeChips = document.querySelectorAll('#tradeDefaultSettings .hq-default-chip:not(#tradeDefaultMode)');
+  const tradeLabels = [sizeLabel, qbLabel, scoringLabel, teLabel];
+  tradeChips.forEach((el, i) => { if (tradeLabels[i] !== undefined) el.textContent = tradeLabels[i]; });
+}
+
+// ═══════════════════════════════════════════════════════════
 // RENDER TRADE
 // ═══════════════════════════════════════════════════════════
 function renderTrade() {
-  // Update TradeHQ default settings chips
-  const { mode, size, qb, scoring, te } = S.settings;
-  const _qbLabel      = qb === 'sf' ? 'Superflex' : qb === '2qb' ? '2-QB' : '1-QB';
-  const _scoringLabel = scoring === 'half' ? 'Half PPR' : scoring === 'std' ? 'STD' : 'PPR';
-  const _teLabel      = te === 'off' ? 'Std TE' : 'TE Premium';
-  const _modeLabel    = mode === 'dynasty' ? 'Dynasty' : 'Redraft';
-  const _modeEl = document.getElementById('tradeDefaultMode');
-  if (_modeEl) {
-    _modeEl.textContent = _modeLabel;
-    _modeEl.classList.toggle('mode-dynasty', mode === 'dynasty');
-    _modeEl.classList.toggle('mode-redraft', mode === 'redraft');
-  }
-  const _chips = document.querySelectorAll('#tradeDefaultSettings .hq-default-chip:not(#tradeDefaultMode)');
-  const _labels = [`${size}-Team`, _qbLabel, _scoringLabel, _teLabel];
-  _chips.forEach((el, i) => { if (_labels[i]) el.textContent = _labels[i]; });
+  _updateAllSettingsChips();
 
   const vA = adjustedTotal(S.tradeA), vB = adjustedTotal(S.tradeB);
   const { grade, cls, verdict, pct } = calcGrade(vA, vB);
@@ -5969,8 +5990,9 @@ function _syncValSettingsBar() {
 }
 
 function renderValuesTable() {
-  // Sync all settings dropdowns and show/hide settings bar
+  // Sync all settings dropdowns and update settings chips immediately
   _syncValSettingsBar();
+  _updateAllSettingsChips();
 
   const q = document.getElementById('tblSearch').value.toLowerCase();
   const { col, dir } = S.tableSort;
@@ -6094,14 +6116,10 @@ function renderValuesTable() {
     </tr>`;
   }).join('') || `<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--text3)">No players found</td></tr>`;
 
-  // update sub
-  const modeStr   = isDynasty ? 'Dynasty' : 'Redraft';
-  const qbStr     = qb === 'sf' ? 'SF' : qb === '2qb' ? '2-QB' : '1-QB';
-  const scoringStr = scoring === 'half' ? 'Half PPR' : scoring === 'std' ? 'STD' : 'PPR';
-  const teStr      = S.settings.te === 'off' ? 'Std TE' : 'TE Premium';
+  // Subtitle shows just the count — settings are shown in the chips above
   document.getElementById('valTableSub').textContent = pos === 'ROOKIE'
-    ? `${rows.length} rookies · ${modeStr} · ${size}-Team · ${qbStr} · ${scoringStr} · ${teStr}`
-    : `${rows.length} players · ${modeStr} · ${size}-Team · ${qbStr} · ${scoringStr} · ${teStr}`;
+    ? `${rows.length} rookies ranked`
+    : `${rows.length} players ranked`;
 
   // Update value column header to match current mode
   const valTh = document.querySelector('#valTable thead th:nth-child(3)');
@@ -6883,17 +6901,8 @@ function setSetting(key, val) {
   document.querySelectorAll(`[data-s="${key}"]`).forEach(btn => {
     btn.classList.toggle('on', String(btn.dataset.v) === String(val));
   });
-  // Keep mode chips in sync across tabs
-  if (key === 'mode') {
-    ['tradeDefaultMode','leagueDefaultMode'].forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.textContent = val === 'dynasty' ? 'Dynasty' : 'Redraft';
-      el.classList.toggle('mode-dynasty', val === 'dynasty');
-      el.classList.toggle('mode-redraft', val === 'redraft');
-    });
-  }
-  // Sync all PlayerHQ settings dropdowns
+  // Sync all settings chips across tabs and PlayerHQ dropdowns
+  _updateAllSettingsChips();
   _syncValSettingsBar();
 
   updateModeChip();
@@ -9821,6 +9830,8 @@ async function init() {
         btn.classList.toggle('on', String(btn.dataset.v) === String(S.settings[k]));
       });
     });
+    // Sync all header chips to loaded settings immediately
+    _updateAllSettingsChips();
   } catch(e){}
 
   S.sourceValues = {};
@@ -11090,6 +11101,8 @@ async function silentSleeperRefresh(lg, { showToastOnSuccess = false } = {}) {
       renderRosterList();
       if (showToastOnSuccess) showToast('🏈 Roster synced from Sleeper');
       if (document.getElementById('tab-home')?.classList.contains('active')) renderHome();
+      // Refresh league tab chips/data if it's currently visible
+      if (document.getElementById('tab-league')?.classList.contains('active')) renderLeagueAnalyzer();
     } else {
       // League refreshed in background — just update the in-memory array so it's fresh next time user switches
       const idx = (S.connectedLeagues||[]).findIndex(l => l.leagueId === updatedLeague.leagueId);
@@ -11547,6 +11560,17 @@ async function renderLeagueAnalyzer() {
   const stats  = document.getElementById('leagueAnalyzerStats');
   const sub    = document.getElementById('leagueAnalyzerSub');
 
+  // Chips are now handled entirely by _updateAllSettingsChips() which reads S.settings.
+  // applyLeagueSettings() copies lg.settings into S.settings when a league connects,
+  // so the chips are always in sync without any extra work here.
+
+  // Subtitle: hide when no league, show league info when connected
+  if (!lg) {
+    sub.style.display = 'none';
+  } else {
+    sub.style.display = '';
+  }
+
   if (!lg || !lg.allTeams?.length) {
     empty.style.display = 'block';
     stats.style.display = 'none';
@@ -11568,7 +11592,7 @@ async function renderLeagueAnalyzer() {
     `<span class="info-chip">${leagueIsDynasty ? '🏆 Dynasty' : '📅 Redraft'}</span>`,
     `<span class="info-chip">${lg.totalTeams}-Team</span>`,
     `<span class="info-chip">⚙️ ${qbLabel}</span>`,
-    `<span class="info-chip">${ls.scoring?.toUpperCase() || 'PPR'}</span>`,
+    `<span class="info-chip">${ls.scoring === 'half' ? 'Half PPR' : ls.scoring === 'std' ? 'STD' : 'PPR'}</span>`,
     teLabel ? `<span class="info-chip" style="color:var(--warn)">TE+</span>` : '',
     `<span class="info-chip" style="color:var(--primary-l)">📋 ${scopeLabel}</span>`,
   ].filter(Boolean).join('');
