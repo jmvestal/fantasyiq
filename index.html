@@ -58,6 +58,8 @@
     /* ── HEADER ─────────────────────────── */
     .hdr{background:var(--bg);border-bottom:none;box-shadow:none;padding:0 20px 0 0;position:sticky;top:0;z-index:100}
     .hdr-inner{display:flex;align-items:center;position:relative;max-width:1440px;margin:0 auto;height:204px;padding:0}
+    .hdr-logo-wrap{cursor:pointer;position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;pointer-events:none}
+    .hdr-logo-img{height:200px;width:auto;pointer-events:auto;cursor:pointer}
     .hdr-spacer{flex:1;min-width:0}
     .hdr-right{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-left:auto;flex-shrink:0;position:relative;z-index:1}
     .logo{font-size:32px;font-weight:900;font-style:italic;letter-spacing:1px;white-space:nowrap;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase}
@@ -878,7 +880,8 @@
       .mob-tab-bar{display:block}
       .nav{display:none}
       .right-nav{display:none}
-      .hdr-inner{gap:6px;height:50px}
+      .hdr-inner{gap:6px;height:60px}
+      .hdr-logo-img{height:50px}
       .logo{font-size:22px;letter-spacing:-1px}
       body.landing-mode .hdr-inner{display:flex;justify-content:space-between;height:58px}
       body.landing-mode .hdr-nav-links{display:none}
@@ -923,7 +926,8 @@
       .wizard-roster{grid-template-columns:repeat(2,1fr)}
       .mob-settings-grid{grid-template-columns:1fr}
       .draft-grid{grid-template-columns:1fr}
-      .hdr-inner{height:46px}
+      .hdr-inner{height:54px}
+      .hdr-logo-img{height:42px}
       .logo{font-size:19px}
       .auth-btn{padding:4px 9px;font-size:11px}
       .panel{padding:12px}
@@ -1394,8 +1398,8 @@
       <button class="hdr-nav-link" onclick="switchTab('draft')"><em>Draft</em><span>HQ</span></button>
     </div>
     <!-- Center: Logo -->
-    <div onclick="switchTab('home')" style="cursor:pointer;position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;pointer-events:none" title="Home">
-      <img src="fantasy-hq-transparent-logo.png" alt="Fantasy HQ" style="height:200px;width:auto;pointer-events:auto;cursor:pointer" onclick="switchTab('home')">
+    <div class="hdr-logo-wrap" onclick="switchTab('home')" title="Home">
+      <img src="fantasy-hq-transparent-logo.png" alt="Fantasy HQ" class="hdr-logo-img" onclick="switchTab('home')">
     </div>
         <!-- Right: search + auth -->
     <div class="hdr-right">
