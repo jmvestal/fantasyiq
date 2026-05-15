@@ -6740,6 +6740,9 @@ function setSetting(key, val) {
   _syncValSettingsBar();
 
   updateModeChip();
+  // Re-apply engine/FHQ scores when mode changes so dynasty↔redraft toggle
+  // always shows the right scores (FHQ for dynasty, engine for redraft)
+  if (key === 'mode') applyEngineScores();
   renderTrade();
   renderValuesTable();
   if (S.sugGive.length) computeSuggest();
