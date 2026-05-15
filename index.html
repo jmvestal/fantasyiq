@@ -3362,7 +3362,7 @@
 // STATE
 // ═══════════════════════════════════════════════════════════
 const S = {
-  settings: { mode:'dynasty', size:12, qb:'sf', scoring:'ppr', te:'off', pkgAdj:true, rookieOpt:50 },
+  settings: { mode:'dynasty', size:12, qb:'sf', scoring:'half', te:'off', pkgAdj:true, rookieOpt:50 },
   players: [],
   tradeA: [], tradeB: [],
   sugGive: [],
@@ -9755,12 +9755,18 @@ async function init() {
   console.log('[FantasyIQ] v2026-05-12c — init');
   // ── 1. SYNC SETUP ────────────────────────────────────────────────
   try {
+    const SETTINGS_VERSION = 3; // bump this to reset all users to new defaults
     const saved = JSON.parse(localStorage.getItem('fantasyiq_settings')||'{}');
-    if (saved.mode)    S.settings.mode    = saved.mode;
-    if (saved.size)    S.settings.size    = parseInt(saved.size);
-    if (saved.qb)      S.settings.qb      = saved.qb;
-    if (saved.scoring) S.settings.scoring = saved.scoring;
-    if (saved.te)      S.settings.te      = saved.te;
+    if ((saved._v || 0) >= SETTINGS_VERSION) {
+      // Only restore settings if they're on the current version
+      if (saved.mode)    S.settings.mode    = saved.mode;
+      if (saved.size)    S.settings.size    = parseInt(saved.size);
+      if (saved.qb)      S.settings.qb      = saved.qb;
+      if (saved.scoring) S.settings.scoring = saved.scoring;
+      if (saved.te)      S.settings.te      = saved.te;
+    }
+    // Always stamp current version when saving
+    S.settings._v = SETTINGS_VERSION;
     if (typeof saved.rookieOpt === 'number') {
       S.settings.rookieOpt = saved.rookieOpt;
       document.getElementById('rookieSlider').value = saved.rookieOpt;
