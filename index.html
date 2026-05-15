@@ -8343,6 +8343,7 @@ function _applyRankingsData(data) {
 // FANTASYCALC LIVE VALUES — auto-refreshed daily
 // ═══════════════════════════════════════════════════════════
 let FC_VALUES = null; // { byId: {sleeperId→{dv,rv,trend}}, byName: {lowerName→{…}} }
+let FHQ_MAP   = null; // keyed by lowercase player name → current.json player record
 const FC_CACHE_KEY = 'tradeiq_fc_values';
 const FC_TS_KEY    = 'tradeiq_fc_ts';
 const FC_TTL       = 23 * 60 * 60 * 1000; // 23 hours
@@ -9577,6 +9578,7 @@ async function init() {
   // ── 3. LOAD FULL PLAYER LIST ──────────────────────────────────────
   // Fetch players.json FIRST with zero competition — fast CDN hit.
   // Ranking sources fire AFTER to avoid clogging the connection pool.
+  loadFHQData(); // fire-and-forget: loads FHQ pipeline scores, re-renders when done
   let sleeperPlayers = FALLBACK_PLAYERS;
   try {
     sleeperPlayers = await fetchPlayers();
@@ -12012,6 +12014,25 @@ const TradeIQEngine = (() => {
   return { scorePlayer, preparePlayer, assignTier, parseHeight };
 })();
 
+// Load FHQ pipeline scores from current.json and build name-keyed lookup
+async function loadFHQData() {
+  try {
+    const res = await fetch('/current.json', { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error('current.json ' + res.status);
+    const json = await res.json();
+    FHQ_MAP = {};
+    (json.players || []).forEach(p => {
+      if (p.name) FHQ_MAP[p.name.toLowerCase()] = p;
+    });
+    console.log(`[FHQ] loaded ${Object.keys(FHQ_MAP).length} players from current.json`);
+    // Re-apply engine scores now that FHQ data is available
+    applyEngineScores();
+    try { renderValuesTable(); } catch(e) {}
+  } catch(e) {
+    console.warn('[FHQ] current.json load failed (non-fatal):', e.message);
+  }
+}
+
 // Apply engine scores to all loaded players (runs after consensus values are set)
 function applyEngineScores() {
   if (!S.ready || !S.players?.length) return;
@@ -12024,6 +12045,29 @@ function applyEngineScores() {
   };
   S.players.forEach(p => {
     if (p.position === 'PICK') { p._engineScore = null; return; }
+
+    // Dynasty mode: use real FHQ pipeline scores if available
+    if (mode === 'dynasty' && FHQ_MAP) {
+      const fhq = FHQ_MAP[(p.full_name || '').toLowerCase()];
+      if (fhq && fhq.fhq?.dynasty != null) {
+        const score = Math.round(fhq.fhq.dynasty * 10) / 10;
+        const tierName = fhq.tier?.dynasty_value || '';
+        const tierColor = fhq.tier?.dynasty_value_color || '#6b7280';
+        const ax = fhq.axes || {};
+        p._engineScore = score;
+        p._engineTier  = { label: tierName, cls: 'eng-' + tierName.toLowerCase(), color: tierColor };
+        p._breakdown   = {
+          production:  ax.P_production  ?? 50,
+          age:         ax.A_age         ?? 50,
+          opportunity: ax.O_opportunity ?? 50,
+          physical:    50,
+          efficiency:  ax.E_efficiency  ?? 50,
+        };
+        return;
+      }
+    }
+
+    // Fallback: existing engine for redraft mode or unmatched players
     const prepped  = TradeIQEngine.preparePlayer(p);
     const result   = TradeIQEngine.scorePlayer(prepped, mode, settings, S.players);
     p._engineScore = result.total;
