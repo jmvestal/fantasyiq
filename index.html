@@ -6057,11 +6057,13 @@ function renderValuesTable() {
   }).join('') || `<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--text3)">No players found</td></tr>`;
 
   // update sub
-  const modeStr = isDynasty ? 'Dynasty' : 'Redraft';
-  const qbStr   = qb === 'sf' ? 'SF' : qb === '2qb' ? '2-QB' : '1-QB';
+  const modeStr   = isDynasty ? 'Dynasty' : 'Redraft';
+  const qbStr     = qb === 'sf' ? 'SF' : qb === '2qb' ? '2-QB' : '1-QB';
+  const scoringStr = scoring === 'half' ? 'Half PPR' : scoring === 'std' ? 'STD' : 'PPR';
+  const teStr      = S.settings.te === 'off' ? 'Std TE' : 'TE Premium';
   document.getElementById('valTableSub').textContent = pos === 'ROOKIE'
-    ? `${rows.length} rookies · ${modeStr} · ${size}-Team · ${qbStr} · ${scoring.toUpperCase()}`
-    : `${rows.length} players · ${modeStr} · ${size}-Team · ${qbStr} · ${scoring.toUpperCase()}`;
+    ? `${rows.length} rookies · ${modeStr} · ${size}-Team · ${qbStr} · ${scoringStr} · ${teStr}`
+    : `${rows.length} players · ${modeStr} · ${size}-Team · ${qbStr} · ${scoringStr} · ${teStr}`;
 
   // Update value column header to match current mode
   const valTh = document.querySelector('#valTable thead th:nth-child(3)');
