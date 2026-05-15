@@ -12017,6 +12017,17 @@ const TradeIQEngine = (() => {
   return { scorePlayer, preparePlayer, assignTier, parseHeight };
 })();
 
+// Normalize a player name for FHQ matching:
+// strips suffixes (Jr, Sr, II, III, IV, V), periods, and extra whitespace
+function _fhqNormName(name) {
+  return (name || '')
+    .toLowerCase()
+    .replace(/\./g, '')          // remove periods (Jr. → Jr)
+    .replace(/\s+(jr|sr|ii|iii|iv|v)\s*$/i, '') // strip suffix
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // Load FHQ pipeline scores from current.json and build name-keyed lookup
 async function loadFHQData() {
   try {
@@ -12025,9 +12036,14 @@ async function loadFHQData() {
     const json = await res.json();
     FHQ_MAP = {};
     (json.players || []).forEach(p => {
-      if (p.name) FHQ_MAP[p.name.toLowerCase()] = p;
+      if (!p.name) return;
+      // Index by exact lowercase name AND by suffix-stripped normalized name
+      const exact = p.name.toLowerCase();
+      const norm  = _fhqNormName(p.name);
+      FHQ_MAP[exact] = p;
+      if (norm !== exact) FHQ_MAP[norm] = FHQ_MAP[norm] || p; // don't overwrite exact
     });
-    console.log(`[FHQ] loaded ${Object.keys(FHQ_MAP).length} players from current.json`);
+    console.log(`[FHQ] loaded ${Object.keys(FHQ_MAP).length} entries from current.json`);
     // Re-apply engine scores now that FHQ data is available
     applyEngineScores();
     try { renderValuesTable(); } catch(e) {}
@@ -12051,7 +12067,8 @@ function applyEngineScores() {
 
     // Dynasty mode: use real FHQ pipeline scores if available
     if (mode === 'dynasty' && FHQ_MAP) {
-      const fhq = FHQ_MAP[(p.full_name || '').toLowerCase()];
+      const fhq = FHQ_MAP[(p.full_name || '').toLowerCase()]
+               || FHQ_MAP[_fhqNormName(p.full_name)];
       if (fhq && fhq.fhq?.dynasty != null) {
         const score = Math.round(fhq.fhq.dynasty * 10) / 10;
         const tierName = fhq.tier?.dynasty_value || '';
