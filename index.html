@@ -883,11 +883,12 @@
       .hdr-inner{gap:6px;height:130px}
       .hdr-logo-img{height:115px}
       .logo{font-size:22px;letter-spacing:-1px}
-      /* Compact auth buttons on mobile so they fit beside the large logo */
-      .auth-btn,.auth-btn-signup{padding:4px 8px;font-size:10px;letter-spacing:.2px;border-width:1px}
-      .user-pill{padding:3px 8px;font-size:11px}
+      /* Auth buttons: top-right corner, tight together, small font */
+      .hdr-right{position:absolute;top:6px;right:8px;gap:3px;align-items:flex-start;align-self:flex-start;margin-left:0}
+      .auth-btn,.auth-btn-signup{padding:3px 7px;font-size:9px;letter-spacing:.1px;border-width:1px;border-radius:6px}
+      .user-pill{padding:3px 7px;font-size:10px}
       .user-name{display:none}
-      .user-avatar{width:22px;height:22px;font-size:11px}
+      .user-avatar{width:20px;height:20px;font-size:10px}
       body.landing-mode .hdr-inner{display:flex;justify-content:space-between;height:58px}
       body.landing-mode .hdr-nav-links{display:none}
       body.landing-mode .logo{font-size:28px;flex:1;text-align:center}
@@ -934,7 +935,8 @@
       .hdr-inner{height:110px}
       .hdr-logo-img{height:95px}
       .logo{font-size:19px}
-      .auth-btn,.auth-btn-signup{padding:3px 7px;font-size:9px;letter-spacing:.2px}
+      .hdr-right{top:5px;right:6px;gap:2px}
+      .auth-btn,.auth-btn-signup{padding:2px 6px;font-size:8px;letter-spacing:.1px;border-radius:5px}
       .panel{padding:12px}
       .pos-btn{padding:5px 9px;font-size:11px}
       .badge{font-size:9px;padding:1px 4px}
