@@ -883,12 +883,16 @@
       .hdr-inner{gap:6px;height:130px}
       .hdr-logo-img{height:115px}
       .logo{font-size:22px;letter-spacing:-1px}
-      /* Auth buttons: top-right corner, tight together, small font */
-      .hdr-right{position:absolute;top:6px;right:8px;gap:3px;align-items:flex-start;align-self:flex-start;margin-left:0}
-      .auth-btn,.auth-btn-signup{padding:3px 7px;font-size:9px;letter-spacing:.1px;border-width:1px;border-radius:6px}
-      .user-pill{padding:3px 7px;font-size:10px}
+      /* Hide search bar on mobile to clear space for auth */
+      .glb-srch-wrap{display:none!important}
+      /* Auth buttons: top-right corner, tight together, small font.
+         Must override body.landing-mode .hdr-right specificity. */
+      .hdr-right,
+      body.landing-mode .hdr-right{position:absolute!important;top:4px;right:4px;gap:2px!important;align-items:flex-start;align-self:flex-start;margin-left:0;justify-content:flex-end}
+      .auth-btn,.auth-btn-signup{padding:2px 6px!important;font-size:8px!important;letter-spacing:0!important;border-width:1px!important;border-radius:5px!important}
+      .user-pill{padding:2px 6px;font-size:9px}
       .user-name{display:none}
-      .user-avatar{width:20px;height:20px;font-size:10px}
+      .user-avatar{width:18px;height:18px;font-size:9px}
       body.landing-mode .hdr-inner{display:flex;justify-content:space-between;height:58px}
       body.landing-mode .hdr-nav-links{display:none}
       body.landing-mode .logo{font-size:28px;flex:1;text-align:center}
@@ -935,8 +939,9 @@
       .hdr-inner{height:110px}
       .hdr-logo-img{height:95px}
       .logo{font-size:19px}
-      .hdr-right{top:5px;right:6px;gap:2px}
-      .auth-btn,.auth-btn-signup{padding:2px 6px;font-size:8px;letter-spacing:.1px;border-radius:5px}
+      .hdr-right,
+      body.landing-mode .hdr-right{top:3px!important;right:3px!important;gap:1px!important}
+      .auth-btn,.auth-btn-signup{padding:2px 5px!important;font-size:7px!important;border-radius:4px!important}
       .panel{padding:12px}
       .pos-btn{padding:5px 9px;font-size:11px}
       .badge{font-size:9px;padding:1px 4px}
