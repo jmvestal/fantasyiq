@@ -1168,6 +1168,9 @@
     .eng-t4{background:rgba(59,130,246,.13);color:#60a5fa;border:1px solid rgba(59,130,246,.25)}
     .eng-t5{background:rgba(100,116,139,.13);color:#94a3b8;border:1px solid rgba(100,116,139,.2)}
     .eng-t6{background:rgba(71,85,105,.1);color:#64748b;border:1px solid rgba(71,85,105,.2)}
+    .hq-default-chip{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(26,86,219,.15);color:#7aa3f5;border:1px solid rgba(26,86,219,.3);letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
+    .hq-default-chip.mode-dynasty{background:rgba(255,215,0,.1);color:#ffd700;border-color:rgba(255,215,0,.3)}
+    .hq-default-chip.mode-redraft{background:rgba(34,197,94,.1);color:#22c55e;border-color:rgba(34,197,94,.3)}
     .eng-foundation{background:rgba(255,215,0,.15);color:#ffd700;border:1px solid rgba(255,215,0,.3)}
     .eng-cornerstone{background:rgba(34,197,94,.13);color:#22c55e;border:1px solid rgba(34,197,94,.25)}
     .eng-starter{background:rgba(59,130,246,.13);color:#60a5fa;border:1px solid rgba(59,130,246,.25)}
@@ -1849,12 +1852,15 @@
         <div>
           <div class="sec-ttl"><em>Trade</em><span>HQ</span></div>
           <div class="sec-sub">Add players to each side — values auto-adjust to your league settings</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px" id="tradeDefaultSettings">
+            <span class="hq-default-chip" id="tradeDefaultMode">Dynasty</span>
+            <span class="hq-default-chip">12 Team</span>
+            <span class="hq-default-chip">Superflex</span>
+            <span class="hq-default-chip">Half PPR</span>
+            <span class="hq-default-chip">Std TE</span>
+          </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <select id="tradeModeSelect" class="dsim-sel" style="font-size:11px;padding:5px 7px;font-weight:700;flex-shrink:0" onchange="setSetting('mode',this.value)">
-            <option value="dynasty">Dynasty</option>
-            <option value="redraft">Redraft</option>
-          </select>
           <span class="info-chip" id="modeChip" style="display:none"></span>
           <button class="btn btn-sm btn-s" onclick="clearTrade()">Clear</button>
           <button class="btn btn-sm btn-s" onclick="shareTradeUrl()">Share</button>
@@ -2159,6 +2165,13 @@
         <div>
           <div class="sec-ttl"><em>League</em><span>HQ</span></div>
           <div class="sec-sub" id="leagueAnalyzerSub">Connect a league to rank all teams</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+            <span class="hq-default-chip" id="leagueDefaultMode">Dynasty</span>
+            <span class="hq-default-chip">12 Team</span>
+            <span class="hq-default-chip">Superflex</span>
+            <span class="hq-default-chip">Half PPR</span>
+            <span class="hq-default-chip">Std TE</span>
+          </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <!-- League switcher (visible when 2+ leagues connected) -->
@@ -6830,10 +6843,15 @@ function setSetting(key, val) {
   document.querySelectorAll(`[data-s="${key}"]`).forEach(btn => {
     btn.classList.toggle('on', String(btn.dataset.v) === String(val));
   });
-  // Keep mode selects in sync across tabs
+  // Keep mode chips in sync across tabs
   if (key === 'mode') {
-    const ts = document.getElementById('tradeModeSelect');
-    if (ts) ts.value = val;
+    ['tradeDefaultMode','leagueDefaultMode'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = val === 'dynasty' ? 'Dynasty' : 'Redraft';
+      el.classList.toggle('mode-dynasty', val === 'dynasty');
+      el.classList.toggle('mode-redraft', val === 'redraft');
+    });
   }
   // Sync all PlayerHQ settings dropdowns
   _syncValSettingsBar();
