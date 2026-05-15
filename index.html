@@ -5901,7 +5901,9 @@ function renderValuesTable() {
       return 0;
     })
     // Remove FA / teamless players AFTER sorting so sort order is unchanged
-    .filter(p => p.position === 'PICK' || (p.team && p.team !== 'FA' && p.team !== 'Free Agent' && p.team !== 'N/A'));
+    .filter(p => p.position === 'PICK' || (p.team && p.team !== 'FA' && p.team !== 'Free Agent' && p.team !== 'N/A'))
+    // Dynasty mode + FHQ data loaded: hide players not in pipeline (inactive/retired/no 2025 data)
+    .filter(p => !isDynasty || !FHQ_MAP || p.position === 'PICK' || p._hasFhq === true);
 
   const maxV = Math.max(...rows.map(r=>r._val), 1);
   const tbody = document.getElementById('valTbody');
@@ -12083,8 +12085,11 @@ function applyEngineScores() {
           physical:    50,
           efficiency:  ax.E_efficiency  ?? 50,
         };
+        p._hasFhq = true;
         return;
       }
+      // Player not in pipeline — flag so dynasty table can hide them
+      p._hasFhq = false;
     }
 
     // Fallback: existing engine for redraft mode or unmatched players
